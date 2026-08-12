@@ -1,0 +1,114 @@
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { MochiDataService } from '../../services/mochi-data.service';
+
+@Component({
+  selector: 'app-contact',
+  standalone: true,
+  imports: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="bg-[#FAF7F2] min-h-screen py-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        
+        <!-- Header -->
+        <div class="bg-white rounded-[40px] p-8 sm:p-12 border border-[#EBE3D5] shadow-xs text-center max-w-3xl mx-auto space-y-3">
+          <span class="px-4 py-1.5 rounded-full bg-[#FFD6E0] text-[#4A3F35] text-[10px] font-bold font-serif uppercase tracking-widest border border-[#EBE3D5]">
+            📍 Estamos para Atenderte
+          </span>
+          <h1 class="text-3xl sm:text-5xl font-serif italic text-[#4A3F35]">
+            Contacto & Atención en La Dorada
+          </h1>
+          <p class="text-[#4A3F35]/70 text-xs uppercase tracking-wider leading-relaxed">
+            ¿Tienes dudas sobre nuestros postres, catering para eventos especiales o pedidos corporativos? Escríbenos directamente.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- Contact Form -->
+          <div class="lg:col-span-7 bg-white rounded-[32px] border border-[#EBE3D5] p-6 sm:p-8 shadow-xs space-y-4">
+            <h2 class="text-xl font-serif italic text-[#4A3F35]">Envíanos un Mensaje Directo</h2>
+            
+            @if (messageSent()) {
+              <div class="p-4 rounded-full bg-[#E0F2F1] border border-[#b2dfdb] text-[#2C5350] text-xs font-bold text-center space-y-1 uppercase tracking-wider">
+                <span>✓ ¡Mensaje enviado con éxito! Nos pondremos en contacto contigo en breve.</span>
+              </div>
+            }
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label for="c-nombre" class="font-bold text-[#4A3F35] block mb-1">Nombre Completo *</label>
+                <input id="c-nombre" #nInput type="text" placeholder="Ej. Ana María" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] focus:outline-none focus:border-[#4A3F35]">
+              </div>
+              <div>
+                <label for="c-email" class="font-bold text-[#4A3F35] block mb-1">Correo Electrónico *</label>
+                <input id="c-email" #eInput type="email" placeholder="ana@ejemplo.com" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] focus:outline-none focus:border-[#4A3F35]">
+              </div>
+              <div class="sm:col-span-2">
+                <label for="c-asunto" class="font-bold text-[#4A3F35] block mb-1">Asunto *</label>
+                <input id="c-asunto" #aInput type="text" placeholder="Ej. Cotización para Cumpleaños / Evento" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] focus:outline-none focus:border-[#4A3F35]">
+              </div>
+              <div class="sm:col-span-2">
+                <label for="c-mensaje" class="font-bold text-[#4A3F35] block mb-1">Mensaje *</label>
+                <textarea id="c-mensaje" #mInput rows="4" placeholder="Escribe tus preguntas..." class="w-full p-3.5 rounded-[20px] bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] focus:outline-none focus:border-[#4A3F35]"></textarea>
+              </div>
+            </div>
+
+            <button 
+              (click)="sendMessage(nInput.value, eInput.value, aInput.value, mInput.value); nInput.value=''; eInput.value=''; aInput.value=''; mInput.value=''"
+              class="w-full py-4 rounded-full bg-[#4A3F35] hover:bg-[#362D26] text-[#FAF7F2] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors">
+              Enviar Mensaje a Mochi.
+            </button>
+          </div>
+
+          <!-- Location Info & WhatsApp Quick Link -->
+          <div class="lg:col-span-5 space-y-6">
+            <div class="bg-white rounded-[32px] border border-[#EBE3D5] p-6 sm:p-8 shadow-xs space-y-4">
+              <h2 class="text-xl font-serif italic text-[#4A3F35]">Ubicación de la Tienda</h2>
+              
+              <div class="space-y-3 text-xs text-[#4A3F35]">
+                <div class="flex items-center gap-3">
+                  <span class="material-icons text-[#8C3A3A] text-lg">location_on</span>
+                  <span>{{ config().direccionLocal }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="material-icons text-[#8C3A3A] text-lg">schedule</span>
+                  <span>{{ config().horarioAtencion }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="material-icons text-[#8C3A3A] text-lg">phone</span>
+                  <span>+57 300 123 4567</span>
+                </div>
+              </div>
+
+              <a [href]="'https://wa.me/' + config().telefonoWhatsApp.replace('+', '') + '?text=Hola%20Mochi,%20tengo%20una%20consulta'" target="_blank" class="w-full py-3.5 rounded-full bg-[#2C5350] hover:bg-[#1f3d3b] text-[#FAF7F2] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-colors">
+                <span>💬 Escribir al WhatsApp Oficial</span>
+              </a>
+            </div>
+
+            <div class="bg-[#4A3F35] text-[#FAF7F2] p-6 rounded-[32px] space-y-2 border border-[#EBE3D5]">
+              <span class="text-xs font-serif italic uppercase tracking-wider block text-[#FFD6E0]">Atención Personalizada</span>
+              <p class="text-xs text-[#FAF7F2]/80 leading-relaxed">
+                Aceptamos pedidos especiales para fiestas de cumpleaños, aniversarios y regalos corporativos con empaques fukusa tradicionales.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  `
+})
+export class ContactPageComponent {
+  dataService = inject(MochiDataService);
+  config = this.dataService.visualConfig;
+
+  messageSent = signal(false);
+
+  sendMessage(n: string, e: string, a: string, m: string) {
+    if (!n || !e || !m) return;
+    this.messageSent.set(true);
+    setTimeout(() => this.messageSent.set(false), 4000);
+  }
+}

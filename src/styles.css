@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-canvas: #FAF7F2;
+    --text-main: #4A3F35;
+    --border-soft: #EBE3D5;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-main);
+  }
+  
+  h1, h2, h3, h4, .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+/* Custom scrollbar styling in Artistic Flair tones */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D8CFC4;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4A3F35;
+}
+
+/* Theme accent classes */
+.bg-canvas { background-color: #FAF7F2; }
+.bg-cream-card { background-color: #FFFFFF; }
+.border-artistic { border-color: #EBE3D5; }
+.text-artistic { color: #4A3F35; }
+.bg-artistic-btn { background-color: #4A3F35; color: #FAF7F2; }
+.bg-artistic-btn:hover { background-color: #362D26; }
+
+.bg-mochi-pink { background-color: #FFD6E0; }
+.bg-mochi-matcha { background-color: #E0F2F1; }
+.bg-mochi-taro { background-color: #F3E5F5; }
+.bg-mochi-yuzu { background-color: #FFF3E0; }
+.bg-mochi-sesame { background-color: #E8EAF6; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-slideLeft {
+  animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
