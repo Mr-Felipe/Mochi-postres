@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-canvas: #FDF5F0;
+    --text-main: #1A1A1A;
+    --border-soft: #F0D5CC;
+    --mochi-pink: #FF758F;
+    --mochi-pink-light: #FFA0B4;
+    --mochi-pink-soft: #FFB3C1;
+    --mochi-beige: #FFF0EA;
+    --mochi-beige-deep: #F5E0D8;
+    --mochi-matcha: #80CBC4;
+    --mochi-yuzu: #FDBA74;
+    --mochi-taro: #CE93D8;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #FDF5F0;
+    background-image:
+      radial-gradient(at 20% 30%, #FFD6E0 0%, transparent 50%),
+      radial-gradient(at 80% 60%, #FFC8D6 0%, transparent 50%),
+      radial-gradient(at 50% 80%, #FFBECF 0%, transparent 50%);
+    color: var(--text-main);
+  }
+  
+  h1, h2, h3, h4, .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+/* Custom scrollbar — tonos claros rosados */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FFF0EA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #F0D5CC;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1A1A1A;
+}
+
+/* Theme accent classes — tonos claros rosados */
+.bg-canvas { background-color: #FFF0EA; }
+.bg-cream-card { background-color: #FFFAF8; }
+.border-artistic { border-color: #F0D5CC; }
+.text-artistic { color: #1A1A1A; }
+.bg-artistic-btn { background-color: #FF758F; color: white; }
+.bg-artistic-btn:hover { background-color: #FF5277; }
+
+.bg-mochi-pink { background-color: #FF758F; }
+.bg-mochi-pink-light { background-color: #FFA0B4; }
+.bg-mochi-matcha { background-color: #80CBC4; }
+.bg-mochi-taro { background-color: #CE93D8; }
+.bg-mochi-yuzu { background-color: #FDBA74; }
+.bg-mochi-sesame { background-color: #D1D5DB; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-slideLeft {
+  animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}

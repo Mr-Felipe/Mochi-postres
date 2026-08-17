@@ -1,0 +1,6 @@
+{
+  "name": "MOCHI - Postres Japoneses",
+  "description": "Plataforma web de postres japoneses artesanales con catálogo, pedidos en línea, simulador y pasarela de pago integrada.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
