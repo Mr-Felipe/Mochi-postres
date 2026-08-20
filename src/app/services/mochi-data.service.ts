@@ -76,6 +76,8 @@ export class MochiDataService {
         disponible: p['disponible'] as boolean,
         destacado: p['destacado'] as boolean,
         stock: p['stock'] as number || 0,
+        stock_minimo: p['stock_minimo'] as number || 10,
+        stock_maximo: p['stock_maximo'] as number || 500,
         calificacion: 0,
         num_resenas: 0,
         calorias: p['calorias'] as number | undefined
@@ -152,7 +154,9 @@ export class MochiDataService {
       galeria_imagenes: JSON.stringify(product.galeria_imagenes),
       disponible: product.disponible,
       destacado: product.destacado,
-      stock: product.stock
+      stock: product.stock,
+      stock_minimo: product.stock_minimo || 10,
+      stock_maximo: product.stock_maximo || 500
     });
     if (error) { console.error('Error adding product:', error); return; }
     await this.loadAllFromSupabase();
@@ -173,6 +177,8 @@ export class MochiDataService {
       disponible: product.disponible,
       destacado: product.destacado,
       stock: product.stock,
+      stock_minimo: product.stock_minimo || 10,
+      stock_maximo: product.stock_maximo || 500,
       updated_at: new Date().toISOString()
     }).eq('id_producto', product.id);
     if (error) { console.error('Error updating product:', error); return; }
@@ -195,7 +201,17 @@ export class MochiDataService {
       await supabase.from('favoritos').delete().eq('id_usuario', userId).eq('id_producto', productId);
       this.favorites.set(current.filter(id => id !== productId));
     } else {
-      await supabase.from('favoritos').insert({ id_usuario: userId, id_producto: productId });
+      // Check if already exists in DB to avoid 409 conflict
+      const { data: existing } = await supabase
+        .from('favoritos')
+        .select('id_producto')
+        .eq('id_usuario', userId)
+        .eq('id_producto', productId)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('favoritos').insert({ id_usuario: userId, id_producto: productId });
+      }
       this.favorites.set([...current, productId]);
     }
   }
@@ -266,23 +282,21 @@ export class MochiDataService {
 
   async recordPOSSale(saleData: Omit<POSSale, 'id' | 'fecha'>): Promise<POSSale> {
     const randNum = Math.floor(1000 + Math.random() * 9000);
-    const { error } = await supabase.from('compras_locales').insert({
-      id_sucursal: saleData.id_sucursal || 1,
-      id_empleado: saleData.id_empleado || '',
-      numero_compra: `POS-${randNum}`,
-      cliente_nombre: saleData.clienteNombre,
-      cliente_telefono: saleData.clienteTelefono,
+    const { error } = await supabase.from('pedidos').insert({
+      id_empleado_registro: saleData.id_empleado || '',
+      numero_pedido: `POS-${randNum}`,
       subtotal: saleData.subtotal,
       total: saleData.total,
       metodo_pago: saleData.metodoPago,
-      estado: 'completada'
+      estado: 'entregado',
+      creado_por: 'local'
     });
     if (error) console.error('Error recording POS sale:', error);
 
     const newSale: POSSale = {
       ...saleData,
       id: `POS-${randNum}`,
-      id_compra_local: randNum,
+      id_pedido: randNum,
       fecha: new Date().toISOString()
     };
     this.posSales.set([newSale, ...this.posSales()]);

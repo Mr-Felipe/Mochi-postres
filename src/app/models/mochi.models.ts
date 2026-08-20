@@ -7,13 +7,9 @@ export interface Usuario {
   telefono?: string;
   foto_perfil?: string;
   activo: boolean;
-  email_verificado: boolean;
   created_at?: string;
   updated_at?: string;
   rol: UserRole;
-  id_sucursal?: number;
-  cargo?: string;
-  fecha_ingreso?: string;
 }
 
 export interface Direccion {
@@ -31,16 +27,6 @@ export interface Direccion {
   updated_at?: string;
 }
 
-export interface Sucursal {
-  id_sucursal: number;
-  nombre: string;
-  direccion: string;
-  ciudad: string;
-  departamento: string;
-  telefono: string;
-  activa: boolean;
-}
-
 export interface DetallePedido {
   id_detalle: number;
   id_pedido?: number;
@@ -49,7 +35,6 @@ export interface DetallePedido {
   precio_unitario: number;
   subtotal: number;
   origen: 'online' | 'local';
-  id_compra_local?: number;
   created_at?: string;
   producto?: {
     nombre_espanol: string;
@@ -94,6 +79,8 @@ export interface Product {
   disponible: boolean;
   destacado: boolean;
   stock: number;
+  stock_minimo: number;
+  stock_maximo: number;
   calificacion: number;
   num_resenas: number;
   calorias?: number;
@@ -179,8 +166,7 @@ export interface BlogPost {
 
 export interface POSSale {
   id: string;
-  id_compra_local?: number;
-  id_sucursal?: number;
+  id_pedido?: number;
   id_empleado?: string;
   fecha: string;
   empleado: string;

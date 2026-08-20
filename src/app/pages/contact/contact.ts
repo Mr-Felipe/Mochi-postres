@@ -1,4 +1,5 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MochiDataService } from '../../services/mochi-data.service';
 
 @Component({
@@ -96,15 +97,42 @@ import { MochiDataService } from '../../services/mochi-data.service';
 
         </div>
 
+        <!-- Google Map -->
+        <div class="bg-white rounded-[40px] border border-[#EBE3D5] overflow-hidden shadow-xs">
+          <div class="p-6 sm:p-8 border-b border-[#EBE3D5]">
+            <h2 class="text-xl font-serif italic text-[#4A3F35] font-bold">Nuestra Ubicación</h2>
+            <p class="text-xs text-[#4A3F35]/60 mt-1">Calle 10 # 5-20, Centro, La Dorada, Caldas</p>
+          </div>
+          <div class="w-full h-80 sm:h-96">
+            <iframe
+              [src]="mapUrl()"
+              width="100%"
+              height="100%"
+              style="border:0;"
+              allowfullscreen=""
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+          </div>
+        </div>
+
       </div>
     </div>
   `
 })
 export class ContactPageComponent {
   dataService = inject(MochiDataService);
+  private sanitizer = inject(DomSanitizer);
   config = this.dataService.visualConfig;
 
   messageSent = signal(false);
+
+  mapUrl = computed<SafeResourceUrl>(() => {
+    const addr = encodeURIComponent(this.config().direccionLocal);
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.google.com/maps?q=${addr}&output=embed`
+    );
+  });
 
   sendMessage(n: string, e: string, a: string, m: string) {
     if (!n || !e || !m) return;

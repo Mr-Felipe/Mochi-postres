@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
+import { MochiDataService } from '../../services/mochi-data.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -87,6 +88,7 @@ export class SidebarComponent {
   @Output() close = new EventEmitter<void>();
 
   private supabase = inject(SupabaseService);
+  private dataService = inject(MochiDataService);
   private router = inject(Router);
 
   userRole = computed(() => this.supabase.activeUser()?.rol ?? 'cliente');
@@ -108,9 +110,7 @@ export class SidebarComponent {
         { route: '/admin/pedidos', icon: 'shopping_cart', label: 'Pedidos', exact: false },
         { route: '/admin/detalles', icon: 'receipt_long', label: 'Detalles Pedido', exact: false },
         { route: '/admin/usuarios', icon: 'people', label: 'Usuarios', exact: false },
-        { route: '/admin/inventario', icon: 'warehouse', label: 'Inventario', exact: false },
-        { route: '/admin/blog', icon: 'article', label: 'Blog', exact: false },
-        { route: '/admin/diseno', icon: 'palette', label: 'Diseño', exact: false },
+        { route: '/empleado', icon: 'point_of_sale', label: 'Punto de Venta', exact: false },
       );
     }
 
@@ -130,6 +130,7 @@ export class SidebarComponent {
   async onLogout() {
     this.close.emit();
     await this.supabase.signOut();
+    this.dataService.favorites.set([]);
     this.router.navigate(['/']);
   }
 }

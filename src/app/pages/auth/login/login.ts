@@ -1,6 +1,7 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../../services/supabase.service';
+import { MochiDataService } from '../../../services/mochi-data.service';
 
 @Component({
   selector: 'app-login',
@@ -120,6 +121,7 @@ import { SupabaseService } from '../../../services/supabase.service';
 })
 export class LoginComponent {
   private supabase = inject(SupabaseService);
+  private dataService = inject(MochiDataService);
   private router = inject(Router);
 
   email = signal('cliente@ejemplo.com');
@@ -148,13 +150,17 @@ export class LoginComponent {
 
     // Redirigir según el rol (lee de la tabla usuarios via activeUser)
     const rol = this.supabase.activeUser()?.rol ?? 'cliente';
+    const userId = this.supabase.activeUser()?.id;
+    if (userId) {
+      await this.dataService.loadFavorites(userId);
+    }
 
     if (rol === 'admin') {
       this.router.navigateByUrl('/admin');
     } else if (rol === 'empleado') {
       this.router.navigateByUrl('/empleado');
     } else {
-      this.router.navigate(['/cliente/dashboard']);
+      this.router.navigateByUrl('/inicio');
     }
 
     this.loading.set(false);

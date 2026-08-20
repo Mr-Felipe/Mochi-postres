@@ -1,6 +1,7 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
+import { MochiDataService } from '../../services/mochi-data.service';
 
 @Component({
   selector: 'app-profile',
@@ -38,10 +39,56 @@ import { SupabaseService } from '../../services/supabase.service';
                 <span class="text-[10px] uppercase tracking-wider font-bold text-[#1A1A1A]/50">Teléfono</span>
                 <p class="text-sm font-bold text-[#1A1A1A] mt-1">{{ u.telefono || 'No registrado' }}</p>
               </div>
-              <div class="bg-[#FDF5F0] rounded-2xl p-4">
-                <span class="text-[10px] uppercase tracking-wider font-bold text-[#1A1A1A]/50">Sucursal</span>
-                <p class="text-sm font-bold text-[#1A1A1A] mt-1">{{ u.id_sucursal ? 'Sucursal #' + u.id_sucursal : 'N/A' }}</p>
+            </div>
+
+            <!-- Change Password -->
+            <div class="bg-[#FDF5F0] rounded-2xl p-4 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs uppercase tracking-wider font-bold text-[#1A1A1A]/50">Cambiar Contraseña</h3>
+                <button (click)="showPasswordForm.set(!showPasswordForm())" 
+                  class="text-[#FF758F] text-xs font-bold hover:underline">
+                  {{ showPasswordForm() ? 'Cancelar' : 'Cambiar' }}
+                </button>
               </div>
+
+              @if (showPasswordForm()) {
+                @if (passwordSuccess()) {
+                  <div class="p-3 rounded-xl bg-[#E0F2F1] border border-[#B2DFDB] text-[#004D40] text-xs font-medium">
+                    ✅ Contraseña actualizada exitosamente.
+                  </div>
+                }
+
+                @if (passwordError()) {
+                  <div class="p-3 rounded-xl bg-[#FFEBEE] border border-[#FFCDD2] text-[#C62828] text-xs font-medium">
+                    ⚠️ {{ passwordError() }}
+                  </div>
+                }
+
+                <form (submit)="onPasswordChange($event)" class="space-y-3">
+                  <input
+                    type="password"
+                    placeholder="Nueva contraseña (mín. 6 caracteres)"
+                    [value]="newPassword()"
+                    (input)="newPassword.set($any($event.target).value)"
+                    required
+                    minlength="6"
+                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirmar contraseña"
+                    [value]="confirmPassword()"
+                    (input)="confirmPassword.set($any($event.target).value)"
+                    required
+                    minlength="6"
+                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors"
+                  />
+                  <button type="submit" [disabled]="passwordLoading()"
+                    class="w-full py-2.5 rounded-xl bg-[#4A3F35] hover:bg-[#362D26] disabled:opacity-50 text-[#FAF7F2] font-bold text-xs uppercase tracking-widest transition-colors">
+                    {{ passwordLoading() ? 'Guardando...' : 'Guardar Contraseña' }}
+                  </button>
+                </form>
+              }
             </div>
 
             <!-- Quick Actions -->
@@ -97,12 +144,55 @@ import { SupabaseService } from '../../services/supabase.service';
 })
 export class ProfileComponent {
   private supabase = inject(SupabaseService);
+  private dataService = inject(MochiDataService);
   private router = inject(Router);
 
   user = this.supabase.activeUser;
 
+  showPasswordForm = signal(false);
+  newPassword = signal('');
+  confirmPassword = signal('');
+  passwordError = signal('');
+  passwordSuccess = signal(false);
+  passwordLoading = signal(false);
+
+  async onPasswordChange(event: Event) {
+    event.preventDefault();
+    this.passwordError.set('');
+    this.passwordSuccess.set(false);
+
+    if (this.newPassword().length < 6) {
+      this.passwordError.set('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    if (this.newPassword() !== this.confirmPassword()) {
+      this.passwordError.set('Las contraseñas no coinciden.');
+      return;
+    }
+
+    this.passwordLoading.set(true);
+
+    const { error } = await this.supabase.updatePassword(this.newPassword());
+
+    if (error) {
+      this.passwordError.set(error.message);
+    } else {
+      this.passwordSuccess.set(true);
+      this.newPassword.set('');
+      this.confirmPassword.set('');
+      setTimeout(() => {
+        this.showPasswordForm.set(false);
+        this.passwordSuccess.set(false);
+      }, 2500);
+    }
+
+    this.passwordLoading.set(false);
+  }
+
   async onLogout() {
     await this.supabase.signOut();
+    this.dataService.favorites.set([]);
     this.router.navigate(['/']);
   }
 }

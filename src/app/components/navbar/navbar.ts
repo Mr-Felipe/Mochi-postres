@@ -1,13 +1,14 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, ViewChild } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
+import { FavoritesPanelComponent } from '../favorites-panel/favorites-panel';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, FavoritesPanelComponent],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <!-- Main Navigation Header -->
@@ -92,14 +93,24 @@ import { SupabaseService } from '../../services/supabase.service';
             </a>
           }
 
+          <!-- Favoritos -->
+          <button (click)="favoritesPanel.toggle()" class="relative p-2 text-[#1A1A1A] hover:text-[#FF758F] transition-colors">
+            <span class="material-icons text-xl">favorite_border</span>
+            @if (dataService.favorites().length > 0) {
+              <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full bg-[#FF758F] text-white text-[9px] font-bold flex items-center justify-center font-mono shadow px-1">
+                {{ dataService.favorites().length }}
+              </span>
+            }
+          </button>
+
           <!-- Carrito -->
           <button (click)="cartService.toggleDrawer()" class="relative p-2 text-[#1A1A1A] hover:text-[#FF758F] transition-colors">
             <span class="material-icons text-xl">shopping_bag</span>
-            @if (cartService.itemCount() > 0) {
-              <span class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-[#FF758F] text-white text-[9px] font-bold flex items-center justify-center font-mono shadow">
-                {{ cartService.itemCount() }}
-              </span>
-            }
+            <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center font-mono shadow"
+              [style.background]="cartService.itemCount() > 0 ? '#FF758F' : '#C4A08A'"
+              [class.px-1]="cartService.itemCount() < 10">
+              {{ cartService.itemCount() }}
+            </span>
           </button>
         </div>
 
@@ -212,21 +223,36 @@ import { SupabaseService } from '../../services/supabase.service';
             </a>
           }
 
+          <!-- Favorites Button -->
+          <button 
+            (click)="favoritesPanel.toggle()" 
+            class="relative flex items-center gap-2 py-2 text-[#1A1A1A] hover:text-[#FF758F] transition-colors focus:outline-none">
+            <span class="material-icons text-xl">favorite_border</span>
+            <span class="hidden sm:inline text-xs font-bold uppercase tracking-wider">Favoritos</span>
+            @if (dataService.favorites().length > 0) {
+              <span class="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-[#FF758F] text-white text-[9px] font-bold flex items-center justify-center font-mono shadow px-1">
+                {{ dataService.favorites().length }}
+              </span>
+            }
+          </button>
+
           <!-- Shopping Cart Drawer Button -->
           <button 
             (click)="cartService.toggleDrawer()" 
             class="relative flex items-center gap-2 py-2 text-[#1A1A1A] hover:text-[#FF758F] transition-colors focus:outline-none">
             <span class="material-icons text-xl">shopping_bag</span>
             <span class="hidden sm:inline text-xs font-bold uppercase tracking-wider">Carrito</span>
-            @if (cartService.itemCount() > 0) {
-              <span class="absolute top-0 right-0 w-4 h-4 rounded-full bg-[#FF758F] text-white text-[9px] font-bold flex items-center justify-center font-mono shadow">
-                {{ cartService.itemCount() }}
-              </span>
-            }
+            <span class="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center font-mono shadow"
+              [style.background]="cartService.itemCount() > 0 ? '#FF758F' : '#C4A08A'"
+              [class.px-1]="cartService.itemCount() < 10">
+              {{ cartService.itemCount() }}
+            </span>
           </button>
         </div>
       </div>
     </header>
+
+    <app-favorites-panel />
 
     <!-- Spacer para navbar fijo -->
     <div class="h-16 sm:h-20"></div>
@@ -326,6 +352,7 @@ import { SupabaseService } from '../../services/supabase.service';
   `
 })
 export class NavbarComponent {
+  @ViewChild(FavoritesPanelComponent) favoritesPanel!: FavoritesPanelComponent;
   cartService = inject(CartService);
   dataService = inject(MochiDataService);
   supabaseService = inject(SupabaseService);
@@ -355,6 +382,7 @@ export class NavbarComponent {
     this.userMenuOpen.set(false);
     this.isMobileMenuOpen.set(false);
     await this.supabaseService.signOut();
+    this.dataService.favorites.set([]);
     this.router.navigate(['/']);
   }
 

@@ -30,6 +30,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/forgot-password/forgot-password').then(m => m.ForgotPasswordComponent)
   },
   {
+    path: 'reset-password',
+    loadComponent: () => import('./pages/auth/reset-password/reset-password').then(m => m.ResetPasswordComponent)
+  },
+  {
+    path: 'perfil',
+    loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
+  },
+  {
     path: 'productos',
     loadComponent: () => import('./pages/catalog/catalog').then(m => m.CatalogPageComponent)
   },
@@ -102,20 +110,8 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin/admin-dashboard').then(m => m.AdminDashboardComponent)
       },
       {
-        path: 'inventario',
-        loadComponent: () => import('./pages/admin/admin-dashboard').then(m => m.AdminDashboardComponent)
-      },
-      {
-        path: 'blog',
-        loadComponent: () => import('./pages/admin/admin-dashboard').then(m => m.AdminDashboardComponent)
-      },
-      {
         path: 'perfil',
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
-      },
-      {
-        path: 'diseno',
-        loadComponent: () => import('./pages/admin/design-playground/design-playground').then(m => m.DesignPlaygroundComponent)
       },
     ]
   },

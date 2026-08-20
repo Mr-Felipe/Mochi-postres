@@ -162,6 +162,43 @@ import { CartService } from '../../../services/cart.service';
             </div>
           </div>
 
+          <!-- Related Products -->
+          @if (relatedProducts().length > 0) {
+            <div class="mt-12">
+              <h2 class="text-2xl font-serif italic text-[#1A1A1A] mb-6 font-bold">
+                También te puede gustar
+              </h2>
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                @for (rel of relatedProducts(); track rel.id) {
+                  <a [routerLink]="['/productos', rel.id]" class="bg-white rounded-[28px] border border-[#F0D5CC] overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col group">
+                    <div class="relative h-40 bg-[#FDF5F0] overflow-hidden">
+                      <img [src]="rel.imagen_principal" [alt]="rel.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      @if (rel.precio_oferta) {
+                        <span class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#FDBA74] text-[#7C2D12] text-[8px] font-bold uppercase">Oferta</span>
+                      }
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span class="text-[8px] font-bold text-[#FF758F] uppercase tracking-wider font-serif italic">{{ rel.nombre_japones }}</span>
+                        <h4 class="text-sm font-serif italic font-bold text-[#1A1A1A] leading-tight mt-0.5">{{ rel.nombre_espanol }}</h4>
+                      </div>
+                      <div class="flex items-center justify-between mt-2 pt-2 border-t border-[#F0D5CC]">
+                        @if (rel.precio_oferta) {
+                          <span class="text-sm font-serif italic font-bold text-[#FF758F]">{{ '$' + rel.precio_oferta.toLocaleString('es-CO') }}</span>
+                        } @else {
+                          <span class="text-sm font-serif italic font-bold text-[#1A1A1A]">{{ '$' + rel.precio.toLocaleString('es-CO') }}</span>
+                        }
+                        <button (click)="cartService.addToCart(rel, 1); $event.preventDefault(); $event.stopPropagation()" class="w-7 h-7 rounded-full bg-[#FF758F] hover:bg-[#FF5277] text-white flex items-center justify-center transition-all active:scale-90" title="Agregar al carrito">
+                          <span class="material-icons" style="font-size: 14px">add_shopping_cart</span>
+                        </button>
+                      </div>
+                    </div>
+                  </a>
+                }
+              </div>
+            </div>
+          }
+
           <!-- Customer Reviews for this Product -->
           <div class="bg-white rounded-[40px] border border-[#F0D5CC] p-6 sm:p-10 shadow-xs">
             <h2 class="text-2xl font-serif italic text-[#1A1A1A] mb-6 font-bold">
@@ -239,6 +276,14 @@ export class ProductDetailPageComponent {
     const id = this.productId();
     if (!id) return [];
     return this.dataService.reviews().filter(r => r.productoId === id && r.aprobado);
+  });
+
+  relatedProducts = computed(() => {
+    const prod = this.product();
+    if (!prod) return [];
+    return this.dataService.products()
+      .filter(p => p.id !== prod.id && p.id_categoria === prod.id_categoria && p.disponible)
+      .slice(0, 4);
   });
 
   submitReview(productId: number, name: string, stars: string, comment: string) {

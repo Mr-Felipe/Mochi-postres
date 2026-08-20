@@ -30,26 +30,12 @@ interface POSCartItem {
                 <span class="text-xs text-[#E0F2F1] font-medium">
                   Empleado: <strong>{{ selectedEmpleado()?.nombre_completo || 'Neider Gómez' }}</strong>
                 </span>
-                <span class="text-[10px] bg-[#4A3F35] px-2 py-0.5 rounded-full text-[#FAF7F2]/80 font-mono">
-                  Sede #{{ selectedSucursalId() }}
-                </span>
               </div>
             </div>
           </div>
 
           <!-- Branch & Employee Selector + Shift Stats Summary -->
           <div class="flex flex-wrap items-center gap-4 text-xs">
-            <div class="flex items-center gap-2">
-              <select 
-                [value]="selectedSucursalId()"
-                (change)="selectedSucursalId.set(Number($any($event.target).value))"
-                class="px-3 py-1.5 rounded-full bg-[#2E2620] border border-[#4A3F35] text-white text-xs">
-                @for (suc of supabaseService.sucursales(); track suc.id_sucursal) {
-                  <option [value]="suc.id_sucursal">{{ suc.nombre }}</option>
-                }
-              </select>
-            </div>
-
             <div class="flex items-center gap-6 bg-[#2E2620] px-5 py-2 rounded-full border border-[#4A3F35]">
               <div>
                 <span class="text-[#FAF7F2]/60 block uppercase tracking-wider text-[9px]">Ventas Turno:</span>
@@ -217,10 +203,6 @@ interface POSCartItem {
                 <span class="font-bold text-white">{{ sale.id }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-[#FAF7F2]/60">Sucursal:</span>
-                <span class="text-white">Sede #{{ sale.id_sucursal }} (La Dorada)</span>
-              </div>
-              <div class="flex justify-between">
                 <span class="text-[#FAF7F2]/60">Atendido por:</span>
                 <span class="text-white">{{ sale.empleado }}</span>
               </div>
@@ -250,12 +232,11 @@ export class PosEmployeePageComponent {
   clienteTel = signal('');
   metodoPago = signal<'efectivo' | 'tarjeta' | 'nequi' | 'daviplata'>('efectivo');
 
-  selectedSucursalId = signal<number>(1);
   posItems = signal<POSCartItem[]>([]);
   lastSale = signal<POSSale | null>(null);
 
   selectedEmpleado = computed(() => {
-    return this.supabaseService.usuarios().find(u => u.rol === 'empleado' && u.id_sucursal === this.selectedSucursalId()) || this.supabaseService.usuarios()[1];
+    return this.supabaseService.usuarios().find(u => u.rol === 'empleado') || this.supabaseService.usuarios()[1];
   });
 
   filteredProducts = computed(() => {
@@ -315,7 +296,6 @@ export class PosEmployeePageComponent {
 
     const emp = this.selectedEmpleado();
     const sale = await this.dataService.recordPOSSale({
-      id_sucursal: this.selectedSucursalId(),
       id_empleado: emp?.id,
       empleado: emp?.nombre_completo || 'Neider Gómez',
       clienteNombre: this.clienteNombre() || 'Cliente General',

@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { CartItem, Product, Coupon } from '../models/mochi.models';
 import { MochiDataService } from './mochi-data.service';
 import { SupabaseService } from './supabase.service';
+import { ToastService } from './toast.service';
 import { supabase } from '../supabase';
 
 @Injectable({
@@ -10,6 +11,7 @@ import { supabase } from '../supabase';
 export class CartService {
   private dataService = inject(MochiDataService);
   private sbService = inject(SupabaseService);
+  private toastService = inject(ToastService);
 
   readonly items = signal<CartItem[]>([]);
   readonly appliedCoupon = signal<Coupon | null>(null);
@@ -68,6 +70,8 @@ export class CartService {
           precio_oferta: prod['precio_oferta'] ? Number(prod['precio_oferta']) : undefined,
           imagen_principal: prod['imagen_principal'] as string || '',
           stock: prod['stock'] as number || 0,
+          stock_minimo: prod['stock_minimo'] as number || 10,
+          stock_maximo: prod['stock_maximo'] as number || 500,
           id_categoria: 0,
           descripcion_corta: '',
           descripcion_completa: '',
@@ -88,8 +92,25 @@ export class CartService {
 
   async addToCart(product: Product, quantity = 1, notes = ''): Promise<void> {
     const userId = this.sbService.activeUser()?.id;
-    if (!userId) return;
 
+    // If not logged in, just add to local state
+    if (!userId) {
+      const current = this.items();
+      const existing = current.find(item => item.product.id === product.id);
+      if (existing) {
+        this.items.set(current.map(item =>
+          item.product.id === product.id
+            ? { ...item, cantidad: item.cantidad + quantity, notas: notes || item.notas }
+            : item
+        ));
+      } else {
+        this.items.set([...current, { product, cantidad: quantity, notas: notes }]);
+      }
+      this.toastService.show(`${product.nombre_espanol} agregado al carrito`);
+      return;
+    }
+
+    // Logged in: save to Supabase
     const { error } = await supabase.from('carrito_compras').upsert({
       id_usuario: userId,
       id_producto: product.id,
@@ -99,12 +120,23 @@ export class CartService {
 
     if (error) { console.error('Error adding to cart:', error); return; }
     await this.loadCart();
-    this.openDrawer();
+    this.toastService.show(`${product.nombre_espanol} agregado al carrito`);
   }
 
   async updateQuantity(productId: number, quantity: number): Promise<void> {
     const userId = this.sbService.activeUser()?.id;
-    if (!userId) return;
+
+    // Local update if not logged in
+    if (!userId) {
+      if (quantity <= 0) {
+        this.items.set(this.items().filter(item => item.product.id !== productId));
+      } else {
+        this.items.set(this.items().map(item =>
+          item.product.id === productId ? { ...item, cantidad: quantity } : item
+        ));
+      }
+      return;
+    }
 
     if (quantity <= 0) {
       await this.removeFromCart(productId);
@@ -122,7 +154,12 @@ export class CartService {
 
   async removeFromCart(productId: number): Promise<void> {
     const userId = this.sbService.activeUser()?.id;
-    if (!userId) return;
+
+    // Local remove if not logged in
+    if (!userId) {
+      this.items.set(this.items().filter(item => item.product.id !== productId));
+      return;
+    }
 
     const { error } = await supabase.from('carrito_compras')
       .delete()
@@ -135,7 +172,13 @@ export class CartService {
 
   async clearCart(): Promise<void> {
     const userId = this.sbService.activeUser()?.id;
-    if (!userId) { this.items.set([]); this.appliedCoupon.set(null); return; }
+
+    // Local clear if not logged in
+    if (!userId) {
+      this.items.set([]);
+      this.appliedCoupon.set(null);
+      return;
+    }
 
     const { error } = await supabase.from('carrito_compras')
       .delete()

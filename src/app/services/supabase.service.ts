@@ -6,8 +6,7 @@ import {
   UserRole,
   Direccion,
   StockValidation,
-  StockCheckItem,
-  Sucursal
+  StockCheckItem
 } from '../models/mochi.models';
 
 @Injectable({
@@ -16,7 +15,6 @@ import {
 export class SupabaseService {
   private sb: SupabaseClient = supabase;
 
-  readonly sucursales = signal<Sucursal[]>([]);
   readonly usuarios = signal<Usuario[]>([]);
   readonly direcciones = signal<Direccion[]>([]);
   readonly activeUser = signal<Usuario | null>(null);
@@ -25,12 +23,8 @@ export class SupabaseService {
   // --- DATA LOADING ---
 
   async loadAll(): Promise<void> {
-    const [sucRes, usrRes] = await Promise.all([
-      this.sb.from('sucursales').select('*'),
-      this.sb.from('usuarios').select('*')
-    ]);
-    if (sucRes.data) this.sucursales.set(sucRes.data as Sucursal[]);
-    if (usrRes.data) this.usuarios.set(usrRes.data as Usuario[]);
+    const { data } = await this.sb.from('usuarios').select('*');
+    if (data) this.usuarios.set(data as Usuario[]);
   }
 
   async loadDirecciones(userId: string): Promise<void> {
@@ -102,16 +96,8 @@ export class SupabaseService {
     if (error) return { data: null, error: { message: error.message } };
 
     if (data?.user) {
-      const { error: insertErr } = await this.sb.from('usuarios').upsert({
-        id: data.user.id,
-        email: trimmedEmail,
-        nombre_completo: metadata.nombre_completo,
-        telefono: metadata.telefono || '',
-        rol: metadata.rol || 'cliente'
-      }, { onConflict: 'id' });
-      if (insertErr) console.warn('Error inserting user profile:', insertErr);
-
-      // Recargar usuarios
+      // El trigger handle_new_user() crea el perfil automáticamente
+      // Solo recargamos y asignamos
       await this.loadAll();
       const matched = this.usuarios().find(u => u.id === data.user!.id);
       if (matched) this.activeUser.set(matched);
@@ -143,7 +129,15 @@ export class SupabaseService {
     if (!trimmed || !trimmed.includes('@')) {
       return { data: null, error: { message: 'Por favor ingresa un correo electrónico válido.' } };
     }
-    const { data, error } = await this.sb.auth.resetPasswordForEmail(trimmed);
+    const { data, error } = await this.sb.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: window.location.origin + '/reset-password'
+    });
+    if (error) return { data: null, error: { message: error.message } };
+    return { data, error: null };
+  }
+
+  async updatePassword(newPassword: string) {
+    const { data, error } = await this.sb.auth.updateUser({ password: newPassword });
     if (error) return { data: null, error: { message: error.message } };
     return { data, error: null };
   }
@@ -259,10 +253,15 @@ export class SupabaseService {
 
   // --- USER MANAGEMENT (admin) ---
 
-  async updateUsuarioRol(userId: string, newRole: UserRole, id_sucursal?: number, cargo?: string) {
+  async updateUsuario(userId: string, data: Partial<Usuario>) {
+    const update: Record<string, unknown> = { ...data };
+    update['updated_at'] = new Date().toISOString();
+    await this.sb.from('usuarios').update(update).eq('id', userId);
+    await this.loadAll();
+  }
+
+  async updateUsuarioRol(userId: string, newRole: UserRole) {
     const update: Record<string, unknown> = { rol: newRole };
-    if (id_sucursal !== undefined) update['id_sucursal'] = id_sucursal;
-    if (cargo !== undefined) update['cargo'] = cargo;
     update['updated_at'] = new Date().toISOString();
 
     await this.sb.from('usuarios').update(update).eq('id', userId);
@@ -274,9 +273,5 @@ export class SupabaseService {
       const refreshed = this.usuarios().find(u => u.id === userId);
       if (refreshed) this.activeUser.set(refreshed);
     }
-  }
-
-  getEmpleadosSucursal(id_sucursal?: number): Usuario[] {
-    return this.usuarios().filter(u => u.rol === 'empleado' && (!id_sucursal || u.id_sucursal === id_sucursal));
   }
 }

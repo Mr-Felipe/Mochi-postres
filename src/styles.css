@@ -15,6 +15,10 @@
     --mochi-taro: #CE93D8;
   }
 
+  html, body {
+    overflow-x: hidden;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     background-color: #FDF5F0;
@@ -22,7 +26,9 @@
       radial-gradient(at 20% 30%, #FFD6E0 0%, transparent 50%),
       radial-gradient(at 80% 60%, #FFC8D6 0%, transparent 50%),
       radial-gradient(at 50% 80%, #FFBECF 0%, transparent 50%);
+    background-attachment: fixed;
     color: var(--text-main);
+    overflow-x: hidden;
   }
   
   h1, h2, h3, h4, .font-serif {

@@ -2,6 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../../components/sidebar/sidebar';
 import { SupabaseService } from '../../services/supabase.service';
+import { MochiDataService } from '../../services/mochi-data.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -53,6 +54,7 @@ import { SupabaseService } from '../../services/supabase.service';
 export class DashboardLayoutComponent {
   private router = inject(Router);
   private supabase = inject(SupabaseService);
+  private dataService = inject(MochiDataService);
 
   sidebarOpen = signal(false);
 
@@ -65,6 +67,7 @@ export class DashboardLayoutComponent {
 
   async onLogout() {
     await this.supabase.signOut();
+    this.dataService.favorites.set([]);
     this.router.navigate(['/']);
   }
 }

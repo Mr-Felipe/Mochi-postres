@@ -3,7 +3,7 @@ import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
-import { UserRole } from '../../models/mochi.models';
+import { UserRole, Usuario, Direccion, Product } from '../../models/mochi.models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -15,66 +15,16 @@ import { UserRole } from '../../models/mochi.models';
       <div class="max-w-7xl mx-auto space-y-8">
         
         <!-- Admin Header -->
-        <div class="bg-white rounded-[32px] p-6 sm:p-8 border border-[#EBE3D5] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="px-3.5 py-1 rounded-full bg-[#FFD6E0] text-[#4A3F35] text-[10px] font-bold font-serif uppercase tracking-widest border border-[#EBE3D5]">
-                Panel de Administración Supabase
-              </span>
-              <span class="px-3 py-1 rounded-full bg-[#E0F2F1] text-[#2C5350] text-[10px] font-bold font-mono">
-                ⚡ Schema v2 Sincronizado
-              </span>
-            </div>
-            <h1 class="text-3xl font-serif italic text-[#4A3F35] mt-2">
-              Mochi. Control Center
-            </h1>
-            <p class="text-xs text-[#4A3F35]/70 uppercase tracking-wider mt-1 font-medium">Gestión de catálogo, detalle_pedido unificado, roles y sucursales</p>
+        <div class="bg-white rounded-[32px] p-6 sm:p-8 border border-[#EBE3D5] shadow-xs">
+          <div class="flex items-center gap-2">
+            <span class="px-3.5 py-1 rounded-full bg-[#FFD6E0] text-[#4A3F35] text-[10px] font-bold font-serif uppercase tracking-widest border border-[#EBE3D5]">
+              Panel de Administración
+            </span>
           </div>
-
-          <!-- View Switcher Tabs -->
-          <div class="flex flex-wrap items-center gap-1.5 bg-[#FAF7F2] p-1.5 rounded-full border border-[#EBE3D5] text-xs font-bold">
-            <button 
-              (click)="activeTab.set('dashboard')"
-              [class]="activeTab() === 'dashboard' ? 'bg-[#4A3F35] text-[#FAF7F2] shadow-xs' : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'"
-              class="px-4 py-2 rounded-full transition-all uppercase tracking-wider text-[11px]">
-              📊 Métricas
-            </button>
-            <button 
-              (click)="activeTab.set('productos')"
-              [class]="activeTab() === 'productos' ? 'bg-[#4A3F35] text-[#FAF7F2] shadow-xs' : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'"
-              class="px-4 py-2 rounded-full transition-all uppercase tracking-wider text-[11px]">
-              🍡 Menú & Stock
-            </button>
-            <button 
-              (click)="activeTab.set('pedidos')"
-              [class]="activeTab() === 'pedidos' ? 'bg-[#4A3F35] text-[#FAF7F2] shadow-xs' : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'"
-              class="px-4 py-2 rounded-full transition-all uppercase tracking-wider text-[11px] relative">
-              📦 Pedidos
-              @if (pendingOrdersCount() > 0) {
-                <span class="ml-1 bg-[#FFD6E0] text-[#4A3F35] text-[10px] w-4 h-4 rounded-full inline-flex items-center justify-center font-bold">
-                  {{ pendingOrdersCount() }}
-                </span>
-              }
-            </button>
-            <button 
-              (click)="activeTab.set('detalles')"
-              [class]="activeTab() === 'detalles' ? 'bg-[#4A3F35] text-[#FAF7F2] shadow-xs' : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'"
-              class="px-4 py-2 rounded-full transition-all uppercase tracking-wider text-[11px]">
-              📑 Detalle Unificado
-            </button>
-            <button 
-              (click)="activeTab.set('usuarios')"
-              [class]="activeTab() === 'usuarios' ? 'bg-[#4A3F35] text-[#FAF7F2] shadow-xs' : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'"
-              class="px-4 py-2 rounded-full transition-all uppercase tracking-wider text-[11px]">
-              👥 Roles & Sucursales
-            </button>
-            <button 
-              (click)="activeTab.set('editor')"
-              [class]="activeTab() === 'editor' ? 'bg-[#FFD6E0] text-[#4A3F35] shadow-xs' : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'"
-              class="px-4 py-2 rounded-full transition-all uppercase tracking-wider text-[11px]">
-              🎨 Editor
-            </button>
-          </div>
+          <h1 class="text-3xl font-serif italic text-[#4A3F35] mt-2">
+            Mochi. Control Center
+          </h1>
+          <p class="text-xs text-[#4A3F35]/70 uppercase tracking-wider mt-1 font-medium">Gestión de catálogo, pedidos, usuarios y configuración</p>
         </div>
 
         <!-- TAB 1: DASHBOARD METRICS -->
@@ -150,60 +100,207 @@ import { UserRole } from '../../models/mochi.models';
         @if (activeTab() === 'productos') {
           <div class="space-y-6">
             
-            <!-- Add New Product Form -->
-            <div class="bg-white rounded-[32px] border border-[#EBE3D5] p-6 sm:p-8 shadow-xs space-y-4">
-              <h2 class="text-lg font-serif italic text-[#4A3F35]">Añadir Nuevo Postre al Menú</h2>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <!-- Header with Add Button -->
+            <div class="bg-white rounded-[32px] border border-[#EBE3D5] p-6 shadow-xs">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <label for="input-jap" class="font-bold text-[#4A3F35] block mb-1">Nombre Japonés</label>
-                  <input id="input-jap" #japInput type="text" placeholder="Ej. Matcha Mochi" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35]">
+                  <h2 class="text-lg font-serif italic text-[#4A3F35]">Catálogo de Productos</h2>
+                  <p class="text-xs text-[#4A3F35]/60">{{ products().length }} productos registrados</p>
                 </div>
-                <div>
-                  <label for="input-esp" class="font-bold text-[#4A3F35] block mb-1">Nombre Español *</label>
-                  <input id="input-esp" #espInput type="text" placeholder="Ej. Mochi de Té Verde" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35]">
-                </div>
-                <div>
-                  <label for="input-price" class="font-bold text-[#4A3F35] block mb-1">Precio COP *</label>
-                  <input id="input-price" #priceInput type="number" placeholder="9500" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35]">
-                </div>
-                <div>
-                  <label for="input-img" class="font-bold text-[#4A3F35] block mb-1">URL Imagen Principal</label>
-                  <input id="input-img" #imgInput type="text" placeholder="https://..." class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35]">
-                </div>
-                <div>
-                  <label for="input-stock" class="font-bold text-[#4A3F35] block mb-1">Stock Inicial</label>
-                  <input id="input-stock" #stockInput type="number" value="20" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35]">
-                </div>
-                <div class="flex items-end">
-                  <button 
-                    (click)="createNewProduct(japInput.value, espInput.value, priceInput.value, imgInput.value, stockInput.value); japInput.value=''; espInput.value=''; priceInput.value=''"
-                    class="w-full py-3 rounded-full bg-[#4A3F35] hover:bg-[#362D26] text-[#FAF7F2] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors">
-                    + Guardar Producto
+                <button 
+                  (click)="openProductModal()"
+                  class="px-6 py-3 rounded-full bg-[#4A3F35] hover:bg-[#362D26] text-[#FAF7F2] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors flex items-center gap-2">
+                  <span class="material-icons text-sm">add</span>
+                  Nuevo Producto
+                </button>
+              </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="bg-white rounded-[32px] border border-[#EBE3D5] shadow-xs overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                  <thead>
+                    <tr class="border-b border-[#EBE3D5] bg-[#FAF7F2]">
+                      <th class="text-left p-4 font-bold text-[#4A3F35]">Producto</th>
+                      <th class="text-left p-4 font-bold text-[#4A3F35]">Categoría</th>
+                      <th class="text-right p-4 font-bold text-[#4A3F35]">Precio</th>
+                      <th class="text-center p-4 font-bold text-[#4A3F35]">Stock</th>
+                      <th class="text-center p-4 font-bold text-[#4A3F35]">Mín</th>
+                      <th class="text-center p-4 font-bold text-[#4A3F35]">Máx</th>
+                      <th class="text-center p-4 font-bold text-[#4A3F35]">Estado</th>
+                      <th class="text-right p-4 font-bold text-[#4A3F35]">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (prod of products(); track prod.id) {
+                      <tr class="border-b border-[#EBE3D5] last:border-0 hover:bg-[#FAF7F2] transition-colors">
+                        <td class="p-4">
+                          <div class="flex items-center gap-3">
+                            <img [src]="prod.imagen_principal" alt="" class="w-12 h-12 rounded-xl object-cover border border-[#EBE3D5]">
+                            <div>
+                              <span class="font-serif italic text-[#4A3F35] block text-sm font-medium">{{ prod.nombre_espanol }}</span>
+                              <span class="text-[#4A3F35]/50 block text-[10px]">{{ prod.nombre_japones }}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="p-4">
+                          <span class="bg-[#FDF5F0] text-[#4A3F35] px-3 py-1 rounded-full text-[10px] font-bold">
+                            Cat. {{ prod.id_categoria }}
+                          </span>
+                        </td>
+                        <td class="p-4 text-right">
+                          <span class="font-serif italic font-bold text-[#4A3F35]">
+                            {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
+                          </span>
+                          @if (prod.precio_oferta) {
+                            <span class="text-[#4A3F35]/40 line-through block text-[10px]">{{ '$' + prod.precio.toLocaleString('es-CO') }}</span>
+                          }
+                        </td>
+                        <td class="p-4 text-center">
+                          <span class="font-mono font-bold" [class]="prod.stock <= prod.stock_minimo ? 'text-[#8C3A3A]' : prod.stock >= prod.stock_maximo ? 'text-[#2C5350]' : 'text-[#4A3F35]'">
+                            {{ prod.stock }}
+                          </span>
+                        </td>
+                        <td class="p-4 text-center">
+                          <span class="text-[#4A3F35]/60 font-mono">{{ prod.stock_minimo }}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                          <span class="text-[#4A3F35]/60 font-mono">{{ prod.stock_maximo }}</span>
+                        </td>
+                        <td class="p-4 text-center">
+                          @if (prod.stock <= prod.stock_minimo) {
+                            <span class="bg-[#8C3A3A]/10 text-[#8C3A3A] px-2.5 py-1 rounded-full text-[10px] font-bold">Stock Bajo</span>
+                          } @else if (prod.stock >= prod.stock_maximo) {
+                            <span class="bg-[#2C5350]/10 text-[#2C5350] px-2.5 py-1 rounded-full text-[10px] font-bold">Completo</span>
+                          } @else if (!prod.disponible) {
+                            <span class="bg-[#4A3F35]/10 text-[#4A3F35] px-2.5 py-1 rounded-full text-[10px] font-bold">Inactivo</span>
+                          } @else {
+                            <span class="bg-[#FF758F]/10 text-[#FF758F] px-2.5 py-1 rounded-full text-[10px] font-bold">Activo</span>
+                          }
+                        </td>
+                        <td class="p-4 text-right">
+                          <div class="flex items-center justify-end gap-2">
+                            <button (click)="openProductModal(prod)" class="p-2 rounded-xl hover:bg-[#E0F2F1] text-[#2C5350] transition-colors" title="Editar">
+                              <span class="material-icons text-sm">edit</span>
+                            </button>
+                            <button (click)="dataService.deleteProduct(prod.id)" class="p-2 rounded-xl hover:bg-[#8C3A3A]/10 text-[#8C3A3A] transition-colors" title="Eliminar">
+                              <span class="material-icons text-sm">delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- PRODUCT MODAL -->
+        @if (showProductModal()) {
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="closeProductModal()"></div>
+            <div class="relative bg-white rounded-[32px] border border-[#EBE3D5] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              
+              <!-- Modal Header -->
+              <div class="sticky top-0 bg-white border-b border-[#EBE3D5] p-6 rounded-t-[32px] z-10">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-lg font-serif italic text-[#4A3F35]">
+                    {{ editingProduct() ? 'Editar Producto' : 'Nuevo Producto' }}
+                  </h2>
+                  <button (click)="closeProductModal()" class="p-2 rounded-xl hover:bg-[#FAF7F2] text-[#4A3F35]/60 transition-colors">
+                    <span class="material-icons">close</span>
                   </button>
                 </div>
               </div>
-            </div>
 
-            <!-- Existing Products Inventory Table -->
-            <div class="bg-white rounded-[32px] border border-[#EBE3D5] p-6 shadow-xs space-y-4">
-              <h2 class="text-lg font-serif italic text-[#4A3F35]">Catálogo de Productos ({{ products().length }})</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @for (prod of products(); track prod.id) {
-                  <div class="p-4 rounded-[24px] bg-[#FAF7F2] border border-[#EBE3D5] flex items-center justify-between gap-3 text-xs">
-                    <img [src]="prod.imagen_principal" alt="" class="w-14 h-14 rounded-2xl object-cover">
-                    <div class="flex-1">
-                      <span class="font-serif italic text-[#4A3F35] block text-sm">{{ prod.nombre_espanol }}</span>
-                      <span class="text-[#4A3F35] font-serif italic font-bold">{{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}</span>
-                      <span class="text-[#4A3F35]/60 block text-[10px]">Stock: {{ prod.stock }} un.</span>
-                    </div>
-                    <button (click)="dataService.deleteProduct(prod.id)" class="text-[#8C3A3A] font-bold text-[11px] uppercase tracking-wider hover:underline">
-                      Eliminar
-                    </button>
+              <!-- Modal Body -->
+              <div class="p-6 space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="font-bold text-[#4A3F35] block mb-1.5 text-xs">Nombre Japonés</label>
+                    <input #mjap type="text" [value]="editingProduct()?.nombre_japones || ''" placeholder="Ej. Matcha Mochi" 
+                      class="w-full p-3 rounded-2xl bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-sm focus:outline-none focus:border-[#FF758F]">
                   </div>
-                }
-              </div>
-            </div>
+                  <div>
+                    <label class="font-bold text-[#4A3F35] block mb-1.5 text-xs">Nombre Español *</label>
+                    <input #mesp type="text" [value]="editingProduct()?.nombre_espanol || ''" placeholder="Ej. Mochi de Té Verde" 
+                      class="w-full p-3 rounded-2xl bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-sm focus:outline-none focus:border-[#FF758F]">
+                  </div>
+                  <div>
+                    <label class="font-bold text-[#4A3F35] block mb-1.5 text-xs">Precio COP *</label>
+                    <input #mprice type="number" [value]="editingProduct()?.precio || ''" placeholder="9500" 
+                      class="w-full p-3 rounded-2xl bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-sm focus:outline-none focus:border-[#FF758F]">
+                  </div>
+                  <div>
+                    <label class="font-bold text-[#4A3F35] block mb-1.5 text-xs">URL Imagen</label>
+                    <input #mimg type="text" [value]="editingProduct()?.imagen_principal || ''" placeholder="https://..." 
+                      class="w-full p-3 rounded-2xl bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-sm focus:outline-none focus:border-[#FF758F]">
+                  </div>
+                </div>
 
+                <!-- Stock Section -->
+                <div class="bg-[#FAF7F2] rounded-2xl p-4 space-y-4">
+                  <h3 class="text-xs font-bold text-[#4A3F35] uppercase tracking-wider">Control de Inventario</h3>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="font-bold text-[#4A3F35] block mb-1.5 text-[10px]">Stock Actual</label>
+                      <input #mstock type="number" [value]="editingProduct()?.stock || 20" 
+                        class="w-full p-3 rounded-2xl bg-white border border-[#EBE3D5] text-[#4A3F35] text-sm font-mono focus:outline-none focus:border-[#FF758F]">
+                    </div>
+                    <div>
+                      <label class="font-bold text-[#4A3F35] block mb-1.5 text-[10px]">Mínimo</label>
+                      <input #mstockmin type="number" [value]="editingProduct()?.stock_minimo || 10" 
+                        class="w-full p-3 rounded-2xl bg-white border border-[#EBE3D5] text-[#4A3F35] text-sm font-mono focus:outline-none focus:border-[#FF758F]">
+                    </div>
+                    <div>
+                      <label class="font-bold text-[#4A3F35] block mb-1.5 text-[10px]">Máximo</label>
+                      <input #mstockmax type="number" [value]="editingProduct()?.stock_maximo || 500" 
+                        class="w-full p-3 rounded-2xl bg-white border border-[#EBE3D5] text-[#4A3F35] text-sm font-mono focus:outline-none focus:border-[#FF758F]">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                  <label class="font-bold text-[#4A3F35] block mb-1.5 text-xs">Descripción Corta</label>
+                  <input #mdesc type="text" [value]="editingProduct()?.descripcion_corta || ''" placeholder="Postre japonés artesanal..." 
+                    class="w-full p-3 rounded-2xl bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-sm focus:outline-none focus:border-[#FF758F]">
+                </div>
+
+                <!-- Toggles -->
+                <div class="flex gap-6">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" #mdisp [checked]="editingProduct()?.disponible ?? true" 
+                      class="w-4 h-4 rounded border-[#EBE3D5] text-[#FF758F] focus:ring-[#FF758F]">
+                    <span class="text-xs font-bold text-[#4A3F35]">Disponible</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" #mdest [checked]="editingProduct()?.destacado ?? false" 
+                      class="w-4 h-4 rounded border-[#EBE3D5] text-[#FF758F] focus:ring-[#FF758F]">
+                    <span class="text-xs font-bold text-[#4A3F35]">Destacado</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Modal Footer -->
+              <div class="sticky bottom-0 bg-white border-t border-[#EBE3D5] p-6 rounded-b-[32px]">
+                <div class="flex gap-3">
+                  <button (click)="closeProductModal()" 
+                    class="flex-1 py-3 rounded-full border border-[#EBE3D5] text-[#4A3F35] font-bold text-xs uppercase tracking-widest hover:bg-[#FAF7F2] transition-colors">
+                    Cancelar
+                  </button>
+                  <button (click)="saveProductModal(mesp.value, mjap.value, mprice.value, mimg.value, mstock.value, mstockmin.value, mstockmax.value, mdesc.value, mdisp.checked, mdest.checked)" 
+                    class="flex-1 py-3 rounded-full bg-[#FF758F] hover:bg-[#FF6080] text-white font-bold text-xs uppercase tracking-widest shadow-xs transition-colors">
+                    {{ editingProduct() ? '✓ Guardar Cambios' : '+ Crear Producto' }}
+                  </button>
+                </div>
+              </div>
+
+            </div>
           </div>
         }
 
@@ -298,7 +395,7 @@ import { UserRole } from '../../models/mochi.models';
                         </span>
                       </td>
                       <td class="p-3 font-mono">
-                        {{ det.origen === 'online' ? 'Ped #' + det.id_pedido : 'POS #' + det.id_compra_local }}
+                        Ped #{{ det.id_pedido }}
                       </td>
                       <td class="p-3 font-medium font-serif italic text-sm">
                         {{ det.producto?.nombre_espanol || 'Producto #' + det.id_producto }}
@@ -320,33 +417,19 @@ import { UserRole } from '../../models/mochi.models';
           </div>
         }
 
-        <!-- TAB 5: USUARIOS & ROLES & SUCURSALES (Supabase schema) -->
+        <!-- TAB 5: USUARIOS & ROLES -->
         @if (activeTab() === 'usuarios') {
           <div class="space-y-6">
-            <!-- Header with Branches Info -->
-            <div class="bg-white rounded-[32px] border border-[#EBE3D5] p-6 sm:p-8 shadow-xs space-y-4">
-              <h2 class="text-2xl font-serif italic text-[#4A3F35]">Sucursales Oficiales (La Dorada, Caldas)</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @for (suc of supabaseService.sucursales(); track suc.id_sucursal) {
-                  <div class="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EBE3D5] text-xs space-y-1">
-                    <div class="flex items-center justify-between">
-                      <span class="font-bold text-[#4A3F35] font-serif text-sm">{{ suc.nombre }}</span>
-                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#E0F2F1] text-[#2C5350] font-bold">Activa</span>
-                    </div>
-                    <p class="text-[#4A3F35]/70">{{ suc.direccion }} — {{ suc.ciudad }}, {{ suc.departamento }}</p>
-                    <span class="text-[10px] text-[#4A3F35]/50 font-mono">Tel: {{ suc.telefono }} | ID: #{{ suc.id_sucursal }}</span>
-                  </div>
-                }
-              </div>
-            </div>
-
             <!-- Users & Roles Management -->
             <div class="bg-white rounded-[32px] border border-[#EBE3D5] p-6 sm:p-8 shadow-xs space-y-4">
               <div class="flex items-center justify-between">
                 <div>
-                  <h2 class="text-2xl font-serif italic text-[#4A3F35]">Gestión de Usuarios & Roles de Supabase</h2>
-                  <p class="text-xs text-[#4A3F35]/70">Roles admitidos: 'admin', 'empleado', 'cliente'. Empleados vinculados mediante id_sucursal (FK).</p>
+                  <h2 class="text-2xl font-serif italic text-[#4A3F35]">Gestión de Usuarios</h2>
+                  <p class="text-xs text-[#4A3F35]/70">Admin, Empleado o Cliente. Edita datos y direcciones.</p>
                 </div>
+                <button (click)="reloadUsers()" class="px-4 py-2 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[10px] font-bold text-[#4A3F35] hover:bg-[#FFD6E0] transition-colors uppercase tracking-wider">
+                  🔄 Recargar
+                </button>
               </div>
 
               <div class="overflow-x-auto">
@@ -355,23 +438,24 @@ import { UserRole } from '../../models/mochi.models';
                     <tr>
                       <th class="p-3 rounded-l-2xl">Usuario</th>
                       <th class="p-3">Email</th>
-                      <th class="p-3">Rol Actual</th>
-                      <th class="p-3">Sucursal Asignada (FK)</th>
-                      <th class="p-3">Cargo</th>
-                      <th class="p-3 rounded-r-2xl">Cambiar Rol</th>
+                      <th class="p-3">Teléfono</th>
+                      <th class="p-3">Rol</th>
+                      <th class="p-3">Direcciones</th>
+                      <th class="p-3 rounded-r-2xl">Acciones</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-[#EBE3D5]">
                     @for (usr of supabaseService.usuarios(); track usr.id) {
                       <tr>
                         <td class="p-3 font-medium flex items-center gap-2">
-                          <img [src]="usr.foto_perfil || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60'" alt="Foto de perfil" class="w-8 h-8 rounded-full object-cover">
+                          <img [src]="usr.foto_perfil || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60'" alt="Foto" class="w-8 h-8 rounded-full object-cover">
                           <div>
                             <span class="font-bold text-[#4A3F35] block">{{ usr.nombre_completo }}</span>
                             <span class="text-[9px] text-[#4A3F35]/50 font-mono">{{ usr.id.substring(0, 8) }}...</span>
                           </div>
                         </td>
                         <td class="p-3 font-mono">{{ usr.email }}</td>
+                        <td class="p-3">{{ usr.telefono || '—' }}</td>
                         <td class="p-3">
                           <span 
                             [class]="usr.rol === 'admin' ? 'bg-[#FFD6E0] text-[#4A3F35]' : usr.rol === 'empleado' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FAF7F2] text-[#4A3F35]'"
@@ -380,22 +464,24 @@ import { UserRole } from '../../models/mochi.models';
                           </span>
                         </td>
                         <td class="p-3">
-                          @if (usr.id_sucursal) {
-                            <span class="font-bold text-[#4A3F35]">Sede #{{ usr.id_sucursal }}</span>
-                          } @else {
-                            <span class="text-[#4A3F35]/40 italic">N/A</span>
-                          }
+                          <button (click)="viewAddresses(usr)" class="px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[10px] font-bold text-[#4A3F35] hover:bg-[#FFD6E0] transition-colors">
+                            📍 Ver
+                          </button>
                         </td>
-                        <td class="p-3 text-[#4A3F35]/70">{{ usr.cargo || 'Cliente particular' }}</td>
                         <td class="p-3">
-                          <select 
-                            [value]="usr.rol"
-                            (change)="onRoleChange(usr.id, $any($event.target).value)"
-                            class="px-3 py-1.5 rounded-full bg-white border border-[#EBE3D5] text-[11px] font-bold text-[#4A3F35]">
-                            <option value="admin">Admin</option>
-                            <option value="empleado">Empleado</option>
-                            <option value="cliente">Cliente</option>
-                          </select>
+                          <div class="flex items-center gap-2">
+                            <select 
+                              [value]="usr.rol"
+                              (change)="onRoleChange(usr.id, $any($event.target).value)"
+                              class="px-3 py-1.5 rounded-full bg-white border border-[#EBE3D5] text-[11px] font-bold text-[#4A3F35]">
+                              <option value="admin">Admin</option>
+                              <option value="empleado">Empleado</option>
+                              <option value="cliente">Cliente</option>
+                            </select>
+                            <button (click)="editUser(usr)" class="w-7 h-7 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] flex items-center justify-center hover:bg-[#FFD6E0] transition-colors" title="Editar">
+                              <span class="material-icons text-[#4A3F35]" style="font-size: 14px">edit</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     }
@@ -403,6 +489,70 @@ import { UserRole } from '../../models/mochi.models';
                 </table>
               </div>
             </div>
+
+            <!-- Edit User Modal -->
+            @if (editingUser()) {
+              <div class="fixed inset-0 z-50 bg-[#4A3F35]/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div class="bg-white rounded-[32px] max-w-md w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-[#EBE3D5]">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-serif italic text-[#4A3F35]">Editar Usuario</h3>
+                    <button (click)="editingUser.set(null)" class="w-8 h-8 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#4A3F35] hover:bg-[#FFD6E0] transition-colors">✕</button>
+                  </div>
+                  <div class="space-y-3 text-xs">
+                    <div>
+                      <label class="font-bold text-[#4A3F35] block mb-1">Nombre Completo</label>
+                      <input type="text" [value]="editingUser()!.nombre_completo" (input)="onEditField('nombre_completo', $any($event.target).value)" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] focus:outline-none focus:border-[#4A3F35]">
+                    </div>
+                    <div>
+                      <label class="font-bold text-[#4A3F35] block mb-1">Email</label>
+                      <input type="email" [value]="editingUser()!.email" (input)="onEditField('email', $any($event.target).value)" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] focus:outline-none focus:border-[#4A3F35]">
+                    </div>
+                    <div>
+                      <label class="font-bold text-[#4A3F35] block mb-1">Teléfono</label>
+                      <input type="text" [value]="editingUser()!.telefono || ''" (input)="onEditField('telefono', $any($event.target).value)" class="w-full p-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] focus:outline-none focus:border-[#4A3F35]">
+                    </div>
+                  </div>
+                  <button (click)="saveUser()" class="w-full py-3 rounded-full bg-[#4A3F35] text-[#FAF7F2] font-bold text-xs uppercase tracking-widest hover:bg-[#362D26] transition-colors">
+                    Guardar Cambios
+                  </button>
+                </div>
+              </div>
+            }
+
+            <!-- View Addresses Modal -->
+            @if (viewingAddresses()) {
+              <div class="fixed inset-0 z-50 bg-[#4A3F35]/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div class="bg-white rounded-[32px] max-w-lg w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-[#EBE3D5]">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-xl font-serif italic text-[#4A3F35]">Direcciones</h3>
+                      <p class="text-xs text-[#4A3F35]/60">{{ viewingAddresses()!.nombre_completo }}</p>
+                    </div>
+                    <button (click)="viewingAddresses.set(null)" class="w-8 h-8 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#4A3F35] hover:bg-[#FFD6E0] transition-colors">✕</button>
+                  </div>
+                  <div class="space-y-3">
+                    @if (userAddresses().length === 0) {
+                      <div class="p-6 text-center text-xs text-[#4A3F35]/50 bg-[#FAF7F2] rounded-2xl border border-[#EBE3D5]">
+                        Este usuario no tiene direcciones guardadas
+                      </div>
+                    } @else {
+                      @for (dir of userAddresses(); track dir.id_direccion) {
+                        <div class="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EBE3D5] text-xs space-y-1">
+                          <div class="flex items-center justify-between">
+                            <span class="font-bold text-[#4A3F35]">{{ dir.alias || 'Dirección' }}</span>
+                            @if (dir.predeterminada) {
+                              <span class="px-2 py-0.5 rounded-full bg-[#E0F2F1] text-[#2C5350] text-[9px] font-bold">Principal</span>
+                            }
+                          </div>
+                          <p class="text-[#4A3F35]/70">{{ dir.direccion_completa }}</p>
+                          <p class="text-[#4A3F35]/50">{{ dir.ciudad }}, {{ dir.departamento }}</p>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+              </div>
+            }
           </div>
         }
 
@@ -491,8 +641,15 @@ export class AdminDashboardComponent implements OnInit {
 
   activeTab = signal<'dashboard' | 'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'>('dashboard');
   detalleOrigenFilter = signal<'todos' | 'online' | 'local'>('todos');
+  editingUser = signal<Usuario | null>(null);
+  editingProduct = signal<Product | null>(null);
+  showProductModal = signal<boolean>(false);
+  viewingAddresses = signal<Usuario | null>(null);
+  userAddresses = signal<Direccion[]>([]);
 
   ngOnInit() {
+    // Reload users with admin token
+    this.reloadUsers();
     // Sync sidebar navigation with internal tabs
     this.syncTabFromRoute(this.router.url);
     this.router.events.pipe(
@@ -503,6 +660,10 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  async reloadUsers() {
+    await this.supabaseService.loadAll();
+  }
+
   private syncTabFromRoute(url: string) {
     const segment = url.replace('/admin', '').replace(/^\//, '');
     const tabMap: Record<string, 'dashboard' | 'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'> = {
@@ -511,7 +672,6 @@ export class AdminDashboardComponent implements OnInit {
       'pedidos': 'pedidos',
       'detalles': 'detalles',
       'usuarios': 'usuarios',
-      'inventario': 'detalles',
       'blog': 'dashboard',
     };
     this.activeTab.set(tabMap[segment] ?? 'dashboard');
@@ -544,22 +704,92 @@ export class AdminDashboardComponent implements OnInit {
     this.supabaseService.updateUsuarioRol(userId, newRole);
   }
 
-  createNewProduct(jap: string, esp: string, price: string, img: string, stock: string) {
-    if (!esp || !price) return;
-    this.dataService.addProduct({
-      id_categoria: 1,
-      nombre_japones: jap || esp,
-      nombre_espanol: esp,
-      descripcion_corta: 'Postre japonés artesanal recién preparado.',
-      descripcion_completa: 'Elaborado artesanalmente en La Dorada con ingredientes de alta calidad.',
-      ingredientes: ['Arroz Mochiko', 'Azúcar refinada'],
-      precio: Number(price),
-      imagen_principal: img || 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80',
-      galeria_imagenes: [img || 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80'],
-      disponible: true,
-      destacado: true,
-      stock: Number(stock) || 20
+  editUser(user: Usuario) {
+    this.editingUser.set({ ...user });
+  }
+
+  onEditField(field: string, value: string) {
+    const user = this.editingUser();
+    if (user) {
+      this.editingUser.set({ ...user, [field]: value });
+    }
+  }
+
+  async saveUser() {
+    const user = this.editingUser();
+    if (!user) return;
+    await this.supabaseService.updateUsuario(user.id, {
+      nombre_completo: user.nombre_completo,
+      email: user.email,
+      telefono: user.telefono
     });
+    this.editingUser.set(null);
+  }
+
+  async viewAddresses(user: Usuario) {
+    this.viewingAddresses.set(user);
+    const { data } = await import('../../supabase').then(m =>
+      m.supabase.from('direcciones').select('*').eq('id_usuario', user.id)
+    );
+    this.userAddresses.set((data as Direccion[]) || []);
+  }
+
+  openProductModal(product?: Product) {
+    if (product) {
+      this.editingProduct.set({ ...product });
+    } else {
+      this.editingProduct.set(null);
+    }
+    this.showProductModal.set(true);
+  }
+
+  closeProductModal() {
+    this.showProductModal.set(false);
+    this.editingProduct.set(null);
+  }
+
+  async saveProductModal(esp: string, jap: string, price: string, img: string, stock: string, stockMin: string, stockMax: string, desc: string, disp: boolean, dest: boolean) {
+    if (!esp || !price) return;
+    
+    const current = this.editingProduct();
+    
+    if (current) {
+      // Edit existing
+      const updated: Product = {
+        ...current,
+        nombre_japones: jap || esp,
+        nombre_espanol: esp,
+        precio: Number(price),
+        imagen_principal: img || current.imagen_principal,
+        stock: Number(stock) || current.stock,
+        stock_minimo: Number(stockMin) || current.stock_minimo,
+        stock_maximo: Number(stockMax) || current.stock_maximo,
+        descripcion_corta: desc || current.descripcion_corta,
+        disponible: disp,
+        destacado: dest
+      };
+      await this.dataService.updateProduct(updated);
+    } else {
+      // Create new
+      await this.dataService.addProduct({
+        id_categoria: 1,
+        nombre_japones: jap || esp,
+        nombre_espanol: esp,
+        descripcion_corta: desc || 'Postre japonés artesanal recién preparado.',
+        descripcion_completa: 'Elaborado artesanalmente en La Dorada con ingredientes de alta calidad.',
+        ingredientes: ['Arroz Mochiko', 'Azúcar refinada'],
+        precio: Number(price),
+        imagen_principal: img || 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80',
+        galeria_imagenes: [img || 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80'],
+        disponible: disp,
+        destacado: dest,
+        stock: Number(stock) || 20,
+        stock_minimo: Number(stockMin) || 10,
+        stock_maximo: Number(stockMax) || 500
+      });
+    }
+    
+    this.closeProductModal();
   }
 }
 

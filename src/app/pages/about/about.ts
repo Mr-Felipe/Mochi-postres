@@ -1,5 +1,6 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MochiDataService } from '../../services/mochi-data.service';
 
 @Component({
@@ -159,18 +160,17 @@ import { MochiDataService } from '../../services/mochi-data.service';
               </div>
             </div>
 
-            <!-- Simulated Map Card -->
-            <div class="rounded-[32px] bg-[#FAF7F2] border border-[#EBE3D5] h-72 relative overflow-hidden flex flex-col justify-between p-6">
-              <div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80');"></div>
-              <div class="relative z-10 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-xs border border-[#EBE3D5]">
-                <span class="text-xs font-serif italic font-bold text-[#4A3F35] block">Mochi. La Dorada</span>
-                <span class="text-[11px] text-[#4A3F35]/60 block">Calle 10 # 5-20, Centro, Caldas</span>
-              </div>
-              <div class="relative z-10 text-right">
-                <span class="px-4 py-1.5 rounded-full bg-[#E0F2F1] text-[#2C5350] border border-[#b2dfdb] font-bold text-[10px] uppercase tracking-widest shadow-xs">
-                  🟢 Abierto Ahora
-                </span>
-              </div>
+            <!-- Google Maps -->
+            <div class="rounded-[32px] overflow-hidden border border-[#EBE3D5] h-72">
+              <iframe
+                [src]="mapUrl()"
+                width="100%"
+                height="100%"
+                style="border:0;"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
             </div>
           </div>
         </div>
@@ -181,5 +181,13 @@ import { MochiDataService } from '../../services/mochi-data.service';
 })
 export class AboutPageComponent {
   dataService = inject(MochiDataService);
+  private sanitizer = inject(DomSanitizer);
   config = this.dataService.visualConfig;
+
+  mapUrl = computed<SafeResourceUrl>(() => {
+    const addr = encodeURIComponent(this.config().direccionLocal);
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.google.com/maps?q=${addr}&output=embed`
+    );
+  });
 }

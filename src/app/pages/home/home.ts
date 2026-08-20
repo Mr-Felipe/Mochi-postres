@@ -11,12 +11,12 @@ import { CartService } from '../../services/cart.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Hero Section -->
-    <section class="relative bg-[#FDF5F0] pt-12 pb-20 overflow-hidden border-b border-[#F0D5CC]">
+    <section class="relative bg-[#FDF5F0] pt-12 pb-20 border-b border-[#F0D5CC]">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           <!-- Left Column: Headlines & Action CTAs -->
-          <div class="lg:col-span-6 space-y-6 text-center lg:text-left">
+          <div class="lg:col-span-5 space-y-6 text-center lg:text-left">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF758F] text-white text-xs font-bold uppercase tracking-wider border border-[#FF5277] shadow-xs">
               <span>🌸</span>
               <span>100% Artesanal • La Dorada, Caldas</span>
@@ -59,7 +59,7 @@ import { CartService } from '../../services/cart.service';
           </div>
 
           <!-- Right Column: Interactive Product Carousel Card -->
-          <div class="lg:col-span-6">
+          <div class="lg:col-span-7">
             <app-product-carousel />
           </div>
 
