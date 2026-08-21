@@ -1,5 +1,12 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
+# ==============================================================================
+# IMPORTANTE: PROYECTO UNIVERSITARIO - NO IGNORAR ARCHIVOS .env
+# Este proyecto requiere que los archivos .env y src/environments/* se commiteen
+# para que todos los compañeros puedan ejecutar el proyecto sin problemas.
+# NO agregar .env* al gitignore. NO agregar src/environments/* al gitignore.
+# ==============================================================================
+
 # Compiled output
 /dist
 /tmp
@@ -37,11 +44,6 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
-
-# Environment variables
-.env
-.env.*
-!.env.example
 
 # System files
 .DS_Store
