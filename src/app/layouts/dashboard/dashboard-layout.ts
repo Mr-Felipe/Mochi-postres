@@ -1,13 +1,16 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../../components/sidebar/sidebar';
+import { OrderNotificationComponent } from '../../components/order-notification/order-notification';
+import { ToastNotificationComponent } from '../../components/toast-notification/toast-notification';
 import { SupabaseService } from '../../services/supabase.service';
 import { MochiDataService } from '../../services/mochi-data.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, SidebarComponent],
+  imports: [RouterOutlet, RouterLink, SidebarComponent, OrderNotificationComponent, ToastNotificationComponent],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <div class="min-h-screen flex bg-[#FDF5F0]">
@@ -26,6 +29,9 @@ import { MochiDataService } from '../../services/mochi-data.service';
           <!-- Right: title + actions -->
           <div class="flex items-center gap-2">
             <h2 class="text-sm font-bold text-[#1A1A1A] hidden sm:block">Panel de Control</h2>
+
+            <!-- Notification Bell -->
+            <app-order-notification />
 
             <!-- Ver como cliente -->
             <a routerLink="/"
@@ -49,23 +55,38 @@ import { MochiDataService } from '../../services/mochi-data.service';
         </main>
       </div>
     </div>
+
+    <!-- Toast Notifications (global) -->
+    <app-toast-notification />
   `
 })
-export class DashboardLayoutComponent {
+export class DashboardLayoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private supabase = inject(SupabaseService);
   private dataService = inject(MochiDataService);
+  private notificationService = inject(NotificationService);
 
   sidebarOpen = signal(false);
 
   constructor() {
-    // En desktop, abrir sidebar por defecto
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       this.sidebarOpen.set(true);
     }
   }
 
+  ngOnInit() {
+    const user = this.supabase.activeUser();
+    if (user) {
+      this.notificationService.startListening(user.id);
+    }
+  }
+
+  ngOnDestroy() {
+    this.notificationService.stopListening();
+  }
+
   async onLogout() {
+    this.notificationService.stopListening();
     await this.supabase.signOut();
     this.dataService.favorites.set([]);
     this.router.navigate(['/']);

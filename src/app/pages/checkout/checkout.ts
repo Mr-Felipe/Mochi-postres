@@ -477,7 +477,7 @@ export class CheckoutPageComponent implements OnInit {
   clienteDireccion = signal('Calle 12 # 4-30, Barrio Centro, La Dorada');
   notasEspeciales = signal('Favor empacar con moño de regalo');
 
-  selectedAddressId = signal<number>(101);
+  selectedAddressId = signal<number | null>(null);
   userAddresses = signal<Direccion[]>([]);
   stockErrors = signal<StockValidation[]>([]);
 
@@ -552,16 +552,15 @@ export class CheckoutPageComponent implements OnInit {
       if (!currentUser) { this.isProcessing.set(false); return; }
       const sbOrderRes = await this.supabaseService.crearPedidoConStock({
         p_id_usuario: currentUser.id,
-        p_id_direccion: this.selectedAddressId(),
+        p_id_direccion: this.selectedAddressId() ?? undefined,
         p_productos: stockItems,
         p_metodo_pago: this.selectedMethod(),
         p_notas: this.notasEspeciales()
       });
 
       const order = await this.dataService.createOrder({
-        id_pedido: sbOrderRes?.id_pedido,
         id_usuario: currentUser.id,
-        id_direccion: this.selectedAddressId(),
+        id_direccion: this.selectedAddressId() ?? undefined,
         cliente: {
           nombre: this.clienteNombre(),
           email: this.clienteEmail(),
@@ -587,7 +586,7 @@ export class CheckoutPageComponent implements OnInit {
         referenciaPago: paymentRes.transactionId,
         notasEspeciales: this.notasEspeciales(),
         tiempoEstimado: '45 - 60 minutos'
-      });
+      }, sbOrderRes?.id_pedido);
 
       this.createdOrder.set(order);
       this.cartService.clearCart();

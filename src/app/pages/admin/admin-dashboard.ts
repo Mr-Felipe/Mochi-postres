@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, AfterViewInit, ChangeDetectionStrategy, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MochiDataService } from '../../services/mochi-data.service';
@@ -311,7 +311,11 @@ import { UserRole, Usuario, Direccion, Product } from '../../models/mochi.models
 
             <div class="space-y-4">
               @for (ord of orders(); track ord.id) {
-                <div class="p-5 rounded-[24px] bg-[#FAF7F2] border border-[#EBE3D5] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                <div [id]="'pedido-' + ord.id_pedido"
+                  class="p-5 rounded-[24px] bg-[#FAF7F2] border border-[#EBE3D5] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs transition-all"
+                  [class.ring-2]="highlightedPedidoId() === ord.id_pedido"
+                  [class.ring-[#FF758F]]="highlightedPedidoId() === ord.id_pedido"
+                  [class.ring-offset-2]="highlightedPedidoId() === ord.id_pedido">
                   <div>
                     <span class="font-mono font-bold text-[#4A3F35] text-sm block">{{ ord.id }}</span>
                     <span class="text-[#4A3F35]/80 block mt-0.5">Cliente: {{ ord.cliente.nombre }} ({{ ord.cliente.telefono }})</span>
@@ -646,10 +650,15 @@ export class AdminDashboardComponent implements OnInit {
   showProductModal = signal<boolean>(false);
   viewingAddresses = signal<Usuario | null>(null);
   userAddresses = signal<Direccion[]>([]);
+  highlightedPedidoId = signal<number | null>(null);
+
+  private el = inject(ElementRef);
 
   ngOnInit() {
     // Reload users with admin token
     this.reloadUsers();
+    // Load orders from Supabase
+    this.dataService.loadOrders();
     // Sync sidebar navigation with internal tabs
     this.syncTabFromRoute(this.router.url);
     this.router.events.pipe(
@@ -658,6 +667,21 @@ export class AdminDashboardComponent implements OnInit {
       const url = (event as NavigationEnd).urlAfterRedirects || (event as NavigationEnd).url;
       this.syncTabFromRoute(url);
     });
+
+    // Handle ?pedido= query param for notification click
+    const pedidoId = this.route.snapshot.queryParamMap.get('pedido');
+    if (pedidoId) {
+      const id = parseInt(pedidoId, 10);
+      this.activeTab.set('pedidos');
+      this.highlightedPedidoId.set(id);
+      setTimeout(() => {
+        const el = this.el.nativeElement.querySelector('#pedido-' + id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+      setTimeout(() => this.highlightedPedidoId.set(null), 4000);
+    }
   }
 
   async reloadUsers() {

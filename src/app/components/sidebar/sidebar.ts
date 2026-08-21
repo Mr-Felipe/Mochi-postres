@@ -117,6 +117,7 @@ export class SidebarComponent {
     if (role === 'empleado') {
       items.push(
         { route: '/empleado', icon: 'point_of_sale', label: 'Punto de Venta', exact: true },
+        { route: '/empleado/pedidos', icon: 'shopping_cart', label: 'Pedidos Online', exact: false },
       );
     }
 

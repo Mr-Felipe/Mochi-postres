@@ -125,6 +125,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/pos-employee/pos-employee').then(m => m.PosEmployeePageComponent)
       },
       {
+        path: 'pedidos',
+        loadComponent: () => import('./pages/employee-orders/employee-orders').then(m => m.EmployeeOrdersPageComponent)
+      },
+      {
         path: 'perfil',
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
       },

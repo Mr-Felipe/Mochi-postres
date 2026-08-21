@@ -124,6 +124,9 @@ export class MochiDataService {
 
     // Cargar calificaciones de productos desde resenas
     this.updateProductRatings();
+
+    // Cargar pedidos desde Supabase
+    await this.loadOrders();
   }
 
   private updateProductRatings() {
@@ -227,23 +230,116 @@ export class MochiDataService {
 
   // --- Orders ---
 
-  async createOrder(orderData: Omit<Order, 'id' | 'fecha' | 'estado'>): Promise<Order> {
-    const { data: pedidoData, error: pedidoErr } = await supabase.from('pedidos').insert({
-      id_usuario: orderData.id_usuario,
-      id_direccion: orderData.id_direccion,
-      numero_pedido: `MOCHI-${Date.now()}`,
-      subtotal: orderData.subtotal,
-      costo_envio: orderData.costoEnvio,
-      impuestos: orderData.descuento,
-      total: orderData.total,
-      metodo_pago: orderData.metodoPago,
-      notas_especiales: orderData.notasEspeciales,
-      creado_por: 'web'
-    }).select().single();
+  async loadOrders(): Promise<void> {
+    const { data: pedidos, error } = await supabase
+      .from('pedidos')
+      .select('*, usuarios:id_usuario(nombre_completo, email, telefono), direcciones:id_direccion(direccion_completa, barrio, ciudad)')
+      .order('created_at', { ascending: false });
 
-    if (pedidoErr) { console.error('Error creating order:', pedidoErr); }
+    if (error) { console.error('Error loading orders:', error); return; }
+    if (!pedidos) return;
 
-    const id_pedido = pedidoData?.['id_pedido'] || Math.floor(1000 + Math.random() * 9000);
+    // Load all detalle_pedido
+    const { data: detalles } = await supabase.from('detalle_pedido').select('*');
+
+    // Load productos for images/names
+    const { data: productos } = await supabase.from('productos').select('id_producto, nombre_japones, nombre_espanol, imagen_principal');
+
+    const prodMap = new Map<number, Record<string, unknown>>();
+    if (productos) productos.forEach(p => prodMap.set(p['id_producto'] as number, p));
+
+    const detallesMap = new Map<number, Record<string, unknown>[]>();
+    if (detalles) {
+      detalles.forEach(d => {
+        const pid = d['id_pedido'] as number;
+        if (!detallesMap.has(pid)) detallesMap.set(pid, []);
+        detallesMap.get(pid)!.push(d);
+      });
+    }
+
+    const orders: Order[] = pedidos.map((p: Record<string, unknown>) => {
+      const usuario = p['usuarios'] as Record<string, unknown> | null;
+      const direccion = p['direcciones'] as Record<string, unknown> | null;
+      const orderDetalles = detallesMap.get(p['id_pedido'] as number) || [];
+
+      return {
+        id: p['numero_pedido'] as string,
+        id_pedido: p['id_pedido'] as number,
+        id_usuario: p['id_usuario'] as string,
+        id_direccion: p['id_direccion'] as number | undefined,
+        fecha: p['created_at'] as string,
+        cliente: {
+          nombre: (usuario?.['nombre_completo'] as string) || 'Cliente',
+          email: (usuario?.['email'] as string) || '',
+          telefono: (usuario?.['telefono'] as string) || '',
+          direccion: (direccion?.['direccion_completa'] as string) || '',
+          barrio: (direccion?.['barrio'] as string) || '',
+          ciudad: (direccion?.['ciudad'] as string) || 'La Dorada'
+        },
+        tipoEntrega: 'domicilio' as const,
+        items: orderDetalles.map((d: Record<string, unknown>) => {
+          const prod = prodMap.get(d['id_producto'] as number);
+          return {
+            productoId: d['id_producto'] as number,
+            nombreJapones: (prod?.['nombre_japones'] as string) || '',
+            nombreEspanol: (prod?.['nombre_espanol'] as string) || '',
+            precio: Number(d['precio_unitario']),
+            cantidad: d['cantidad'] as number,
+            imagen: (prod?.['imagen_principal'] as string) || ''
+          };
+        }),
+        subtotal: Number(p['subtotal']),
+        costoEnvio: Number(p['costo_envio'] || 0),
+        descuento: Number(p['impuestos'] || 0),
+        total: Number(p['total']),
+        metodoPago: (p['metodo_pago'] as Order['metodoPago']) || 'contraentrega',
+        estadoPago: 'aprobado' as const,
+        estado: (p['estado'] as Order['estado']) || 'pendiente',
+        notasEspeciales: (p['notas_especiales'] as string) || '',
+        tiempoEstimado: '45 - 60 minutos',
+        creado_por: (p['creado_por'] as 'web' | 'pos') || 'web'
+      };
+    });
+
+    this.orders.set(orders);
+  }
+
+  async createOrder(orderData: Omit<Order, 'id' | 'fecha' | 'estado'>, rpcOrderId?: number): Promise<Order> {
+    let id_pedido = rpcOrderId;
+
+    // Si el RPC ya creó el pedido, NO volver a insertar
+    if (!id_pedido) {
+      const { data: pedidoData, error: pedidoErr } = await supabase.from('pedidos').insert({
+        id_usuario: orderData.id_usuario,
+        id_direccion: orderData.id_direccion,
+        numero_pedido: `MOCHI-${Date.now()}`,
+        subtotal: orderData.subtotal,
+        costo_envio: orderData.costoEnvio,
+        impuestos: orderData.descuento,
+        total: orderData.total,
+        metodo_pago: orderData.metodoPago,
+        notas_especiales: orderData.notasEspeciales,
+        creado_por: 'web'
+      }).select().single();
+
+      if (pedidoErr) { console.error('Error creating order:', pedidoErr); }
+
+      id_pedido = pedidoData?.['id_pedido'] || Math.floor(1000 + Math.random() * 9000);
+
+      // Insertar detalle del pedido solo si no lo hizo el RPC
+      if (orderData.items?.length) {
+        const detalles = orderData.items.map(item => ({
+          id_pedido,
+          id_producto: item.productoId,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio,
+          subtotal: item.precio * item.cantidad,
+          origen: 'online' as const
+        }));
+        await supabase.from('detalle_pedido').insert(detalles);
+      }
+    }
+
     const newOrder: Order = {
       ...orderData,
       id: `MOCHI-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${id_pedido}`,
@@ -251,19 +347,6 @@ export class MochiDataService {
       fecha: new Date().toISOString(),
       estado: 'pendiente'
     };
-
-    // Insertar detalle del pedido
-    if (orderData.items?.length) {
-      const detalles = orderData.items.map(item => ({
-        id_pedido,
-        id_producto: item.productoId,
-        cantidad: item.cantidad,
-        precio_unitario: item.precio,
-        subtotal: item.precio * item.cantidad,
-        origen: 'online' as const
-      }));
-      await supabase.from('detalle_pedido').insert(detalles);
-    }
 
     this.orders.set([newOrder, ...this.orders()]);
     return newOrder;
