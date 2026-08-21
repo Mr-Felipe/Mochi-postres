@@ -1,13 +1,5 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# Env variables
-.env*
-!.env.example
-
-# Supabase credentials (contains secrets)
-src/environments/environment.ts
-src/environments/environment.prod.ts
-
 # Compiled output
 /dist
 /tmp
@@ -45,6 +37,11 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
+
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # System files
 .DS_Store
