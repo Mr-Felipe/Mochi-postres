@@ -13,11 +13,10 @@ import { SupabaseService } from '../../services/supabase.service';
     <div class="relative">
       <!-- Bell Button -->
       <button (click)="toggleDropdown()"
-        class="relative p-2 rounded-xl transition-colors"
-        [class]="isOpen() ? 'bg-[#FF758F]/10 text-[#FF758F]' : 'text-[#1A1A1A]/60 hover:text-[#FF758F] hover:bg-[#FF758F]/5'">
-        <span class="material-icons text-xl">notifications</span>
+        class="relative p-2 rounded-xl transition-colors hover:opacity-70">
+        <span class="material-icons text-xl" style="color: #FDF8F4">notifications</span>
         @if (notificationService.unreadCount() > 0) {
-          <span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-[#FF758F] text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-bounce">
+          <span class="absolute -top-0.5 -right-0.5 w-5 h-5 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-bounce" style="background: #D95578">
             {{ notificationService.unreadCount() > 9 ? '9+' : notificationService.unreadCount() }}
           </span>
         }
@@ -25,24 +24,24 @@ import { SupabaseService } from '../../services/supabase.service';
 
       <!-- Dropdown -->
       @if (isOpen()) {
-        <div class="absolute right-0 top-full mt-2 w-80 max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-[#F0D5CC] overflow-hidden z-50">
+        <div class="absolute right-0 top-full mt-2 w-80 max-h-[70vh] rounded-2xl shadow-2xl overflow-hidden z-50" style="background: #3A0A1C; border: 1px solid rgba(255,255,255,0.1)">
           <!-- Header -->
-          <div class="flex items-center justify-between p-4 border-b border-[#F0D5CC]">
+          <div class="flex items-center justify-between p-4" style="border-bottom: 1px solid rgba(255,255,255,0.1)">
             <div>
-              <h3 class="text-sm font-bold text-[#1A1A1A]">Notificaciones</h3>
+              <h3 class="text-sm font-bold" style="color: #FDF8F4">Notificaciones</h3>
               @if (notificationService.unreadCount() > 0) {
-                <span class="text-[10px] text-[#FF758F] font-bold">{{ notificationService.unreadCount() }} sin leer</span>
+                <span class="text-[10px] font-bold" style="color: #D95578">{{ notificationService.unreadCount() }} sin leer</span>
               }
             </div>
             <div class="flex items-center gap-1">
               @if (notificationService.unreadCount() > 0) {
                 <button (click)="notificationService.markAllAsRead()"
-                  class="text-[10px] text-[#FF758F] font-bold hover:underline px-2 py-1 rounded-lg hover:bg-[#FF758F]/5">
+                  class="text-[10px] font-bold hover:underline px-2 py-1 rounded-lg hover:opacity-70" style="color: #D95578">
                   Marcar todo leído
                 </button>
               }
               <button (click)="notificationService.clearAll()"
-                class="text-[10px] text-[#1A1A1A]/40 hover:text-[#1A1A1A] px-2 py-1 rounded-lg hover:bg-[#FDF5F0]">
+                class="text-[10px] hover:opacity-70 px-2 py-1 rounded-lg hover:opacity-50" style="color: rgba(253,248,244,0.4)">
                 Limpiar
               </button>
             </div>
@@ -52,28 +51,28 @@ import { SupabaseService } from '../../services/supabase.service';
           <div class="overflow-y-auto max-h-[50vh]">
             @if (notificationService.notifications().length === 0) {
               <div class="p-8 text-center">
-                <span class="material-icons text-3xl text-[#F0D5CC]">notifications_none</span>
-                <p class="text-xs text-[#1A1A1A]/50 mt-2">Sin notificaciones nuevas</p>
+                <span class="material-icons text-3xl" style="color: rgba(255,255,255,0.15)">notifications_none</span>
+                <p class="text-xs mt-2" style="color: rgba(253,248,244,0.4)">Sin notificaciones nuevas</p>
               </div>
             } @else {
               @for (notif of notificationService.notifications(); track notif.id) {
                 <button (click)="onNotificationClick(notif)"
-                  class="w-full text-left p-4 border-b border-[#F0D5CC]/50 transition-colors hover:bg-[#FDF5F0]"
-                  [class]="notif.leida ? '' : 'bg-[#FF758F]/5'">
+                  class="w-full text-left p-4 transition-colors hover:opacity-80"
+                  [style.background]="notif.leida ? 'transparent' : 'rgba(217,85,120,0.08)'"
+                  [style.border-bottom]="'1px solid rgba(255,255,255,0.05)'">
                   <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-sm"
-                      [class]="getNotifIconClass(notif.tipo)">
+                    <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-sm" style="background: rgba(217,85,120,0.2)">
                       {{ getNotifIcon(notif.tipo) }}
                     </div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center gap-2">
-                        <p class="text-xs font-bold text-[#1A1A1A]">{{ notif.titulo }}</p>
+                        <p class="text-xs font-bold" style="color: #FDF8F4">{{ notif.titulo }}</p>
                         @if (!notif.leida) {
-                          <span class="w-2 h-2 rounded-full bg-[#FF758F] flex-shrink-0"></span>
+                          <span class="w-2 h-2 rounded-full flex-shrink-0" style="background: #D95578"></span>
                         }
                       </div>
-                      <p class="text-[11px] text-[#1A1A1A]/70 mt-0.5">{{ notif.mensaje }}</p>
-                      <p class="text-[9px] text-[#1A1A1A]/40 mt-1">{{ notif.created_at | date:'short' }}</p>
+                      <p class="text-[11px] mt-0.5" style="color: rgba(253,248,244,0.7)">{{ notif.mensaje }}</p>
+                      <p class="text-[9px] mt-1" style="color: rgba(253,248,244,0.3)">{{ notif.created_at | date:'short' }}</p>
                     </div>
                   </div>
                 </button>
@@ -83,9 +82,9 @@ import { SupabaseService } from '../../services/supabase.service';
 
           <!-- Footer -->
           @if (isAdmin() || isEmpleado()) {
-            <div class="p-3 border-t border-[#F0D5CC]">
+            <div class="p-3" style="border-top: 1px solid rgba(255,255,255,0.1)">
               <button (click)="goToOrders(); closeDropdown()"
-                class="w-full py-2 rounded-xl text-xs font-bold text-[#FF758F] hover:bg-[#FF758F]/5 transition-colors">
+                class="w-full py-2 rounded-xl text-xs font-bold transition-colors hover:opacity-70" style="color: #D95578">
                 Ver todos los pedidos →
               </button>
             </div>
@@ -146,15 +145,6 @@ export class OrderNotificationComponent {
       case 'cambio_estado': return '📦';
       case 'stock_bajo': return '⚠️';
       default: return '🔔';
-    }
-  }
-
-  getNotifIconClass(tipo: string): string {
-    switch (tipo) {
-      case 'nuevo_pedido': return 'bg-[#FF758F]/15 text-[#FF758F]';
-      case 'cambio_estado': return 'bg-[#065F46]/10 text-[#065F46]';
-      case 'stock_bajo': return 'bg-[#F59E0B]/10 text-[#F59E0B]';
-      default: return 'bg-[#F0D5CC] text-[#1A1A1A]';
     }
   }
 }

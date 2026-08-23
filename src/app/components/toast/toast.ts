@@ -10,9 +10,9 @@ import { ToastService } from '../../services/toast.service';
       @for (toast of toastService.toasts(); track toast.id) {
         <div
           class="pointer-events-auto px-5 py-3 rounded-2xl shadow-lg border flex items-center gap-2 animate-slideUp"
-          [style.background]="toast.type === 'success' ? '#FF758F' : toast.type === 'error' ? '#EF4444' : '#1A1A1A'"
+          [style.background]="toast.type === 'success' ? '#D95578' : toast.type === 'error' ? '#EF4444' : '#590E2A'"
           [style.border-color]="toast.type === 'success' ? '#FF5277' : 'transparent'"
-          style="color: #FDF5F0; backdrop-filter: blur(8px);">
+          style="color: #FDF8F4; backdrop-filter: blur(8px);">
           <span class="material-icons" style="font-size: 18px">
             {{ toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : 'info' }}
           </span>

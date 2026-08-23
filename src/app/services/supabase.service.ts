@@ -130,7 +130,7 @@ export class SupabaseService {
       return { data: null, error: { message: 'Por favor ingresa un correo electrónico válido.' } };
     }
     const { data, error } = await this.sb.auth.resetPasswordForEmail(trimmed, {
-      redirectTo: window.location.origin + '/reset-password'
+      redirectTo: (typeof window !== 'undefined' ? window.location.origin : '') + '/reset-password'
     });
     if (error) return { data: null, error: { message: error.message } };
     return { data, error: null };

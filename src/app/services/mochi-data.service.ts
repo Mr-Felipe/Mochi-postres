@@ -38,6 +38,23 @@ export class MochiDataService {
   readonly detallePedidosOnline = computed(() => this.detallePedidos().filter(d => d.origen === 'online'));
   readonly detallePedidosLocal = computed(() => this.detallePedidos().filter(d => d.origen === 'local'));
 
+  // --- STORAGE UPLOAD ---
+
+  async uploadProductImage(file: File): Promise<string | null> {
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from('product-images').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+    if (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+    const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+    return data?.publicUrl ?? null;
+  }
+
   // --- DATA LOADING FROM SUPABASE ---
 
   async loadAllFromSupabase(): Promise<void> {
@@ -352,13 +369,19 @@ export class MochiDataService {
     return newOrder;
   }
 
-  async updateOrderStatus(orderId: string, newStatus: Order['estado']): Promise<void> {
-    const idNum = orderId.split('-').pop();
-    if (idNum) {
-      await supabase.from('pedidos').update({ estado: newStatus, updated_at: new Date().toISOString() }).eq('id_pedido', parseInt(idNum));
+  async updateOrderStatus(orderId: string, newStatus: Order['estado'], idPedido?: number): Promise<void> {
+    if (idPedido) {
+      const { error } = await supabase
+        .from('pedidos')
+        .update({ estado: newStatus, updated_at: new Date().toISOString() })
+        .eq('id_pedido', idPedido);
+      if (error) {
+        console.error('Error updating order status:', error);
+        return;
+      }
     }
-    const updated = this.orders().map(o => o.id === orderId ? { ...o, estado: newStatus } : o);
-    this.orders.set(updated);
+    // Reload from Supabase to ensure consistency
+    await this.loadOrders();
   }
 
   // --- POS Sales ---

@@ -2,6 +2,7 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 import { MochiDataService } from '../../services/mochi-data.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-profile',
@@ -9,25 +10,25 @@ import { MochiDataService } from '../../services/mochi-data.service';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="min-h-[80vh] bg-[#FDF5F0] p-4 sm:p-8">
+    <div class="min-h-[80vh] bg-[#FDF8F4] p-4 sm:p-8">
       <div class="max-w-2xl mx-auto space-y-6">
         
-        <h1 class="text-2xl font-serif italic text-[#1A1A1A] font-bold">Mi Perfil</h1>
+        <h1 class="text-2xl font-serif italic text-[#590E2A] font-bold">Mi Perfil</h1>
 
         @if (user(); as u) {
           <!-- Profile Card -->
-          <div class="bg-white rounded-3xl border border-[#F0D5CC] p-6 sm:p-8 shadow-sm space-y-6">
+          <div class="bg-white rounded-3xl border border-[#E8D8D0] p-6 sm:p-8 shadow-sm space-y-6">
             
             <!-- Avatar & Name -->
             <div class="flex items-center gap-4">
-              <div class="w-16 h-16 rounded-full bg-[#FF758F] flex items-center justify-center text-white text-2xl font-serif italic font-bold">
+              <div class="w-16 h-16 rounded-full bg-[#D95578] flex items-center justify-center text-white text-2xl font-serif italic font-bold">
                 {{ u.nombre_completo?.charAt(0) || '?' }}
               </div>
               <div>
-                <h2 class="text-xl font-bold text-[#1A1A1A]">{{ u.nombre_completo }}</h2>
-                <p class="text-sm text-[#1A1A1A]/60">{{ u.email }}</p>
+                <h2 class="text-xl font-bold text-[#590E2A]">{{ u.nombre_completo }}</h2>
+                <p class="text-sm text-[#590E2A]/60">{{ u.email }}</p>
                 <span class="inline-block mt-1 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase"
-                  [class]="u.rol === 'admin' ? 'bg-[#FFD6E0] text-[#4A3F35]' : u.rol === 'empleado' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FAF7F2] text-[#4A3F35]'">
+                  [class]="u.rol === 'admin' ? 'bg-[#D95578] text-[#590E2A]' : u.rol === 'empleado' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FDF8F4] text-[#590E2A]'">
                   {{ u.rol }}
                 </span>
               </div>
@@ -35,18 +36,18 @@ import { MochiDataService } from '../../services/mochi-data.service';
 
             <!-- Info Fields -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="bg-[#FDF5F0] rounded-2xl p-4">
-                <span class="text-[10px] uppercase tracking-wider font-bold text-[#1A1A1A]/50">Teléfono</span>
-                <p class="text-sm font-bold text-[#1A1A1A] mt-1">{{ u.telefono || 'No registrado' }}</p>
+              <div class="bg-[#FDF8F4] rounded-2xl p-4">
+                <span class="text-[10px] uppercase tracking-wider font-bold text-[#590E2A]/50">Teléfono</span>
+                <p class="text-sm font-bold text-[#590E2A] mt-1">{{ u.telefono || 'No registrado' }}</p>
               </div>
             </div>
 
             <!-- Change Password -->
-            <div class="bg-[#FDF5F0] rounded-2xl p-4 space-y-4">
+            <div class="bg-[#FDF8F4] rounded-2xl p-4 space-y-4">
               <div class="flex items-center justify-between">
-                <h3 class="text-xs uppercase tracking-wider font-bold text-[#1A1A1A]/50">Cambiar Contraseña</h3>
+                <h3 class="text-xs uppercase tracking-wider font-bold text-[#590E2A]/50">Cambiar Contraseña</h3>
                 <button (click)="showPasswordForm.set(!showPasswordForm())" 
-                  class="text-[#FF758F] text-xs font-bold hover:underline">
+                  class="text-[#D95578] text-xs font-bold hover:underline">
                   {{ showPasswordForm() ? 'Cancelar' : 'Cambiar' }}
                 </button>
               </div>
@@ -72,7 +73,7 @@ import { MochiDataService } from '../../services/mochi-data.service';
                     (input)="newPassword.set($any($event.target).value)"
                     required
                     minlength="6"
-                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors"
+                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] transition-colors"
                   />
                   <input
                     type="password"
@@ -81,10 +82,10 @@ import { MochiDataService } from '../../services/mochi-data.service';
                     (input)="confirmPassword.set($any($event.target).value)"
                     required
                     minlength="6"
-                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors"
+                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] transition-colors"
                   />
                   <button type="submit" [disabled]="passwordLoading()"
-                    class="w-full py-2.5 rounded-xl bg-[#4A3F35] hover:bg-[#362D26] disabled:opacity-50 text-[#FAF7F2] font-bold text-xs uppercase tracking-widest transition-colors">
+                    class="w-full py-2.5 rounded-xl bg-[#590E2A] hover:bg-[#3A0A1C] disabled:opacity-50 text-[#FDF8F4] font-bold text-xs uppercase tracking-widest transition-colors">
                     {{ passwordLoading() ? 'Guardando...' : 'Guardar Contraseña' }}
                   </button>
                 </form>
@@ -93,21 +94,21 @@ import { MochiDataService } from '../../services/mochi-data.service';
 
             <!-- Quick Actions -->
             <div class="space-y-2">
-              <h3 class="text-xs uppercase tracking-wider font-bold text-[#1A1A1A]/50">Accesos Rápidos</h3>
+              <h3 class="text-xs uppercase tracking-wider font-bold text-[#590E2A]/50">Accesos Rápidos</h3>
               
-              <a routerLink="/cliente/dashboard" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#FDF5F0] transition-colors">
-                <span class="material-icons text-[#FF758F]">shopping_bag</span>
+              <a routerLink="/cliente/dashboard" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#FDF8F4] transition-colors">
+                <span class="material-icons text-[#D95578]">shopping_bag</span>
                 <div>
-                  <p class="text-sm font-bold text-[#1A1A1A]">Mis Pedidos</p>
-                  <p class="text-[11px] text-[#1A1A1A]/60">Historial y estado de pedidos</p>
+                  <p class="text-sm font-bold text-[#590E2A]">Mis Pedidos</p>
+                  <p class="text-[11px] text-[#590E2A]/60">Historial y estado de pedidos</p>
                 </div>
               </a>
 
-              <a routerLink="/productos" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#FDF5F0] transition-colors">
-                <span class="material-icons text-[#FF758F]">restaurant</span>
+              <a routerLink="/productos" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#FDF8F4] transition-colors">
+                <span class="material-icons text-[#D95578]">restaurant</span>
                 <div>
-                  <p class="text-sm font-bold text-[#1A1A1A]">Ver Catálogo</p>
-                  <p class="text-[11px] text-[#1A1A1A]/60">Explorar productos disponibles</p>
+                  <p class="text-sm font-bold text-[#590E2A]">Ver Catálogo</p>
+                  <p class="text-[11px] text-[#590E2A]/60">Explorar productos disponibles</p>
                 </div>
               </a>
 
@@ -145,6 +146,7 @@ import { MochiDataService } from '../../services/mochi-data.service';
 export class ProfileComponent {
   private supabase = inject(SupabaseService);
   private dataService = inject(MochiDataService);
+  private cartService = inject(CartService);
   private router = inject(Router);
 
   user = this.supabase.activeUser;
@@ -193,6 +195,7 @@ export class ProfileComponent {
   async onLogout() {
     await this.supabase.signOut();
     this.dataService.favorites.set([]);
+    this.cartService.clearCart();
     this.router.navigate(['/']);
   }
 }

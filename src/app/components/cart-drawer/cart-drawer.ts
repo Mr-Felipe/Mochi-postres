@@ -2,7 +2,6 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@a
 import { Router } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { MochiDataService } from '../../services/mochi-data.service';
-import { PaletteService } from '../../services/palette.service';
 
 @Component({
   selector: 'app-cart-drawer',
@@ -13,7 +12,7 @@ import { PaletteService } from '../../services/palette.service';
     @if (cartService.isDrawerOpen()) {
       <div (click)="cartService.closeDrawer()"
         class="fixed inset-0 z-50 backdrop-blur-xs transition-opacity duration-300 animate-fadeIn"
-        [style.background]="isVino() ? 'rgba(0,0,0,0.5)' : 'rgba(255,117,143,0.6)'"
+        [style.background]="'rgba(0,0,0,0.5)'"
         aria-hidden="true">
       </div>
 
@@ -202,7 +201,6 @@ import { PaletteService } from '../../services/palette.service';
 export class CartDrawerComponent {
   cartService = inject(CartService);
   dataService = inject(MochiDataService);
-  palette = inject(PaletteService);
   router = inject(Router);
 
   Math = Math;
@@ -211,18 +209,16 @@ export class CartDrawerComponent {
   couponMessage = signal<string>('');
   couponSuccess = signal<boolean>(false);
 
-  isVino = computed(() => this.palette.current() === 'vino');
-
-  panelBg = computed(() => this.isVino() ? '#3A0A1C' : '#FDF5F0');
-  headerBg = computed(() => this.isVino() ? '#4A0D22' : '#FFFFFF');
-  footerBg = computed(() => this.isVino() ? '#4A0D22' : '#FFFFFF');
-  progressBg = computed(() => this.isVino() ? 'rgba(217,85,120,0.15)' : 'rgba(255,160,180,0.3)');
-  headingColor = computed(() => this.isVino() ? '#FDF8F4' : '#1A1A1A');
-  textColor = computed(() => this.isVino() ? 'rgba(253,248,244,0.8)' : 'rgba(26,26,26,0.8)');
-  borderColor = computed(() => this.isVino() ? 'rgba(255,255,255,0.1)' : '#F0D5CC');
-  cardBg = computed(() => this.isVino() ? 'rgba(255,255,255,0.05)' : '#FFFFFF');
-  imgBg = computed(() => this.isVino() ? 'rgba(255,255,255,0.08)' : '#FDF5F0');
-  closeBtnBg = computed(() => this.isVino() ? 'rgba(255,255,255,0.1)' : '#FDF5F0');
+  panelBg = signal('#3A0A1C');
+  headerBg = signal('#4A0D22');
+  footerBg = signal('#4A0D22');
+  progressBg = signal('rgba(217,85,120,0.15)');
+  headingColor = signal('#FDF8F4');
+  textColor = signal('rgba(253,248,244,0.8)');
+  borderColor = signal('rgba(255,255,255,0.1)');
+  cardBg = signal('rgba(255,255,255,0.05)');
+  imgBg = signal('rgba(255,255,255,0.08)');
+  closeBtnBg = signal('rgba(255,255,255,0.1)');
 
   applyCoupon(code: string) {
     if (!code.trim()) return;

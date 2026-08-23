@@ -8,18 +8,18 @@ import { SupabaseService } from '../../../services/supabase.service';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-[#FAF7F2]">
-      <div class="w-full max-w-md bg-white rounded-[32px] border border-[#EBE3D5] p-6 sm:p-10 shadow-xs space-y-6">
+    <div class="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-[#FDF8F4]">
+      <div class="w-full max-w-md bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-10 shadow-xs space-y-6">
         
         <!-- Header -->
         <div class="text-center space-y-2">
-          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FFD6E0] border border-[#EBE3D5] text-[#4A3F35] font-serif text-2xl mb-1 shadow-xs">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D95578] border border-[#E8D8D0] text-[#590E2A] font-serif text-2xl mb-1 shadow-xs">
             🔑
           </div>
-          <h1 class="text-2xl sm:text-3xl font-serif italic text-[#4A3F35]">
+          <h1 class="text-2xl sm:text-3xl font-serif italic text-[#590E2A]">
             Recuperar Contraseña
           </h1>
-          <p class="text-xs text-[#4A3F35]/70">
+          <p class="text-xs text-[#590E2A]/70">
             Ingresa tu correo electrónico y te enviaremos un enlace de recuperación de Supabase Auth
           </p>
         </div>
@@ -32,7 +32,7 @@ import { SupabaseService } from '../../../services/supabase.service';
               Hemos enviado las instrucciones para restablecer tu contraseña a <strong>{{ email() }}</strong>.
             </p>
             <div class="pt-2">
-              <a routerLink="/login" class="inline-block px-6 py-2.5 rounded-full bg-[#4A3F35] text-[#FAF7F2] text-xs font-bold uppercase tracking-wider shadow-xs hover:bg-[#362D26]">
+              <a routerLink="/login" class="inline-block px-6 py-2.5 rounded-full bg-[#590E2A] text-[#FDF8F4] text-xs font-bold uppercase tracking-wider shadow-xs hover:bg-[#3A0A1C]">
                 Volver a Iniciar Sesión
               </a>
             </div>
@@ -49,7 +49,7 @@ import { SupabaseService } from '../../../services/supabase.service';
           <!-- Form -->
           <form (submit)="onSubmit($event)" class="space-y-4 text-xs">
             <div>
-              <label for="email" class="font-bold text-[#4A3F35] block mb-1 uppercase tracking-wider text-[11px]">
+              <label for="email" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                 Correo Electrónico Registrado *
               </label>
               <input
@@ -60,21 +60,21 @@ import { SupabaseService } from '../../../services/supabase.service';
                 name="email"
                 placeholder="tu@email.com"
                 required
-                class="w-full px-4 py-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-xs focus:outline-none focus:border-[#4A3F35] transition-colors"
+                class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#590E2A] transition-colors"
               />
             </div>
 
             <button
               type="submit"
               [disabled]="loading()"
-              class="w-full py-3.5 rounded-full bg-[#4A3F35] hover:bg-[#362D26] disabled:opacity-50 text-[#FAF7F2] font-bold text-xs uppercase tracking-widest transition-all shadow-xs mt-2">
+              class="w-full py-3.5 rounded-full bg-[#590E2A] hover:bg-[#3A0A1C] disabled:opacity-50 text-[#FDF8F4] font-bold text-xs uppercase tracking-widest transition-all shadow-xs mt-2">
               {{ loading() ? 'Enviando enlace...' : 'Enviar Enlace de Recuperación' }}
             </button>
           </form>
 
           <!-- Links -->
-          <div class="text-center pt-3 border-t border-[#EBE3D5] text-xs">
-            <a routerLink="/login" class="text-[#4A3F35] font-bold hover:underline">
+          <div class="text-center pt-3 border-t border-[#E8D8D0] text-xs">
+            <a routerLink="/login" class="text-[#590E2A] font-bold hover:underline">
               ← Volver al inicio de sesión
             </a>
           </div>

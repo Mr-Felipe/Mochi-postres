@@ -1,6 +1,7 @@
-import { Injectable, signal, computed, OnDestroy } from '@angular/core';
+import { Injectable, signal, computed, OnDestroy, inject } from '@angular/core';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../supabase';
+import { MochiDataService } from './mochi-data.service';
 
 export interface AppNotification {
   id: string;
@@ -16,6 +17,7 @@ export interface AppNotification {
 export class NotificationService implements OnDestroy {
   private channel: RealtimeChannel | null = null;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
+  private dataService = inject(MochiDataService);
 
   readonly notifications = signal<AppNotification[]>([]);
   readonly unreadCount = computed(() => this.notifications().filter(n => !n.leida).length);
@@ -51,16 +53,15 @@ export class NotificationService implements OnDestroy {
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
-        table: 'pedidos',
-        filter: `id_usuario=eq.${userId}`
+        table: 'pedidos'
       }, (payload) => {
         const old = payload.old as Record<string, unknown>;
         const updated = payload.new as Record<string, unknown>;
         if (old['estado'] !== updated['estado']) {
           const notif: AppNotification = {
             id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            titulo: 'Estado de Pedido Actualizado',
-            mensaje: `Tu pedido #${updated['numero_pedido']} ahora está: ${this.estadoLabel(updated['estado'] as string)}`,
+            titulo: 'Estado Actualizado',
+            mensaje: `Pedido #${updated['numero_pedido']} → ${this.estadoLabel(updated['estado'] as string)}`,
             tipo: 'cambio_estado',
             leida: false,
             created_at: new Date().toISOString(),
@@ -69,6 +70,8 @@ export class NotificationService implements OnDestroy {
           this.addNotification(notif);
           this.showToast(notif);
         }
+        // Reload orders so all views update immediately
+        this.dataService.loadOrders();
       })
       .subscribe();
 
@@ -89,6 +92,9 @@ export class NotificationService implements OnDestroy {
   }
 
   async pollPendingOrders() {
+    // Reload full orders list from Supabase so all pages stay in sync
+    await this.dataService.loadOrders();
+
     const { count } = await supabase
       .from('pedidos')
       .select('*', { count: 'exact', head: true })

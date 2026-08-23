@@ -1,11 +1,12 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, ViewChild, HostListener, OnInit, PLATFORM_ID } from '@angular/core';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, ViewChild, HostListener, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
-import { PaletteService } from '../../services/palette.service';
 import { FavoritesPanelComponent } from '../favorites-panel/favorites-panel';
 import { isPlatformBrowser } from '@angular/common';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -13,19 +14,13 @@ import { isPlatformBrowser } from '@angular/common';
   imports: [RouterLink, RouterLinkActive, FavoritesPanelComponent],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
-    <!-- Palette Toggle Button -->
-    <button (click)="palette.toggle()" class="palette-toggle">
-      <span class="dot" [style.background]="palette.current() === 'clara' ? '#D95578' : '#590E2A'"></span>
-      <span>{{ palette.current() === 'clara' ? 'Clara' : 'Vino' }}</span>
-    </button>
-
     <header
       class="fixed top-0 left-0 right-0 z-40"
-      [style.padding]="isScrolled() ? '14px 0' : '20px 0'"
+      [style.padding]="headerPadding()"
       [style.transition]="'background 0.4s, box-shadow 0.4s, padding 0.4s'"
-      [style.background]="isScrolled() ? 'var(--bg-navbar-solid)' : 'transparent'"
-      [style.box-shadow]="isScrolled() ? scrolledShadow() : 'none'">
-      <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between" [style.height]="isScrolled() ? '48px' : '64px'" [style.transition]="'height 0.4s'">
+      [style.background]="headerBg()"
+      [style.box-shadow]="headerShadow()">
+      <div class="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between" [style.height]="headerHeight()" [style.transition]="'height 0.4s'">
 
         <!-- MOBILE -->
         <button (click)="isMobileMenuOpen.set(true)" class="md:hidden p-2 -ml-2 rounded-xl focus:outline-none" [style.color]="navColor()">
@@ -73,8 +68,9 @@ import { isPlatformBrowser } from '@angular/common';
           </button>
           <button (click)="cartService.toggleDrawer()" class="relative p-2 transition-colors" [style.color]="navColor()">
             <span class="material-icons text-xl">shopping_bag</span>
-            <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center font-mono shadow"
+            <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full text-[9px] font-bold flex items-center justify-center font-mono shadow"
               [style.background]="cartService.itemCount() > 0 ? 'var(--accent)' : 'var(--border-soft)'"
+              [style.color]="cartService.itemCount() > 0 ? 'white' : '#590E2A'"
               [class.px-1]="cartService.itemCount() < 10">
               {{ cartService.itemCount() }}
             </span>
@@ -158,8 +154,9 @@ import { isPlatformBrowser } from '@angular/common';
           <button (click)="cartService.toggleDrawer()" class="relative flex items-center gap-2 py-2 transition-colors focus:outline-none" [style.color]="navColor()">
             <span class="material-icons text-xl">shopping_bag</span>
             <span class="hidden sm:inline text-xs font-bold uppercase tracking-wider">Carrito</span>
-            <span class="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center font-mono shadow"
+            <span class="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full text-[9px] font-bold flex items-center justify-center font-mono shadow"
               [style.background]="cartService.itemCount() > 0 ? 'var(--accent)' : 'var(--border-soft)'"
+              [style.color]="cartService.itemCount() > 0 ? 'white' : '#590E2A'"
               [class.px-1]="cartService.itemCount() < 10">
               {{ cartService.itemCount() }}
             </span>
@@ -169,7 +166,6 @@ import { isPlatformBrowser } from '@angular/common';
     </header>
 
     <app-favorites-panel />
-    <!-- Sin spacer: el hero empieza en top:0 y el navbar lo cubre con transparencia -->
 
     @if (isMobileMenuOpen()) {
       <div class="fixed inset-0 bg-black/40 z-40 md:hidden" (click)="isMobileMenuOpen.set(false)" style="animation: fadeIn 0.2s ease-out"></div>
@@ -241,47 +237,83 @@ import { isPlatformBrowser } from '@angular/common';
     }
   `
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   @ViewChild(FavoritesPanelComponent) favoritesPanel!: FavoritesPanelComponent;
   cartService = inject(CartService);
   dataService = inject(MochiDataService);
   supabaseService = inject(SupabaseService);
-  palette = inject(PaletteService);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
   isMobileMenuOpen = signal(false);
   userMenuOpen = signal(false);
   isScrolled = signal(false);
+  isHomeRoute = signal(true);
+  private routerSub?: Subscription;
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       this.isScrolled.set(window.scrollY > 50);
+      this.isHomeRoute.set(this.router.url === '/' || this.router.url === '/inicio');
     }
+    this.routerSub = this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe((e) => {
+      const url = (e as NavigationEnd).urlAfterRedirects || (e as NavigationEnd).url;
+      this.isHomeRoute.set(url === '/' || url === '/inicio');
+      // En rutas que no son home, el navbar siempre es solido
+      if (!this.isHomeRoute()) {
+        this.isScrolled.set(true);
+      } else if (isPlatformBrowser(this.platformId)) {
+        this.isScrolled.set(window.scrollY > 50);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.routerSub?.unsubscribe();
   }
 
   @HostListener('window:scroll')
   onWindowScroll() {
-    this.isScrolled.set(window.scrollY > 50);
+    // En home, el scroll controla transparencia. En otras rutas, siempre solido.
+    if (this.isHomeRoute() && isPlatformBrowser(this.platformId)) {
+      this.isScrolled.set(window.scrollY > 50);
+    }
   }
 
-  navColor = computed(() => {
-    return this.palette.current() === 'vino' ? '#FDF8F4' : '#590E2A';
+  headerBg = computed(() => {
+    if (!this.isHomeRoute() || this.isScrolled()) {
+      return 'rgba(89, 14, 42, 0.97)';
+    }
+    return 'transparent';
   });
 
-  scrolledShadow = computed(() => {
-    return this.palette.current() === 'vino'
-      ? '0 2px 8px rgba(0,0,0,0.25)'
-      : '0 1px 0 var(--border-soft)';
+  headerShadow = computed(() => {
+    if (!this.isHomeRoute() || this.isScrolled()) {
+      return '0 2px 8px rgba(0,0,0,0.25)';
+    }
+    return 'none';
   });
 
-  sidebarBg = computed(() => {
-    return this.palette.current() === 'vino' ? '#4A0D22' : 'var(--bg-canvas)';
+  headerPadding = computed(() => {
+    if (!this.isHomeRoute() || this.isScrolled()) {
+      return '14px 0';
+    }
+    return '20px 0';
   });
 
-  sidebarBorderColor = computed(() => {
-    return this.palette.current() === 'vino' ? 'rgba(255,255,255,0.1)' : 'var(--border-soft)';
+  headerHeight = computed(() => {
+    if (!this.isHomeRoute() || this.isScrolled()) {
+      return '48px';
+    }
+    return '64px';
   });
+
+  navColor = computed(() => '#FDF8F4');
+
+  sidebarBg = computed(() => '#4A0D22');
+  sidebarBorderColor = computed(() => 'rgba(255,255,255,0.1)');
 
   isLoggedIn = computed(() => !!this.supabaseService.activeUser());
   userRole = computed(() => this.supabaseService.activeUser()?.rol ?? 'cliente');
@@ -296,6 +328,7 @@ export class NavbarComponent implements OnInit {
     this.isMobileMenuOpen.set(false);
     await this.supabaseService.signOut();
     this.dataService.favorites.set([]);
+    this.cartService.clearCart();
     this.router.navigate(['/']);
   }
 

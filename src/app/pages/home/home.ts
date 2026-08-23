@@ -3,7 +3,6 @@ import { RouterLink } from '@angular/router';
 import { ProductCarouselComponent } from '../../components/carousel/product-carousel';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { CartService } from '../../services/cart.service';
-import { PaletteService } from '../../services/palette.service';
 import { isPlatformBrowser } from '@angular/common';
 
 @Component({
@@ -130,7 +129,7 @@ import { isPlatformBrowser } from '@angular/common';
               [style.background]="cardBg()" [style.border]="'1px solid var(--border-soft)'">
               <div class="relative h-64 overflow-hidden" [style.background]="imgBg()">
                 <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                <span class="absolute top-4 left-4 px-3 py-1 rounded-full text-[#FDF5F0] text-[10px] font-bold uppercase tracking-wider backdrop-blur-md"
+                <span class="absolute top-4 left-4 px-3 py-1 rounded-full text-[#FDF8F4] text-[10px] font-bold uppercase tracking-wider backdrop-blur-md"
                   [style.background]="'var(--accent)/90'">
                   {{ prod.nombre_japones.split(' ')[0] }}
                 </span>
@@ -319,7 +318,6 @@ import { isPlatformBrowser } from '@angular/common';
 export class HomePageComponent implements OnInit, OnDestroy {
   dataService = inject(MochiDataService);
   cartService = inject(CartService);
-  palette = inject(PaletteService);
   private platformId = inject(PLATFORM_ID);
 
   config = this.dataService.visualConfig;
@@ -374,30 +372,27 @@ export class HomePageComponent implements OnInit, OnDestroy {
     this.openFaq.update(current => current === i ? null : i);
   }
 
-  // ---- PALETTE-AWARE STYLES ----
-  // Use palette service directly so computed re-evaluates on toggle
-  private p = computed(() => this.palette.current());
+  // ---- PALETTE-AWARE STYLES (Vino only) ----
+  heroBg = signal('linear-gradient(135deg, #590E2A 0%, #3D0A1A 60%, #590E2A 100%)');
+  heroTextColor = signal('#FDF8F4');
+  heroSubtextColor = signal('rgba(253,248,244,0.8)');
+  heroBtnText = signal('#FFFFFF');
+  heroBtnText2 = signal('#FDF8F4');
+  heroBtnBg2 = signal('rgba(255,255,255,0.1)');
+  heroBtnBorder = signal('rgba(253,248,244,0.3)');
+  heroBorderColor = signal('rgba(253,248,244,0.15)');
+  heroBadgeBg = signal('rgba(217,85,120,0.25)');
+  heroBadgeText = signal('#FDF8F4');
+  heroPatternOpacity = signal('1');
+  heroCircleColor = signal('rgba(217,85,120,0.15)');
+  heroCircleColor2 = signal('rgba(253,248,244,0.06)');
+  heroWaveFill = signal('#FDF8F4');
 
-  heroBg = computed(() => this.p() === 'vino' ? 'linear-gradient(135deg, #590E2A 0%, #3D0A1A 60%, #590E2A 100%)' : 'linear-gradient(135deg, #FDF5F0 0%, #F8E8EE 50%, #FDF5F0 100%)');
-  heroTextColor = computed(() => this.p() === 'vino' ? '#FDF8F4' : '#590E2A');
-  heroSubtextColor = computed(() => this.p() === 'vino' ? 'rgba(253,248,244,0.8)' : 'rgba(89,14,42,0.75)');
-  heroBtnText = computed(() => '#FFFFFF');
-  heroBtnText2 = computed(() => this.p() === 'vino' ? '#FDF8F4' : '#590E2A');
-  heroBtnBg2 = computed(() => this.p() === 'vino' ? 'rgba(255,255,255,0.1)' : 'rgba(89,14,42,0.05)');
-  heroBtnBorder = computed(() => this.p() === 'vino' ? 'rgba(253,248,244,0.3)' : 'rgba(89,14,42,0.2)');
-  heroBorderColor = computed(() => this.p() === 'vino' ? 'rgba(253,248,244,0.15)' : 'rgba(89,14,42,0.12)');
-  heroBadgeBg = computed(() => this.p() === 'vino' ? 'rgba(217,85,120,0.25)' : 'rgba(217,85,120,0.1)');
-  heroBadgeText = computed(() => this.p() === 'vino' ? '#F2A3B5' : '#590E2A');
-  heroPatternOpacity = computed(() => '1');
-  heroCircleColor = computed(() => this.p() === 'vino' ? 'rgba(217,85,120,0.15)' : 'rgba(217,85,120,0.12)');
-  heroCircleColor2 = computed(() => this.p() === 'vino' ? 'rgba(253,248,244,0.06)' : 'rgba(217,85,120,0.08)');
-  heroWaveFill = computed(() => this.p() === 'vino' ? '#FDF8F4' : '#FFFFFF');
-
-  headingColor = computed(() => this.p() === 'vino' ? '#590E2A' : '#590E2A');
-  textColor = computed(() => this.p() === 'vino' ? '#8C6D51' : '#8C6D51');
-  sectionBg1 = computed(() => this.p() === 'vino' ? '#FDF8F4' : '#FFFFFF');
-  sectionBg2 = computed(() => this.p() === 'vino' ? '#FFFCF8' : '#FDF5F0');
-  cardBg = computed(() => this.p() === 'vino' ? '#FFFCF8' : '#FFFFFF');
-  imgBg = computed(() => this.p() === 'vino' ? '#FDF8F4' : '#FDF5F0');
-  pillarBg = computed(() => this.p() === 'vino' ? 'rgba(217,85,120,0.1)' : 'rgba(217,85,120,0.08)');
+  headingColor = signal('#590E2A');
+  textColor = signal('#8C6D51');
+  sectionBg1 = signal('#FDF8F4');
+  sectionBg2 = signal('#FFFCF8');
+  cardBg = signal('#FFFCF8');
+  imgBg = signal('#FDF8F4');
+  pillarBg = signal('rgba(217,85,120,0.1)');
 }

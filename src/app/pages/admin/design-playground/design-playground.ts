@@ -1266,11 +1266,11 @@ import { FormsModule } from '@angular/forms';
             <h3 class="text-sm font-bold text-[#1A1A1A] mb-4">Tipografía Preview</h3>
             <div class="space-y-4">
               <div>
-                <p class="text-3xl italic" [style.font-family]="fontSerif()">Playfair Display</p>
+                <p class="text-3xl italic" [style.font-family]="fontSerif()">Cormorant Garamond</p>
                 <p class="text-[10px] text-[#1A1A1A]/50 mt-1">Serif — Títulos</p>
               </div>
               <div>
-                <p class="text-lg" [style.font-family]="fontSans()">Plus Jakarta Sans</p>
+                <p class="text-lg" [style.font-family]="fontSans()">Inter</p>
                 <p class="text-[10px] text-[#1A1A1A]/50 mt-1">Sans — Cuerpo</p>
               </div>
               <div class="border-t border-[#F0D5CC] pt-4">
@@ -1431,8 +1431,8 @@ export class DesignPlaygroundComponent {
     { id: 5, name: 'Taiyaki', japanese: 'たい焼き', emoji: '🐟', price: '$8.500', rating: '4.8', tag: 'Popular', desc: 'Pastel en forma de pez relleno de crema pastelera.', gradient: 'linear-gradient(135deg, #80CBC4 0%, #B2DFDB 100%)' },
   ]);
 
-  fontSerif = signal('Playfair Display');
-  fontSans = signal('Plus Jakarta Sans');
+  fontSerif = signal('Cormorant Garamond');
+  fontSans = signal('Inter');
   fontSize = signal(16);
 
   sidebarBg = signal('#FFF0EA');
@@ -1455,7 +1455,7 @@ export class DesignPlaygroundComponent {
   ];
 
   serifFonts = [
-    { name: 'Playfair Display', label: 'Playfair Display' },
+    { name: 'Cormorant Garamond', label: 'Cormorant Garamond' },
     { name: 'Cormorant Garamond', label: 'Cormorant Garamond' },
     { name: 'Libre Baskerville', label: 'Libre Baskerville' },
     { name: 'Vollkorn', label: 'Vollkorn' },
@@ -1466,7 +1466,7 @@ export class DesignPlaygroundComponent {
   ];
 
   sansFonts = [
-    { name: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans' },
+    { name: 'Inter', label: 'Inter' },
     { name: 'Inter', label: 'Inter' },
     { name: 'DM Sans', label: 'DM Sans' },
     { name: 'Outfit', label: 'Outfit' },

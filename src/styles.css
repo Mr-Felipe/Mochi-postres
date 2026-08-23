@@ -1,56 +1,9 @@
 @import "tailwindcss";
 
 /* ============================================================
-   PALETA A: "Clara" — Estilo mochiArtesanal (colores claros)
+   PALETA VINO — Estilo Actúa mochi-japanese (vino predominante)
    ============================================================ */
-:root, [data-palette="clara"] {
-  --bg-canvas: #FDF5F0;
-  --bg-page: #FDF5F0;
-  --bg-card: #FFFFFF;
-  --bg-hero: #FDF5F0;
-  --bg-navbar: rgba(253, 245, 240, 0.92);
-  --bg-navbar-solid: rgba(253, 245, 240, 0.98);
-  --bg-footer: #F5EDE4;
-  --bg-section-alt: #FFFFFF;
-
-  --text-main: #590E2A;
-  --text-body: #8C6D51;
-  --text-muted: #6B6B6B;
-  --text-on-dark: #FDF5F0;
-  --text-on-pink: #FFFFFF;
-
-  --border-soft: #E6E0D8;
-  --border-card: #F0D5CC;
-
-  --accent: #D95578;
-  --accent-hover: #C4446A;
-  --accent-light: #F2A3B5;
-  --accent-bg: rgba(217, 85, 120, 0.08);
-
-  --wine: #590E2A;
-  --wine-light: #7A1E3E;
-  --wine-bg: rgba(89, 14, 42, 0.06);
-
-  --star: #F7A04D;
-  --success: #4CAF50;
-  --error: #E53935;
-
-  --hero-gradient: linear-gradient(135deg, #FDF5F0 0%, #F8E8EE 50%, #FDF5F0 100%);
-  --hero-pattern-opacity: 0.15;
-  --nav-text: #590E2A;
-  --nav-text-hover: #D95578;
-  --nav-underline: #D95578;
-  --footer-bg: #F5EDE4;
-  --footer-text: #590E2A;
-  --footer-heading: #590E2A;
-  --footer-link: #8C6D51;
-  --footer-link-hover: #D95578;
-}
-
-/* ============================================================
-   PALETA B: "Vino" — Estilo Actúa mochi-japanese (vino predominante)
-   ============================================================ */
-[data-palette="vino"] {
+:root {
   --bg-canvas: #4A0D22;
   --bg-page: #FDF8F4;
   --bg-card: #FFFCF8;
@@ -103,29 +56,15 @@
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-page);
     color: var(--text-main);
     overflow-x: hidden;
-    transition: background-color 0.4s ease, color 0.4s ease;
-  }
-
-  /* Body mesh gradient — solo para paleta clara */
-  [data-palette="clara"] body,
-  :root body {
-    background-image:
-      radial-gradient(at 20% 30%, #FFD6E0 0%, transparent 50%),
-      radial-gradient(at 80% 60%, #FFC8D6 0%, transparent 50%),
-      radial-gradient(at 50% 80%, #FFBECF 0%, transparent 50%);
-    background-attachment: fixed;
-  }
-
-  [data-palette="vino"] body {
     background-image: none;
   }
 
   h1, h2, h3, h4, .font-serif {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
   }
 }
 
@@ -223,35 +162,57 @@
 .faq-answer.open {
   max-height: 500px;
 }
-.faq-icon {
-  transition: transform 0.3s ease;
-}
-.faq-icon.rotated {
-  transform: rotate(45deg);
-}
 
 /* ============================================================
    CAROUSEL
    ============================================================ */
 .carousel-track {
   display: flex;
-  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.5rem;
 }
-.carousel-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background-color: var(--border-soft);
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.carousel-dot.active {
-  background-color: var(--accent);
-  width: 24px;
+.carousel-track::-webkit-scrollbar { height: 4px; }
+.carousel-track::-webkit-scrollbar-track { background: transparent; }
+.carousel-track::-webkit-scrollbar-thumb { background: var(--border-soft); border-radius: 999px; }
+.carousel-item {
+  scroll-snap-align: start;
+  flex-shrink: 0;
 }
 
 /* ============================================================
-   UTILITY ANIMATIONS
+   CUP BUILDER STEP INDICATOR
+   ============================================================ */
+.step-indicator {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+.step-indicator.active {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px rgba(217, 85, 120, 0.3);
+}
+.step-indicator.done {
+  background: var(--success);
+  color: white;
+}
+.step-indicator.pending {
+  background: var(--border-soft);
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
    ============================================================ */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -283,80 +244,3 @@
 .animate-slideUp { animation: slideUp 0.25s ease-out; }
 .animate-float { animation: float 6s ease-in-out infinite; }
 .animate-slideInRight { animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-/* ============================================================
-   PALETTE TOGGLE BUTTON
-   ============================================================ */
-.palette-toggle {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 9998;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  border-radius: 9999px;
-  border: 2px solid var(--border-soft);
-  background: var(--bg-card);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-main);
-  transition: all 0.3s ease;
-}
-.palette-toggle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.18);
-}
-.palette-toggle .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 9999px;
-  transition: background-color 0.3s ease;
-}
-
-/* ============================================================
-   CUP BUILDER
-   ============================================================ */
-.cup-step-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-.cup-step-dot {
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
-  border: 2px solid var(--border-soft);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  transition: all 0.3s ease;
-}
-.cup-step-dot.active {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: white;
-}
-.cup-step-dot.done {
-  border-color: var(--success);
-  background: var(--success);
-  color: white;
-}
-.cup-step-line {
-  width: 48px;
-  height: 2px;
-  background: var(--border-soft);
-  transition: background 0.3s ease;
-}
-.cup-step-line.done {
-  background: var(--success);
-}

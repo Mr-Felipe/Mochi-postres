@@ -8,18 +8,18 @@ import { SupabaseService } from '../../../services/supabase.service';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-[#FDF5F0]">
-      <div class="w-full max-w-md bg-white rounded-[32px] border border-[#F0D5CC] p-6 sm:p-10 shadow-xs space-y-6">
+    <div class="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-[#FDF8F4]">
+      <div class="w-full max-w-md bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-10 shadow-xs space-y-6">
         
         <!-- Header -->
         <div class="text-center space-y-2">
-          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FF758F] text-white font-serif text-2xl mb-1 shadow-xs font-bold">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D95578] text-white font-serif text-2xl mb-1 shadow-xs font-bold">
             M
           </div>
-          <h1 class="text-2xl sm:text-3xl font-serif italic text-[#1A1A1A] font-bold">
+          <h1 class="text-2xl sm:text-3xl font-serif italic text-[#590E2A] font-bold">
             Crear Cuenta
           </h1>
-          <p class="text-xs text-[#1A1A1A]/80 font-medium">
+          <p class="text-xs text-[#590E2A]/80 font-medium">
             Regístrate en Mochi. y disfruta de envíos exclusivos
           </p>
         </div>
@@ -32,7 +32,7 @@ import { SupabaseService } from '../../../services/supabase.service';
               Tu cuenta ha sido registrada en Supabase. Ya puedes iniciar sesión y ordenar tus mochis artesanales favoritos.
             </p>
             <div class="pt-2">
-              <a routerLink="/login" class="inline-block px-6 py-2.5 rounded-full bg-[#FF758F] hover:bg-[#FF6078] text-[#FDF5F0] text-xs font-bold uppercase tracking-wider shadow-xs transition-colors">
+              <a routerLink="/login" class="inline-block px-6 py-2.5 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] text-xs font-bold uppercase tracking-wider shadow-xs transition-colors">
                 Ir a Iniciar Sesión
               </a>
             </div>
@@ -49,7 +49,7 @@ import { SupabaseService } from '../../../services/supabase.service';
           <!-- Register Form -->
           <form (submit)="onSubmit($event)" class="space-y-4 text-xs">
             <div>
-              <label for="nombre" class="font-bold text-[#1A1A1A] block mb-1 uppercase tracking-wider text-[11px]">
+              <label for="nombre" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                 Nombre Completo *
               </label>
               <input
@@ -60,12 +60,12 @@ import { SupabaseService } from '../../../services/supabase.service';
                 name="nombre_completo"
                 placeholder="Juan Pérez"
                 required
-                class="w-full px-4 py-3 rounded-full bg-[#FDF5F0] border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors font-medium"
+                class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] transition-colors font-medium"
               />
             </div>
 
             <div>
-              <label for="email" class="font-bold text-[#1A1A1A] block mb-1 uppercase tracking-wider text-[11px]">
+              <label for="email" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                 Correo Electrónico *
               </label>
               <input
@@ -76,12 +76,12 @@ import { SupabaseService } from '../../../services/supabase.service';
                 name="email"
                 placeholder="tu@email.com"
                 required
-                class="w-full px-4 py-3 rounded-full bg-[#FDF5F0] border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors font-medium"
+                class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] transition-colors font-medium"
               />
             </div>
 
             <div>
-              <label for="telefono" class="font-bold text-[#1A1A1A] block mb-1 uppercase tracking-wider text-[11px]">
+              <label for="telefono" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                 Teléfono Celular (Opcional)
               </label>
               <input
@@ -91,13 +91,13 @@ import { SupabaseService } from '../../../services/supabase.service';
                 (input)="telefono.set($any($event.target).value)"
                 name="telefono"
                 placeholder="+57 300 123 4567"
-                class="w-full px-4 py-3 rounded-full bg-[#FDF5F0] border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors font-medium"
+                class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] transition-colors font-medium"
               />
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label for="password" class="font-bold text-[#1A1A1A] block mb-1 uppercase tracking-wider text-[11px]">
+                <label for="password" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                   Contraseña *
                 </label>
                 <input
@@ -109,12 +109,12 @@ import { SupabaseService } from '../../../services/supabase.service';
                   placeholder="Mín. 6 caracteres"
                   required
                   minlength="6"
-                  class="w-full px-4 py-3 rounded-full bg-[#FDF5F0] border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors font-medium"
+                  class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] transition-colors font-medium"
                 />
               </div>
 
               <div>
-                <label for="confirmPassword" class="font-bold text-[#1A1A1A] block mb-1 uppercase tracking-wider text-[11px]">
+                <label for="confirmPassword" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                   Confirmar *
                 </label>
                 <input
@@ -125,7 +125,7 @@ import { SupabaseService } from '../../../services/supabase.service';
                   name="confirmPassword"
                   placeholder="Repite contraseña"
                   required
-                  class="w-full px-4 py-3 rounded-full bg-[#FDF5F0] border border-[#F0D5CC] text-[#1A1A1A] text-xs focus:outline-none focus:border-[#FF758F] transition-colors font-medium"
+                  class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] transition-colors font-medium"
                 />
               </div>
             </div>
@@ -137,25 +137,25 @@ import { SupabaseService } from '../../../services/supabase.service';
                 [checked]="acceptTerms()"
                 (change)="acceptTerms.set($any($event.target).checked)"
                 name="acceptTerms"
-                class="w-4 h-4 rounded text-[#FF758F] focus:ring-0 cursor-pointer accent-[#FF758F]"
+                class="w-4 h-4 rounded text-[#D95578] focus:ring-0 cursor-pointer accent-[#D95578]"
               />
-              <label for="acceptTerms" class="text-xs text-[#1A1A1A]/80 cursor-pointer font-medium">
-                Acepto los <a routerLink="/contacto" class="underline font-medium text-[#FF758F]">términos y condiciones</a>
+              <label for="acceptTerms" class="text-xs text-[#590E2A]/80 cursor-pointer font-medium">
+                Acepto los <a routerLink="/contacto" class="underline font-medium text-[#D95578]">términos y condiciones</a>
               </label>
             </div>
 
             <button
               type="submit"
               [disabled]="loading()"
-              class="w-full py-3.5 rounded-full bg-[#FF758F] hover:bg-[#FF5277] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-xs mt-2 cursor-pointer">
+              class="w-full py-3.5 rounded-full bg-[#D95578] hover:bg-[#FF5277] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-widest transition-all shadow-xs mt-2 cursor-pointer">
               {{ loading() ? 'Creando cuenta...' : 'Crear Cuenta' }}
             </button>
           </form>
 
           <!-- Links -->
-          <div class="text-center pt-3 border-t border-[#F0D5CC] text-xs">
-            <span class="text-[#1A1A1A]/80 font-medium">¿Ya tienes una cuenta?</span>
-            <a routerLink="/login" class="ml-1 text-[#FF758F] font-bold hover:underline">
+          <div class="text-center pt-3 border-t border-[#E8D8D0] text-xs">
+            <span class="text-[#590E2A]/80 font-medium">¿Ya tienes una cuenta?</span>
+            <a routerLink="/login" class="ml-1 text-[#D95578] font-bold hover:underline">
               Inicia sesión aquí
             </a>
           </div>

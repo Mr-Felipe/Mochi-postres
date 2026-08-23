@@ -15,18 +15,18 @@ interface SimulatedItem {
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-[#FDF5F0] min-h-screen py-10">
+    <div class="bg-[#FDF8F4] min-h-screen py-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         
         <!-- Header -->
-        <div class="bg-white rounded-[40px] p-8 sm:p-12 border border-[#F0D5CC] shadow-xs text-center max-w-3xl mx-auto space-y-3">
-          <span class="px-4 py-1.5 rounded-full bg-[#FF758F] text-white text-[11px] font-bold font-serif uppercase tracking-widest shadow-xs">
+        <div class="bg-white rounded-[40px] p-8 sm:p-12 border border-[#E8D8D0] shadow-xs text-center max-w-3xl mx-auto space-y-3">
+          <span class="px-4 py-1.5 rounded-full bg-[#D95578] text-white text-[11px] font-bold font-serif uppercase tracking-widest shadow-xs">
             🧮 Cotizador Interactivo
           </span>
-          <h1 class="text-3xl sm:text-4xl font-serif italic text-[#1A1A1A] font-bold">
+          <h1 class="text-3xl sm:text-4xl font-serif italic text-[#590E2A] font-bold">
             Simulador de Pedidos en Línea
           </h1>
-          <p class="text-[#1A1A1A]/80 text-xs uppercase tracking-wider leading-relaxed font-medium">
+          <p class="text-[#590E2A]/80 text-xs uppercase tracking-wider leading-relaxed font-medium">
             Arma tu combinación ideal de mochis y postres japoneses, calcula el domicilio exacto en La Dorada y conoce el tiempo estimado de entrega sin compromiso.
           </p>
         </div>
@@ -34,8 +34,8 @@ interface SimulatedItem {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           <!-- Left Column: Product Selection Grid -->
-          <div class="lg:col-span-7 bg-white rounded-[32px] border border-[#F0D5CC] p-6 shadow-xs space-y-6">
-            <h2 class="text-xl font-serif italic text-[#1A1A1A] font-bold flex items-center gap-2">
+          <div class="lg:col-span-7 bg-white rounded-[32px] border border-[#E8D8D0] p-6 shadow-xs space-y-6">
+            <h2 class="text-xl font-serif italic text-[#590E2A] font-bold flex items-center gap-2">
               <span>🍡</span>
               <span>Selecciona tus Postres para la Simulación</span>
             </h2>
@@ -44,28 +44,28 @@ interface SimulatedItem {
               @for (prod of activeProducts(); track prod.id) {
                 @let simulatedQty = getItemQuantity(prod.id);
 
-                <div class="p-4 rounded-[24px] bg-[#FDF5F0] border border-[#F0D5CC] hover:border-[#FF758F] transition-all flex flex-col justify-between space-y-3">
+                <div class="p-4 rounded-[24px] bg-[#FDF8F4] border border-[#E8D8D0] hover:border-[#D95578] transition-all flex flex-col justify-between space-y-3">
                   <div class="flex items-start gap-3">
                     <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-16 h-16 rounded-2xl object-cover flex-shrink-0">
                     <div>
-                      <span class="text-[10px] font-bold text-[#FF758F] font-serif italic uppercase tracking-wider block">{{ prod.nombre_japones }}</span>
-                      <h3 class="font-serif italic text-[#1A1A1A] text-sm leading-snug font-bold">{{ prod.nombre_espanol }}</h3>
-                      <span class="text-xs font-serif italic text-[#1A1A1A] font-bold mt-1 block">
+                      <span class="text-[10px] font-bold text-[#D95578] font-serif italic uppercase tracking-wider block">{{ prod.nombre_japones }}</span>
+                      <h3 class="font-serif italic text-[#590E2A] text-sm leading-snug font-bold">{{ prod.nombre_espanol }}</h3>
+                      <span class="text-xs font-serif italic text-[#590E2A] font-bold mt-1 block">
                         {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
                       </span>
                     </div>
                   </div>
 
                   <!-- Controls -->
-                  <div class="flex items-center justify-between pt-2 border-t border-[#F0D5CC]">
-                    <span class="text-[11px] text-[#1A1A1A]/80 font-bold">Subtotal: {{ '$' + (simulatedQty * (prod.precio_oferta || prod.precio)).toLocaleString('es-CO') }}</span>
+                  <div class="flex items-center justify-between pt-2 border-t border-[#E8D8D0]">
+                    <span class="text-[11px] text-[#590E2A]/80 font-bold">Subtotal: {{ '$' + (simulatedQty * (prod.precio_oferta || prod.precio)).toLocaleString('es-CO') }}</span>
                     
-                    <div class="flex items-center rounded-full bg-white border border-[#F0D5CC] p-1 shadow-xs">
-                      <button (click)="updateQuantity(prod, -1)" class="w-6 h-6 rounded-full bg-[#FDF5F0] text-[#1A1A1A] font-bold hover:bg-[#FF758F] hover:text-white transition-colors flex items-center justify-center text-xs cursor-pointer">
+                    <div class="flex items-center rounded-full bg-white border border-[#E8D8D0] p-1 shadow-xs">
+                      <button (click)="updateQuantity(prod, -1)" class="w-6 h-6 rounded-full bg-[#FDF8F4] text-[#590E2A] font-bold hover:bg-[#D95578] hover:text-white transition-colors flex items-center justify-center text-xs cursor-pointer">
                         -
                       </button>
-                      <span class="w-7 text-center text-xs font-bold text-[#1A1A1A]">{{ simulatedQty }}</span>
-                      <button (click)="updateQuantity(prod, 1)" class="w-6 h-6 rounded-full bg-[#FDF5F0] text-[#1A1A1A] font-bold hover:bg-[#FF758F] hover:text-white transition-colors flex items-center justify-center text-xs cursor-pointer">
+                      <span class="w-7 text-center text-xs font-bold text-[#590E2A]">{{ simulatedQty }}</span>
+                      <button (click)="updateQuantity(prod, 1)" class="w-6 h-6 rounded-full bg-[#FDF8F4] text-[#590E2A] font-bold hover:bg-[#D95578] hover:text-white transition-colors flex items-center justify-center text-xs cursor-pointer">
                         +
                       </button>
                     </div>
@@ -76,8 +76,8 @@ interface SimulatedItem {
           </div>
 
           <!-- Right Column: Quote Summary Panel -->
-          <div class="lg:col-span-5 bg-white rounded-[32px] border border-[#F0D5CC] p-6 sm:p-8 shadow-xs sticky top-28 space-y-6">
-            <h2 class="text-xl font-serif italic text-[#1A1A1A] font-bold pb-4 border-b border-[#F0D5CC] flex items-center gap-2">
+          <div class="lg:col-span-5 bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-8 shadow-xs sticky top-28 space-y-6">
+            <h2 class="text-xl font-serif italic text-[#590E2A] font-bold pb-4 border-b border-[#E8D8D0] flex items-center gap-2">
               <span>📋</span>
               <span>Resumen de Simulación</span>
             </h2>
@@ -86,36 +86,36 @@ interface SimulatedItem {
             @if (simulatedItems().length > 0) {
               <div class="space-y-3 max-h-56 overflow-y-auto pr-1 text-xs">
                 @for (item of simulatedItems(); track item.product.id) {
-                  <div class="flex items-center justify-between p-2.5 rounded-2xl bg-[#FDF5F0] border border-[#F0D5CC]/50">
+                  <div class="flex items-center justify-between p-2.5 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]/50">
                     <div>
-                      <span class="font-serif italic text-[#1A1A1A] font-bold block text-sm">{{ item.product.nombre_espanol }}</span>
-                      <span class="text-[10px] text-[#1A1A1A]/70 font-medium">x{{ item.cantidad }} a {{ '$' + (item.product.precio_oferta || item.product.precio).toLocaleString('es-CO') }} c/u</span>
+                      <span class="font-serif italic text-[#590E2A] font-bold block text-sm">{{ item.product.nombre_espanol }}</span>
+                      <span class="text-[10px] text-[#590E2A]/70 font-medium">x{{ item.cantidad }} a {{ '$' + (item.product.precio_oferta || item.product.precio).toLocaleString('es-CO') }} c/u</span>
                     </div>
-                    <span class="font-serif italic text-[#1A1A1A] font-bold">
+                    <span class="font-serif italic text-[#590E2A] font-bold">
                       {{ '$' + (item.cantidad * (item.product.precio_oferta || item.product.precio)).toLocaleString('es-CO') }}
                     </span>
                   </div>
                 }
               </div>
             } @else {
-              <div class="p-6 text-center text-[#1A1A1A]/60 text-xs rounded-2xl bg-[#FDF5F0] border border-dashed border-[#F0D5CC] font-medium">
+              <div class="p-6 text-center text-[#590E2A]/60 text-xs rounded-2xl bg-[#FDF8F4] border border-dashed border-[#E8D8D0] font-medium">
                 Selecciona postres de la lista de la izquierda para comenzar a simular.
               </div>
             }
 
             <!-- Delivery Options Selector -->
             <div class="space-y-2 pt-2">
-              <span class="text-xs font-bold text-[#1A1A1A] block uppercase tracking-wider text-[10px]">Tipo de Entrega:</span>
+              <span class="text-xs font-bold text-[#590E2A] block uppercase tracking-wider text-[10px]">Tipo de Entrega:</span>
               <div class="grid grid-cols-2 gap-3">
                 <button 
                   (click)="tipoEntrega.set('domicilio')"
-                  [class]="tipoEntrega() === 'domicilio' ? 'bg-[#FF758F] text-white border-[#FF5277] shadow-xs' : 'bg-[#FDF5F0] text-[#1A1A1A] border-[#F0D5CC] hover:border-[#FF758F]/50'"
+                  [class]="tipoEntrega() === 'domicilio' ? 'bg-[#D95578] text-white border-[#FF5277] shadow-xs' : 'bg-[#FDF8F4] text-[#590E2A] border-[#E8D8D0] hover:border-[#D95578]/50'"
                   class="p-3 rounded-full border text-xs font-bold transition-all text-center uppercase tracking-wider cursor-pointer">
                   🚗 Domicilio
                 </button>
                 <button 
                   (click)="tipoEntrega.set('recogida')"
-                  [class]="tipoEntrega() === 'recogida' ? 'bg-[#FF758F] text-white border-[#FF5277] shadow-xs' : 'bg-[#FDF5F0] text-[#1A1A1A] border-[#F0D5CC] hover:border-[#FF758F]/50'"
+                  [class]="tipoEntrega() === 'recogida' ? 'bg-[#D95578] text-white border-[#FF5277] shadow-xs' : 'bg-[#FDF8F4] text-[#590E2A] border-[#E8D8D0] hover:border-[#D95578]/50'"
                   class="p-3 rounded-full border text-xs font-bold transition-all text-center uppercase tracking-wider cursor-pointer">
                   🏪 Recoger en Local
                 </button>
@@ -124,42 +124,42 @@ interface SimulatedItem {
 
             <!-- Free Delivery Progress Bar -->
             @if (tipoEntrega() === 'domicilio') {
-              <div class="p-4 rounded-2xl bg-[#FDF5F0] border border-[#F0D5CC] text-xs space-y-1.5">
+              <div class="p-4 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] text-xs space-y-1.5">
                 @if (subtotal() >= config().montoEnvioGratis) {
                   <span class="font-bold text-[#065F46] flex items-center gap-1 uppercase tracking-wider text-[11px]">
                     🎉 ¡Felicidades! Tienes envío GRATIS a todo La Dorada.
                   </span>
                 } @else {
-                  <div class="flex justify-between text-[#1A1A1A] font-medium">
-                    <span>Faltan <strong class="text-[#FF758F]">{{ '$' + (config().montoEnvioGratis - subtotal()).toLocaleString('es-CO') }}</strong> para Envío Gratis</span>
+                  <div class="flex justify-between text-[#590E2A] font-medium">
+                    <span>Faltan <strong class="text-[#D95578]">{{ '$' + (config().montoEnvioGratis - subtotal()).toLocaleString('es-CO') }}</strong> para Envío Gratis</span>
                     <span class="font-bold">{{ Math.round((subtotal() / config().montoEnvioGratis) * 100) }}%</span>
                   </div>
-                  <div class="w-full bg-[#F0D5CC] rounded-full h-2 overflow-hidden">
-                    <div class="bg-[#FF758F] h-2 rounded-full transition-all duration-300" [style.width.%]="Math.min(100, (subtotal() / config().montoEnvioGratis) * 100)"></div>
+                  <div class="w-full bg-[#E8D8D0] rounded-full h-2 overflow-hidden">
+                    <div class="bg-[#D95578] h-2 rounded-full transition-all duration-300" [style.width.%]="Math.min(100, (subtotal() / config().montoEnvioGratis) * 100)"></div>
                   </div>
                 }
               </div>
             }
 
             <!-- Costs Breakdown -->
-            <div class="space-y-2 text-xs pt-2 border-t border-[#F0D5CC]">
-              <div class="flex justify-between text-[#1A1A1A]/80 font-medium">
+            <div class="space-y-2 text-xs pt-2 border-t border-[#E8D8D0]">
+              <div class="flex justify-between text-[#590E2A]/80 font-medium">
                 <span>Subtotal Postres:</span>
-                <span class="font-bold text-[#1A1A1A]">{{ '$' + subtotal().toLocaleString('es-CO') }}</span>
+                <span class="font-bold text-[#590E2A]">{{ '$' + subtotal().toLocaleString('es-CO') }}</span>
               </div>
-              <div class="flex justify-between text-[#1A1A1A]/80 font-medium">
+              <div class="flex justify-between text-[#590E2A]/80 font-medium">
                 <span>Costo de Envío (La Dorada):</span>
-                <span class="font-bold text-[#1A1A1A]">
+                <span class="font-bold text-[#590E2A]">
                   {{ costoEnvio() === 0 ? '¡GRATIS!' : '$' + costoEnvio().toLocaleString('es-CO') }}
                 </span>
               </div>
-              <div class="flex justify-between text-[#1A1A1A]/80 font-medium">
+              <div class="flex justify-between text-[#590E2A]/80 font-medium">
                 <span>Tiempo Estimado:</span>
                 <span class="font-bold text-[#065F46]">45 - 60 minutos</span>
               </div>
-              <div class="flex justify-between text-base font-bold text-[#1A1A1A] pt-3 border-t border-[#F0D5CC]">
+              <div class="flex justify-between text-base font-bold text-[#590E2A] pt-3 border-t border-[#E8D8D0]">
                 <span>TOTAL ESTIMADO:</span>
-                <span class="text-2xl font-serif italic text-[#FF758F] font-bold">{{ '$' + total().toLocaleString('es-CO') }}</span>
+                <span class="text-2xl font-serif italic text-[#D95578] font-bold">{{ '$' + total().toLocaleString('es-CO') }}</span>
               </div>
             </div>
 
@@ -167,7 +167,7 @@ interface SimulatedItem {
             <button 
               [disabled]="simulatedItems().length === 0"
               (click)="transferToCart()"
-              class="w-full py-4 rounded-full bg-[#FF758F] hover:bg-[#FF5277] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-widest shadow-xs transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+              class="w-full py-4 rounded-full bg-[#D95578] hover:bg-[#FF5277] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-widest shadow-xs transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
               <span>Llevar este Pedido al Checkout →</span>
             </button>
           </div>

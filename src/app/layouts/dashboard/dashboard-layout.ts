@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../../components/sidebar/sidebar';
 import { OrderNotificationComponent } from '../../components/order-notification/order-notification';
@@ -6,6 +7,7 @@ import { ToastNotificationComponent } from '../../components/toast-notification/
 import { SupabaseService } from '../../services/supabase.service';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { NotificationService } from '../../services/notification.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -13,44 +15,44 @@ import { NotificationService } from '../../services/notification.service';
   imports: [RouterOutlet, RouterLink, SidebarComponent, OrderNotificationComponent, ToastNotificationComponent],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
-    <div class="min-h-screen flex bg-[#FDF5F0]">
+    <div class="h-screen flex overflow-hidden" style="background: #2E0A16">
       <!-- Sidebar -->
       <app-sidebar [open]="sidebarOpen" (close)="sidebarOpen.set(false)" />
 
       <!-- Main Content -->
-      <div class="flex-1 flex flex-col min-w-0">
+      <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <!-- Top Header -->
-        <header class="h-16 bg-white border-b border-[#F0D5CC] flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+        <header class="h-16 flex items-center px-4 sm:px-6 shrink-0 z-30" style="background: #3A0A1C; border-bottom: 1px solid rgba(255,255,255,0.1)">
           <!-- Left: hamburger (mobile) -->
-          <button (click)="sidebarOpen.set(!sidebarOpen())" class="lg:hidden p-2 -ml-2 rounded-xl hover:bg-[#FDF5F0] transition-colors">
-            <span class="material-icons text-[#1A1A1A]">menu</span>
+          <button (click)="sidebarOpen.set(!sidebarOpen())" class="lg:hidden p-2 -ml-2 rounded-xl transition-colors hover:opacity-70">
+            <span class="material-icons" style="color: #FDF8F4">menu</span>
           </button>
 
           <!-- Right: title + actions -->
-          <div class="flex items-center gap-2">
-            <h2 class="text-sm font-bold text-[#1A1A1A] hidden sm:block">Panel de Control</h2>
+          <div class="flex items-center gap-2 ml-auto">
+            <h2 class="text-sm font-bold hidden sm:block" style="color: #FDF8F4">Panel de Control</h2>
 
             <!-- Notification Bell -->
             <app-order-notification />
 
             <!-- Ver como cliente -->
             <a routerLink="/"
-              class="flex items-center gap-1.5 p-2 text-[#1A1A1A] hover:text-[#FF758F] transition-colors">
-              <span class="material-icons text-xl">storefront</span>
-              <span class="hidden sm:inline text-[11px] font-bold uppercase tracking-wider">Ver Tienda</span>
+              class="flex items-center gap-1.5 p-2 transition-colors hover:opacity-70">
+              <span class="material-icons text-xl" style="color: #FDF8F4">storefront</span>
+              <span class="hidden sm:inline text-[11px] font-bold uppercase tracking-wider" style="color: #FDF8F4">Ver Tienda</span>
             </a>
 
             <!-- Logout -->
             <button (click)="onLogout()"
-              class="flex items-center gap-1.5 p-2 text-red-500 hover:text-red-700 transition-colors">
-              <span class="material-icons text-xl">logout</span>
-              <span class="hidden sm:inline text-[11px] font-bold uppercase tracking-wider">Salir</span>
+              class="flex items-center gap-1.5 p-2 transition-colors hover:opacity-70">
+              <span class="material-icons text-xl" style="color: #EF5350">logout</span>
+              <span class="hidden sm:inline text-[11px] font-bold uppercase tracking-wider" style="color: #EF5350">Salir</span>
             </button>
           </div>
         </header>
 
         <!-- Page Content -->
-        <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto" style="background: #FDF8F4">
           <router-outlet />
         </main>
       </div>
@@ -65,6 +67,8 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   private supabase = inject(SupabaseService);
   private dataService = inject(MochiDataService);
   private notificationService = inject(NotificationService);
+  private cartService = inject(CartService);
+  private platformId = inject(PLATFORM_ID);
 
   sidebarOpen = signal(false);
 
@@ -75,9 +79,11 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const user = this.supabase.activeUser();
-    if (user) {
-      this.notificationService.startListening(user.id);
+    if (isPlatformBrowser(this.platformId)) {
+      const user = this.supabase.activeUser();
+      if (user) {
+        this.notificationService.startListening(user.id);
+      }
     }
   }
 
@@ -89,6 +95,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     this.notificationService.stopListening();
     await this.supabase.signOut();
     this.dataService.favorites.set([]);
+    this.cartService.clearCart();
     this.router.navigate(['/']);
   }
 }

@@ -15,13 +15,13 @@ interface POSCartItem {
   imports: [UpperCasePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-[#2E2620] text-[#FAF7F2] min-h-screen p-4 sm:p-6 font-sans">
+    <div class="bg-[#2E0A16] text-[#FDF8F4] min-h-screen p-4 sm:p-6 font-sans">
       <div class="max-w-7xl mx-auto space-y-6">
         
         <!-- POS Top Header -->
-        <div class="bg-[#362D26] rounded-[28px] p-5 border border-[#4A3F35] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+        <div class="bg-[#3A0A1C] rounded-[28px] p-5 border border-[#4A0D22] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-[#FFD6E0] text-[#4A3F35] flex items-center justify-center font-bold text-xl">
+            <div class="w-10 h-10 rounded-full bg-[#D95578] text-[#4A0D22] flex items-center justify-center font-bold text-xl">
               🛒
             </div>
             <div>
@@ -36,13 +36,13 @@ interface POSCartItem {
 
           <!-- Branch & Employee Selector + Shift Stats Summary -->
           <div class="flex flex-wrap items-center gap-4 text-xs">
-            <div class="flex items-center gap-6 bg-[#2E2620] px-5 py-2 rounded-full border border-[#4A3F35]">
+            <div class="flex items-center gap-6 bg-[#2E0A16] px-5 py-2 rounded-full border border-[#4A0D22]">
               <div>
-                <span class="text-[#FAF7F2]/60 block uppercase tracking-wider text-[9px]">Ventas Turno:</span>
-                <span class="text-base font-serif italic text-[#FFD6E0]">{{ '$' + todaySalesTotal().toLocaleString('es-CO') }}</span>
+                <span class="text-[#FDF8F4]/60 block uppercase tracking-wider text-[9px]">Ventas Turno:</span>
+                <span class="text-base font-serif italic text-[#D95578]">{{ '$' + todaySalesTotal().toLocaleString('es-CO') }}</span>
               </div>
-              <div class="border-l border-[#4A3F35] pl-4">
-                <span class="text-[#FAF7F2]/60 block uppercase tracking-wider text-[9px]">Tickets:</span>
+              <div class="border-l border-[#4A0D22] pl-4">
+                <span class="text-[#FDF8F4]/60 block uppercase tracking-wider text-[9px]">Tickets:</span>
                 <span class="text-base font-bold text-white">{{ todaySalesCount() }}</span>
               </div>
             </div>
@@ -53,7 +53,7 @@ interface POSCartItem {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           <!-- Left 7 Cols: Catalog & Fast Product Picker -->
-          <div class="lg:col-span-7 bg-[#362D26] rounded-[32px] border border-[#4A3F35] p-6 space-y-4">
+          <div class="lg:col-span-7 bg-[#3A0A1C] rounded-[32px] border border-[#4A0D22] p-6 space-y-4">
             
             <!-- Product Search -->
             <div class="relative">
@@ -62,7 +62,7 @@ interface POSCartItem {
                 placeholder="Buscar postre para venta en mostrador..." 
                 [value]="searchQuery()"
                 (input)="searchQuery.set($any($event.target).value)"
-                class="w-full px-4 py-3 rounded-full bg-[#2E2620] border border-[#4A3F35] text-xs text-white focus:outline-none focus:border-[#FFD6E0]"
+                class="w-full px-4 py-3 rounded-full bg-[#2E0A16] border border-[#4A0D22] text-xs text-white focus:outline-none focus:border-[#D95578]"
               />
             </div>
 
@@ -71,18 +71,18 @@ interface POSCartItem {
               @for (prod of filteredProducts(); track prod.id) {
                 <button 
                   (click)="addToPOSCart(prod)"
-                  class="p-3.5 rounded-[24px] bg-[#2E2620] border border-[#4A3F35] hover:border-[#FFD6E0] text-left transition-all active:scale-95 space-y-2 group">
+                  class="p-3.5 rounded-[24px] bg-[#2E0A16] border border-[#4A0D22] hover:border-[#D95578] text-left transition-all active:scale-95 space-y-2 group">
                   <img [src]="prod.imagen_principal" alt="" class="w-full h-24 object-cover rounded-[16px]">
                   <div>
-                    <span class="text-[10px] text-[#FAF7F2]/60 block font-serif italic">{{ prod.nombre_japones }}</span>
-                    <h3 class="text-xs font-serif italic text-white group-hover:text-[#FFD6E0] transition-colors line-clamp-1">
+                    <span class="text-[10px] text-[#FDF8F4]/60 block font-serif italic">{{ prod.nombre_japones }}</span>
+                    <h3 class="text-xs font-serif italic text-white group-hover:text-[#D95578] transition-colors line-clamp-1">
                       {{ prod.nombre_espanol }}
                     </h3>
                     <div class="flex justify-between items-center mt-1">
-                      <span class="text-xs font-serif italic text-[#FFD6E0]">
+                      <span class="text-xs font-serif italic text-[#D95578]">
                         {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
                       </span>
-                      <span [class]="prod.stock <= 5 ? 'text-[#ff8a80] font-bold' : 'text-[#FAF7F2]/50'" class="text-[9px]">
+                      <span [class]="prod.stock <= 5 ? 'text-[#ff8a80] font-bold' : 'text-[#FDF8F4]/50'" class="text-[9px]">
                         Stock: {{ prod.stock }}
                       </span>
                     </div>
@@ -93,10 +93,10 @@ interface POSCartItem {
           </div>
 
           <!-- Right 5 Cols: Current Order Ticket & Checkout -->
-          <div class="lg:col-span-5 bg-[#362D26] rounded-[32px] border border-[#4A3F35] p-6 space-y-4 sticky top-6">
-            <h2 class="text-base font-serif italic text-white pb-2 border-b border-[#4A3F35] flex justify-between items-center">
+          <div class="lg:col-span-5 bg-[#3A0A1C] rounded-[32px] border border-[#4A0D22] p-6 space-y-4 sticky top-6">
+            <h2 class="text-base font-serif italic text-white pb-2 border-b border-[#4A0D22] flex justify-between items-center">
               <span>Ticket de Venta (detalle_pedido: local)</span>
-              <button (click)="posItems.set([])" class="text-xs text-[#FFD6E0] font-bold uppercase tracking-wider hover:underline">Vaciar</button>
+              <button (click)="posItems.set([])" class="text-xs text-[#D95578] font-bold uppercase tracking-wider hover:underline">Vaciar</button>
             </h2>
 
             <!-- Customer Details for Local Receipt -->
@@ -106,64 +106,64 @@ interface POSCartItem {
                 placeholder="Nombre Cliente" 
                 [value]="clienteNombre()"
                 (input)="clienteNombre.set($any($event.target).value)"
-                class="p-3 rounded-full bg-[#2E2620] border border-[#4A3F35] text-white text-xs"
+                class="p-3 rounded-full bg-[#2E0A16] border border-[#4A0D22] text-white text-xs"
               />
               <input 
                 type="text" 
                 placeholder="Teléfono" 
                 [value]="clienteTel()"
                 (input)="clienteTel.set($any($event.target).value)"
-                class="p-3 rounded-full bg-[#2E2620] border border-[#4A3F35] text-white text-xs"
+                class="p-3 rounded-full bg-[#2E0A16] border border-[#4A0D22] text-white text-xs"
               />
             </div>
 
             <!-- Items List -->
             <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
               @for (item of posItems(); track item.product.id) {
-                <div class="flex items-center justify-between p-2.5 rounded-2xl bg-[#2E2620] border border-[#4A3F35] text-xs">
+                <div class="flex items-center justify-between p-2.5 rounded-2xl bg-[#2E0A16] border border-[#4A0D22] text-xs">
                   <div>
                     <span class="font-serif italic text-white block">{{ item.product.nombre_espanol }}</span>
-                    <span class="text-[10px] text-[#FAF7F2]/60">{{ '$' + (item.product.precio_oferta || item.product.precio).toLocaleString('es-CO') }} c/u</span>
+                    <span class="text-[10px] text-[#FDF8F4]/60">{{ '$' + (item.product.precio_oferta || item.product.precio).toLocaleString('es-CO') }} c/u</span>
                   </div>
 
                   <div class="flex items-center gap-2">
-                    <button (click)="updatePOSQty(item.product.id, -1)" class="w-6 h-6 rounded-full bg-[#362D26] text-white flex items-center justify-center text-xs font-bold border border-[#4A3F35]">-</button>
+                    <button (click)="updatePOSQty(item.product.id, -1)" class="w-6 h-6 rounded-full bg-[#3A0A1C] text-white flex items-center justify-center text-xs font-bold border border-[#4A0D22]">-</button>
                     <span class="font-bold font-mono">{{ item.cantidad }}</span>
-                    <button (click)="updatePOSQty(item.product.id, 1)" class="w-6 h-6 rounded-full bg-[#362D26] text-white flex items-center justify-center text-xs font-bold border border-[#4A3F35]">+</button>
+                    <button (click)="updatePOSQty(item.product.id, 1)" class="w-6 h-6 rounded-full bg-[#3A0A1C] text-white flex items-center justify-center text-xs font-bold border border-[#4A0D22]">+</button>
                   </div>
                 </div>
               } @empty {
-                <div class="p-8 text-center text-[#FAF7F2]/50 text-xs italic">
+                <div class="p-8 text-center text-[#FDF8F4]/50 text-xs italic">
                   Selecciona postres del panel izquierdo para agregarlos al ticket.
                 </div>
               }
             </div>
 
             <!-- Payment Method Selector -->
-            <div class="space-y-1.5 pt-2 border-t border-[#4A3F35]">
-              <span class="text-[10px] text-[#FAF7F2]/60 uppercase tracking-wider block font-bold">Método de Cobro en Mostrador:</span>
+            <div class="space-y-1.5 pt-2 border-t border-[#4A0D22]">
+              <span class="text-[10px] text-[#FDF8F4]/60 uppercase tracking-wider block font-bold">Método de Cobro en Mostrador:</span>
               <div class="grid grid-cols-4 gap-1 text-[10px] font-bold">
                 <button 
                   (click)="metodoPago.set('efectivo')"
-                  [class]="metodoPago() === 'efectivo' ? 'bg-[#FFD6E0] text-[#4A3F35]' : 'bg-[#2E2620] text-white border border-[#4A3F35]'"
+                  [class]="metodoPago() === 'efectivo' ? 'bg-[#D95578] text-[#4A0D22]' : 'bg-[#2E0A16] text-white border border-[#4A0D22]'"
                   class="py-2 rounded-xl transition-all uppercase">
                   💵 Efvo
                 </button>
                 <button 
                   (click)="metodoPago.set('tarjeta')"
-                  [class]="metodoPago() === 'tarjeta' ? 'bg-[#FFD6E0] text-[#4A3F35]' : 'bg-[#2E2620] text-white border border-[#4A3F35]'"
+                  [class]="metodoPago() === 'tarjeta' ? 'bg-[#D95578] text-[#4A0D22]' : 'bg-[#2E0A16] text-white border border-[#4A0D22]'"
                   class="py-2 rounded-xl transition-all uppercase">
                   💳 Tarjeta
                 </button>
                 <button 
                   (click)="metodoPago.set('nequi')"
-                  [class]="metodoPago() === 'nequi' ? 'bg-[#FFD6E0] text-[#4A3F35]' : 'bg-[#2E2620] text-white border border-[#4A3F35]'"
+                  [class]="metodoPago() === 'nequi' ? 'bg-[#D95578] text-[#4A0D22]' : 'bg-[#2E0A16] text-white border border-[#4A0D22]'"
                   class="py-2 rounded-xl transition-all uppercase">
                   📱 Nequi
                 </button>
                 <button 
                   (click)="metodoPago.set('daviplata')"
-                  [class]="metodoPago() === 'daviplata' ? 'bg-[#FFD6E0] text-[#4A3F35]' : 'bg-[#2E2620] text-white border border-[#4A3F35]'"
+                  [class]="metodoPago() === 'daviplata' ? 'bg-[#D95578] text-[#4A0D22]' : 'bg-[#2E0A16] text-white border border-[#4A0D22]'"
                   class="py-2 rounded-xl transition-all uppercase">
                   📱 Davi
                 </button>
@@ -171,16 +171,16 @@ interface POSCartItem {
             </div>
 
             <!-- Total and Print Ticket Button -->
-            <div class="pt-3 border-t border-[#4A3F35] space-y-3">
+            <div class="pt-3 border-t border-[#4A0D22] space-y-3">
               <div class="flex justify-between items-center text-sm">
-                <span class="text-[#FAF7F2]/70 font-medium">TOTAL A COBRAR:</span>
-                <span class="text-2xl font-serif italic text-[#FFD6E0]">{{ '$' + posTotal().toLocaleString('es-CO') }}</span>
+                <span class="text-[#FDF8F4]/70 font-medium">TOTAL A COBRAR:</span>
+                <span class="text-2xl font-serif italic text-[#D95578]">{{ '$' + posTotal().toLocaleString('es-CO') }}</span>
               </div>
 
               <button 
                 [disabled]="posItems().length === 0"
                 (click)="recordSale()"
-                class="w-full py-4 rounded-full bg-[#FFD6E0] hover:bg-[#ffc2d1] disabled:opacity-40 text-[#4A3F35] font-bold text-xs uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2">
+                class="w-full py-4 rounded-full bg-[#D95578] hover:bg-[#ffc2d1] disabled:opacity-40 text-[#4A0D22] font-bold text-xs uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2">
                 <span>✓ Finalizar Venta & Emitir Ticket</span>
               </button>
             </div>
@@ -192,25 +192,25 @@ interface POSCartItem {
         <!-- Last Sale Ticket Modal / Toast -->
         @if (lastSale()) {
           @let sale = lastSale()!;
-          <div class="bg-[#362D26] rounded-[28px] border border-[#4A3F35] p-6 max-w-md mx-auto space-y-3 text-xs">
+          <div class="bg-[#3A0A1C] rounded-[28px] border border-[#4A0D22] p-6 max-w-md mx-auto space-y-3 text-xs">
             <div class="flex justify-between items-center text-sm font-bold text-[#E0F2F1]">
               <span>✓ Venta Registrada con Éxito</span>
-              <button (click)="lastSale.set(null)" class="text-[#FAF7F2]/60 hover:text-white">✕</button>
+              <button (click)="lastSale.set(null)" class="text-[#FDF8F4]/60 hover:text-white">✕</button>
             </div>
-            <div class="p-4 rounded-2xl bg-[#2E2620] border border-[#4A3F35] space-y-1 font-mono text-[11px]">
+            <div class="p-4 rounded-2xl bg-[#2E0A16] border border-[#4A0D22] space-y-1 font-mono text-[11px]">
               <div class="flex justify-between">
-                <span class="text-[#FAF7F2]/60">Ticket:</span>
+                <span class="text-[#FDF8F4]/60">Ticket:</span>
                 <span class="font-bold text-white">{{ sale.id }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-[#FAF7F2]/60">Atendido por:</span>
+                <span class="text-[#FDF8F4]/60">Atendido por:</span>
                 <span class="text-white">{{ sale.empleado }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-[#FAF7F2]/60">Cliente:</span>
+                <span class="text-[#FDF8F4]/60">Cliente:</span>
                 <span class="text-white">{{ sale.clienteNombre }}</span>
               </div>
-              <div class="flex justify-between font-bold text-sm text-[#FFD6E0] pt-2 border-t border-[#4A3F35]">
+              <div class="flex justify-between font-bold text-sm text-[#D95578] pt-2 border-t border-[#4A0D22]">
                 <span>Total Cobrado:</span>
                 <span>{{ '$' + sale.total.toLocaleString('es-CO') }}</span>
               </div>

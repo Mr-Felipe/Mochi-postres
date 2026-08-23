@@ -12,29 +12,29 @@ import { Order, OrderStatus } from '../../models/mochi.models';
   imports: [RouterLink, DatePipe, UpperCasePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-[#FDF5F0] min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="bg-[#FDF8F4] min-h-screen p-4 sm:p-6 lg:p-8">
       <div class="max-w-6xl mx-auto space-y-6">
 
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 class="text-2xl font-serif italic text-[#1A1A1A] font-bold">Pedidos Online</h1>
-            <p class="text-xs text-[#1A1A1A]/60 mt-1">Gestiona los estados de los pedidos recibidos</p>
+            <h1 class="text-2xl font-serif italic text-[#590E2A] font-bold">Pedidos Online</h1>
+            <p class="text-xs text-[#590E2A]/60 mt-1">Gestiona los estados de los pedidos recibidos</p>
           </div>
           <div class="flex items-center gap-3">
             <!-- Stats -->
-            <div class="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-[#F0D5CC] text-xs">
+            <div class="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-[#E8D8D0] text-xs">
               <div class="text-center">
-                <span class="block text-lg font-bold text-[#FF758F]">{{ pendingCount() }}</span>
-                <span class="text-[9px] text-[#1A1A1A]/50 uppercase tracking-wider">Pendientes</span>
+                <span class="block text-lg font-bold text-[#D95578]">{{ pendingCount() }}</span>
+                <span class="text-[9px] text-[#590E2A]/50 uppercase tracking-wider">Pendientes</span>
               </div>
-              <div class="border-l border-[#F0D5CC] pl-4 text-center">
+              <div class="border-l border-[#E8D8D0] pl-4 text-center">
                 <span class="block text-lg font-bold text-[#065F46]">{{ activeCount() }}</span>
-                <span class="text-[9px] text-[#1A1A1A]/50 uppercase tracking-wider">Activos</span>
+                <span class="text-[9px] text-[#590E2A]/50 uppercase tracking-wider">Activos</span>
               </div>
-              <div class="border-l border-[#F0D5CC] pl-4 text-center">
-                <span class="block text-lg font-bold text-[#1A1A1A]/40">{{ deliveredTodayCount() }}</span>
-                <span class="text-[9px] text-[#1A1A1A]/50 uppercase tracking-wider">Entregados Hoy</span>
+              <div class="border-l border-[#E8D8D0] pl-4 text-center">
+                <span class="block text-lg font-bold text-[#590E2A]/40">{{ deliveredTodayCount() }}</span>
+                <span class="text-[9px] text-[#590E2A]/50 uppercase tracking-wider">Entregados Hoy</span>
               </div>
             </div>
           </div>
@@ -43,17 +43,17 @@ import { Order, OrderStatus } from '../../models/mochi.models';
         <!-- Filter Tabs -->
         <div class="flex gap-2 overflow-x-auto pb-1">
           <button (click)="activeFilter.set('all')"
-            [class]="activeFilter() === 'all' ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#1A1A1A] border border-[#F0D5CC]'"
+            [class]="activeFilter() === 'all' ? 'bg-[#590E2A] text-white' : 'bg-white text-[#590E2A] border border-[#E8D8D0]'"
             class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
             Todos ({{ allOrders().length }})
           </button>
           <button (click)="activeFilter.set('pendiente')"
-            [class]="activeFilter() === 'pendiente' ? 'bg-[#FF758F] text-white' : 'bg-white text-[#FF758F] border border-[#FF758F]/30'"
+            [class]="activeFilter() === 'pendiente' ? 'bg-[#D95578] text-white' : 'bg-white text-[#D95578] border border-[#D95578]/30'"
             class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
             📝 Pendientes ({{ pendingCount() }})
           </button>
           <button (click)="activeFilter.set('en_preparacion')"
-            [class]="activeFilter() === 'en_preparacion' ? 'bg-[#FF758F] text-white' : 'bg-white text-[#FF758F] border border-[#FF758F]/30'"
+            [class]="activeFilter() === 'en_preparacion' ? 'bg-[#D95578] text-white' : 'bg-white text-[#D95578] border border-[#D95578]/30'"
             class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
             🍡 En Cocina ({{ prepCount() }})
           </button>
@@ -74,24 +74,24 @@ import { Order, OrderStatus } from '../../models/mochi.models';
           <div class="space-y-4">
             @for (order of filteredOrders(); track order.id) {
               <div [id]="'pedido-' + order.id_pedido"
-                class="bg-white rounded-[24px] border border-[#F0D5CC] p-5 sm:p-6 shadow-xs transition-all hover:shadow-md"
+                class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 sm:p-6 shadow-xs transition-all hover:shadow-md"
                 [class.ring-2]="highlightedPedidoId() === order.id_pedido"
-                [class.ring-[#FF758F]]="highlightedPedidoId() === order.id_pedido"
+                [class.ring-[#D95578]]="highlightedPedidoId() === order.id_pedido"
                 [class.ring-offset-2]="highlightedPedidoId() === order.id_pedido">
                 <!-- Order Header -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#F0D5CC]/50">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#E8D8D0]/50">
                   <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
                       [class]="getStatusIconClass(order.estado)">
                       {{ getStatusEmoji(order.estado) }}
                     </div>
                     <div>
-                      <span class="font-mono font-bold text-[#1A1A1A] text-sm block">{{ order.id }}</span>
-                      <span class="text-[11px] text-[#1A1A1A]/60">{{ order.fecha | date:'short' }}</span>
+                      <span class="font-mono font-bold text-[#590E2A] text-sm block">{{ order.id }}</span>
+                      <span class="text-[11px] text-[#590E2A]/60">{{ order.fecha | date:'short' }}</span>
                     </div>
                   </div>
                   <div class="flex items-center gap-3">
-                    <span class="text-lg font-serif italic text-[#1A1A1A]">{{ '$' + order.total.toLocaleString('es-CO') }}</span>
+                    <span class="text-lg font-serif italic text-[#590E2A]">{{ '$' + order.total.toLocaleString('es-CO') }}</span>
                     <span [class]="getStatusBadgeClass(order.estado)" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                       {{ getStatusLabel(order.estado) }}
                     </span>
@@ -101,41 +101,41 @@ import { Order, OrderStatus } from '../../models/mochi.models';
                 <!-- Client Info -->
                 <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                   <div>
-                    <span class="text-[#1A1A1A]/50 block text-[10px] uppercase tracking-wider">Cliente</span>
-                    <span class="font-bold text-[#1A1A1A]">{{ order.cliente.nombre }}</span>
-                    <span class="text-[#1A1A1A]/60 block">{{ order.cliente.telefono }}</span>
+                    <span class="text-[#590E2A]/50 block text-[10px] uppercase tracking-wider">Cliente</span>
+                    <span class="font-bold text-[#590E2A]">{{ order.cliente.nombre }}</span>
+                    <span class="text-[#590E2A]/60 block">{{ order.cliente.telefono }}</span>
                   </div>
                   <div>
-                    <span class="text-[#1A1A1A]/50 block text-[10px] uppercase tracking-wider">Direccion</span>
-                    <span class="text-[#1A1A1A]">{{ order.cliente.direccion }}</span>
+                    <span class="text-[#590E2A]/50 block text-[10px] uppercase tracking-wider">Direccion</span>
+                    <span class="text-[#590E2A]">{{ order.cliente.direccion }}</span>
                   </div>
                   <div>
-                    <span class="text-[#1A1A1A]/50 block text-[10px] uppercase tracking-wider">Pago</span>
-                    <span class="text-[#1A1A1A]">{{ order.metodoPago | uppercase }} — {{ order.estadoPago }}</span>
+                    <span class="text-[#590E2A]/50 block text-[10px] uppercase tracking-wider">Pago</span>
+                    <span class="text-[#590E2A]">{{ order.metodoPago | uppercase }} — {{ order.estadoPago }}</span>
                   </div>
                 </div>
 
                 <!-- Items -->
-                <div class="py-3 border-t border-[#F0D5CC]/50">
+                <div class="py-3 border-t border-[#E8D8D0]/50">
                   <div class="flex flex-wrap gap-2">
                     @for (item of order.items; track item.productoId) {
-                      <div class="flex items-center gap-2 bg-[#FDF5F0] px-3 py-1.5 rounded-full text-[11px]">
+                      <div class="flex items-center gap-2 bg-[#FDF8F4] px-3 py-1.5 rounded-full text-[11px]">
                         <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
-                        <span class="font-medium text-[#1A1A1A]">{{ item.nombreEspanol }}</span>
-                        <span class="text-[#1A1A1A]/50">x{{ item.cantidad }}</span>
+                        <span class="font-medium text-[#590E2A]">{{ item.nombreEspanol }}</span>
+                        <span class="text-[#590E2A]/50">x{{ item.cantidad }}</span>
                       </div>
                     }
                   </div>
                 </div>
 
                 <!-- Status Update Actions -->
-                <div class="pt-3 border-t border-[#F0D5CC]/50">
+                <div class="pt-3 border-t border-[#E8D8D0]/50">
                   <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#1A1A1A]/40">Avanzar Estado:</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#590E2A]/40">Avanzar Estado:</span>
                     <div class="flex gap-2 flex-wrap justify-end">
                       @if (order.estado === 'pendiente') {
                         <button (click)="updateStatus(order, 'en_preparacion')"
-                          class="px-4 py-2 rounded-full bg-[#FF758F] text-white text-xs font-bold hover:bg-[#FF6078] transition-colors shadow-xs">
+                          class="px-4 py-2 rounded-full bg-[#D95578] text-white text-xs font-bold hover:bg-[#FF6078] transition-colors shadow-xs">
                           🍡 Poner en Cocina
                         </button>
                       }
@@ -164,11 +164,11 @@ import { Order, OrderStatus } from '../../models/mochi.models';
             }
           </div>
         } @else {
-          <div class="text-center py-16 bg-white rounded-[32px] border border-[#F0D5CC] space-y-4">
-            <span class="material-icons text-5xl text-[#F0D5CC]">inventory_2</span>
+          <div class="text-center py-16 bg-white rounded-[32px] border border-[#E8D8D0] space-y-4">
+            <span class="material-icons text-5xl text-[#E8D8D0]">inventory_2</span>
             <div>
-              <h3 class="text-lg font-serif italic text-[#1A1A1A]">Sin pedidos</h3>
-              <p class="text-xs text-[#1A1A1A]/50 mt-1">
+              <h3 class="text-lg font-serif italic text-[#590E2A]">Sin pedidos</h3>
+              <p class="text-xs text-[#590E2A]/50 mt-1">
                 @if (activeFilter() === 'all') {
                   No hay pedidos online todavia.
                 } @else {
@@ -233,7 +233,7 @@ export class EmployeeOrdersPageComponent implements OnInit, AfterViewInit {
   });
 
   async updateStatus(order: Order, newStatus: OrderStatus) {
-    await this.dataService.updateOrderStatus(order.id, newStatus);
+    await this.dataService.updateOrderStatus(order.id, newStatus, order.id_pedido);
   }
 
   getStatusEmoji(status: OrderStatus): string {
@@ -250,22 +250,22 @@ export class EmployeeOrdersPageComponent implements OnInit, AfterViewInit {
   getStatusIconClass(status: OrderStatus): string {
     switch (status) {
       case 'pendiente': return 'bg-[#FFF3E0] text-[#6B4E28]';
-      case 'en_preparacion': return 'bg-[#FFD6E0] text-[#4A3F35]';
+      case 'en_preparacion': return 'bg-[#D95578] text-[#590E2A]';
       case 'en_camino': return 'bg-[#E8EAF6] text-[#283593]';
       case 'entregado': return 'bg-[#E0F2F1] text-[#2C5350]';
       case 'cancelado': return 'bg-red-50 text-red-500';
-      default: return 'bg-[#FDF5F0] text-[#1A1A1A]';
+      default: return 'bg-[#FDF8F4] text-[#590E2A]';
     }
   }
 
   getStatusBadgeClass(status: OrderStatus): string {
     switch (status) {
       case 'pendiente': return 'bg-[#FFF3E0] text-[#6B4E28] border border-[#ffe0b2]';
-      case 'en_preparacion': return 'bg-[#FFD6E0] text-[#4A3F35] border border-[#EBE3D5]';
+      case 'en_preparacion': return 'bg-[#D95578] text-[#590E2A] border border-[#E8D8D0]';
       case 'en_camino': return 'bg-[#E8EAF6] text-[#283593] border border-[#c5cae9]';
       case 'entregado': return 'bg-[#E0F2F1] text-[#2C5350] border border-[#b2dfdb]';
       case 'cancelado': return 'bg-red-50 text-red-500 border border-red-200';
-      default: return 'bg-[#FDF5F0] text-[#1A1A1A] border border-[#F0D5CC]';
+      default: return 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0]';
     }
   }
 

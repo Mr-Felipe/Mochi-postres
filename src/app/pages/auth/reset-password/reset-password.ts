@@ -8,8 +8,8 @@ import { SupabaseService } from '../../../services/supabase.service';
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-[#FAF7F2]">
-      <div class="w-full max-w-md bg-white rounded-[32px] border border-[#EBE3D5] p-6 sm:p-10 shadow-xs space-y-6">
+    <div class="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-[#FDF8F4]">
+      <div class="w-full max-w-md bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-10 shadow-xs space-y-6">
         
         @if (success()) {
           <!-- Success State -->
@@ -17,27 +17,27 @@ import { SupabaseService } from '../../../services/supabase.service';
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#E0F2F1] border border-[#B2DFDB] text-4xl mb-2 shadow-xs">
               ✅
             </div>
-            <h1 class="text-2xl sm:text-3xl font-serif italic text-[#4A3F35]">
+            <h1 class="text-2xl sm:text-3xl font-serif italic text-[#590E2A]">
               Contraseña Actualizada
             </h1>
-            <p class="text-xs text-[#4A3F35]/70 leading-relaxed">
+            <p class="text-xs text-[#590E2A]/70 leading-relaxed">
               Tu contraseña ha sido cambiada exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.
             </p>
             <a routerLink="/login" 
-              class="inline-block px-8 py-3 rounded-full bg-[#4A3F35] text-[#FAF7F2] text-xs font-bold uppercase tracking-wider shadow-xs hover:bg-[#362D26] transition-colors">
+              class="inline-block px-8 py-3 rounded-full bg-[#590E2A] text-[#FDF8F4] text-xs font-bold uppercase tracking-wider shadow-xs hover:bg-[#3A0A1C] transition-colors">
               Iniciar Sesión
             </a>
           </div>
         } @else if (loading()) {
           <!-- Loading State -->
           <div class="text-center space-y-4">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#FFD6E0] border border-[#EBE3D5] text-4xl mb-2 shadow-xs animate-pulse">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#D95578] border border-[#E8D8D0] text-4xl mb-2 shadow-xs animate-pulse">
               🔑
             </div>
-            <h1 class="text-2xl font-serif italic text-[#4A3F35]">
+            <h1 class="text-2xl font-serif italic text-[#590E2A]">
               Verificando enlace...
             </h1>
-            <p class="text-xs text-[#4A3F35]/70">
+            <p class="text-xs text-[#590E2A]/70">
               Por favor espera un momento.
             </p>
           </div>
@@ -47,27 +47,27 @@ import { SupabaseService } from '../../../services/supabase.service';
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#FFEBEE] border border-[#FFCDD2] text-4xl mb-2 shadow-xs">
               ❌
             </div>
-            <h1 class="text-2xl font-serif italic text-[#4A3F35]">
+            <h1 class="text-2xl font-serif italic text-[#590E2A]">
               Enlace inválido o expirado
             </h1>
-            <p class="text-xs text-[#4A3F35]/70 leading-relaxed">
+            <p class="text-xs text-[#590E2A]/70 leading-relaxed">
               {{ error() }}
             </p>
             <a routerLink="/recuperar" 
-              class="inline-block px-8 py-3 rounded-full bg-[#4A3F35] text-[#FAF7F2] text-xs font-bold uppercase tracking-wider shadow-xs hover:bg-[#362D26] transition-colors">
+              class="inline-block px-8 py-3 rounded-full bg-[#590E2A] text-[#FDF8F4] text-xs font-bold uppercase tracking-wider shadow-xs hover:bg-[#3A0A1C] transition-colors">
               Solicitar nuevo enlace
             </a>
           </div>
         } @else {
           <!-- Password Reset Form -->
           <div class="text-center space-y-2">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FFD6E0] border border-[#EBE3D5] text-[#4A3F35] font-serif text-2xl mb-1 shadow-xs">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D95578] border border-[#E8D8D0] text-[#590E2A] font-serif text-2xl mb-1 shadow-xs">
               🔑
             </div>
-            <h1 class="text-2xl sm:text-3xl font-serif italic text-[#4A3F35]">
+            <h1 class="text-2xl sm:text-3xl font-serif italic text-[#590E2A]">
               Nueva Contraseña
             </h1>
-            <p class="text-xs text-[#4A3F35]/70">
+            <p class="text-xs text-[#590E2A]/70">
               Ingresa tu nueva contraseña para tu cuenta.
             </p>
           </div>
@@ -81,7 +81,7 @@ import { SupabaseService } from '../../../services/supabase.service';
 
           <form (submit)="onSubmit($event)" class="space-y-4 text-xs">
             <div>
-              <label for="new-password" class="font-bold text-[#4A3F35] block mb-1 uppercase tracking-wider text-[11px]">
+              <label for="new-password" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                 Nueva Contraseña *
               </label>
               <input
@@ -92,12 +92,12 @@ import { SupabaseService } from '../../../services/supabase.service';
                 placeholder="Mínimo 6 caracteres"
                 required
                 minlength="6"
-                class="w-full px-4 py-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-xs focus:outline-none focus:border-[#4A3F35] transition-colors"
+                class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#590E2A] transition-colors"
               />
             </div>
 
             <div>
-              <label for="confirm-password" class="font-bold text-[#4A3F35] block mb-1 uppercase tracking-wider text-[11px]">
+              <label for="confirm-password" class="font-bold text-[#590E2A] block mb-1 uppercase tracking-wider text-[11px]">
                 Confirmar Contraseña *
               </label>
               <input
@@ -108,14 +108,14 @@ import { SupabaseService } from '../../../services/supabase.service';
                 placeholder="Repite tu contraseña"
                 required
                 minlength="6"
-                class="w-full px-4 py-3 rounded-full bg-[#FAF7F2] border border-[#EBE3D5] text-[#4A3F35] text-xs focus:outline-none focus:border-[#4A3F35] transition-colors"
+                class="w-full px-4 py-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#590E2A] transition-colors"
               />
             </div>
 
             <button
               type="submit"
               [disabled]="submitting()"
-              class="w-full py-3.5 rounded-full bg-[#4A3F35] hover:bg-[#362D26] disabled:opacity-50 text-[#FAF7F2] font-bold text-xs uppercase tracking-widest transition-all shadow-xs mt-2">
+              class="w-full py-3.5 rounded-full bg-[#590E2A] hover:bg-[#3A0A1C] disabled:opacity-50 text-[#FDF8F4] font-bold text-xs uppercase tracking-widest transition-all shadow-xs mt-2">
               {{ submitting() ? 'Guardando...' : 'Guardar Nueva Contraseña' }}
             </button>
           </form>

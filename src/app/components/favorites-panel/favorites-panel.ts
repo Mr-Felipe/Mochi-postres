@@ -2,7 +2,6 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@a
 import { RouterLink } from '@angular/router';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { CartService } from '../../services/cart.service';
-import { PaletteService } from '../../services/palette.service';
 import { Product } from '../../models/mochi.models';
 
 @Component({
@@ -85,19 +84,16 @@ import { Product } from '../../models/mochi.models';
 export class FavoritesPanelComponent {
   dataService = inject(MochiDataService);
   cartService = inject(CartService);
-  palette = inject(PaletteService);
 
   isOpen = signal(false);
 
-  private isVino = computed(() => this.palette.current() === 'vino');
-
-  panelBg = computed(() => this.isVino() ? '#3A0A1C' : '#FFFFFF');
-  headingColor = computed(() => this.isVino() ? '#FDF8F4' : '#1A1A1A');
-  textColor = computed(() => this.isVino() ? 'rgba(253,248,244,0.8)' : 'rgba(26,26,26,0.7)');
-  borderColor = computed(() => this.isVino() ? 'rgba(255,255,255,0.1)' : '#F0D5CC');
-  cardBg = computed(() => this.isVino() ? 'rgba(255,255,255,0.05)' : '#FDF5F0');
-  imgBg = computed(() => this.isVino() ? 'rgba(255,255,255,0.08)' : '#FFFFFF');
-  closeBtnBg = computed(() => this.isVino() ? 'rgba(255,255,255,0.1)' : '#FDF5F0');
+  panelBg = signal('#3A0A1C');
+  headingColor = signal('#FDF8F4');
+  textColor = signal('rgba(253,248,244,0.8)');
+  borderColor = signal('rgba(255,255,255,0.1)');
+  cardBg = signal('rgba(255,255,255,0.05)');
+  imgBg = signal('rgba(255,255,255,0.08)');
+  closeBtnBg = signal('rgba(255,255,255,0.1)');
 
   favoriteProducts = computed(() => {
     const favIds = this.dataService.favorites();

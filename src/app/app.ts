@@ -17,12 +17,14 @@ export class App {
   private router = inject(Router);
 
   isDashboardRoute = signal(this.isDashboardUrl(this.router.url));
+  isHomeRoute = signal(this.isHomeUrl(this.router.url));
 
   constructor() {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const url = event.urlAfterRedirects || event.url;
         this.isDashboardRoute.set(this.isDashboardUrl(url));
+        this.isHomeRoute.set(this.isHomeUrl(url));
         // Scroll to top on every navigation
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'instant' });
@@ -35,5 +37,9 @@ export class App {
 
   private isDashboardUrl(url: string): boolean {
     return url.startsWith('/admin') || url.startsWith('/empleado');
+  }
+
+  private isHomeUrl(url: string): boolean {
+    return url === '/' || url === '/inicio';
   }
 }

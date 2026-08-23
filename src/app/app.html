@@ -1,6 +1,9 @@
 <div class="min-h-screen flex flex-col font-sans selection:bg-rose-200 selection:text-rose-900">
   @if (!isDashboardRoute()) {
     <app-navbar />
+    @if (!isHomeRoute()) {
+      <div class="h-[76px] shrink-0"></div>
+    }
   }
   <main class="flex-1">
     <router-outlet />
