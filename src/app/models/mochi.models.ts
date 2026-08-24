@@ -66,30 +66,30 @@ export interface Category {
 
 export interface Product {
   id: number;
-  id_categoria: number;
   nombre_japones: string;
   nombre_espanol: string;
-  descripcion_corta: string;
-  descripcion_completa: string;
-  ingredientes: string[];
+  descripcion: string;
   precio: number;
-  precio_oferta?: number;
   imagen_principal: string;
   galeria_imagenes: string[];
   disponible: boolean;
-  destacado: boolean;
   stock: number;
   stock_minimo: number;
   stock_maximo: number;
   calificacion: number;
   num_resenas: number;
   calorias?: number;
+  frase?: string;
 }
 
 export interface CartItem {
   product: Product;
   cantidad: number;
   notas?: string;
+  frase_personalizada?: string;
+  configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null;
+  customPrice?: number;
+  toppings_seleccionados?: { id: string; nombre: string; precio: number }[];
 }
 
 export type OrderStatus = 'pendiente' | 'en_preparacion' | 'en_camino' | 'listo_recogida' | 'entregado' | 'cancelado';
@@ -130,15 +130,6 @@ export interface Order {
   tiempoEstimado: string;
   creado_por?: 'web' | 'pos';
   id_empleado_registro?: string;
-}
-
-export interface Coupon {
-  codigo: string;
-  descripcion: string;
-  tipo: 'porcentaje' | 'monto_fijo' | 'envio_gratis';
-  valor: number; // e.g. 10 for 10%
-  montoMinimo: number;
-  activo: boolean;
 }
 
 export interface Review {
@@ -191,8 +182,61 @@ export interface VisualConfig {
   telefonoWhatsApp: string;
   direccionLocal: string;
   horarioAtencion: string;
-  costoEnvioBase: number;
-  montoEnvioGratis: number;
   colorPrimarioHex: string;
+}
+
+export type DeliveryZone = 'La Dorada' | 'Puerto Salgar' | 'Purnio' | 'Guarinocito' | 'Honda' | 'Victoria';
+
+export const DELIVERY_PRICES: Record<DeliveryZone, number> = {
+  'La Dorada': 3000,
+  'Puerto Salgar': 3800,
+  'Purnio': 4200,
+  'Guarinocito': 4800,
+  'Honda': 8000,
+  'Victoria': 10000
+};
+
+export function getDeliveryPrice(zone: DeliveryZone, quantity: number): number {
+  const base = DELIVERY_PRICES[zone];
+  const trips = quantity > 25 ? 2 : 1;
+  return base * trips;
+}
+
+export function detectZoneFromAddress(address: string): DeliveryZone {
+  const lower = address.toLowerCase();
+  if (lower.includes('victoria')) return 'Victoria';
+  if (lower.includes('honda')) return 'Honda';
+  if (lower.includes('puerto salgar')) return 'Puerto Salgar';
+  if (lower.includes('purnio')) return 'Purnio';
+  if (lower.includes('guarinocito')) return 'Guarinocito';
+  return 'La Dorada';
+}
+
+// --- Vaso Personalizado ---
+export interface CupLayerOption {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface CupLayer {
+  id: number;
+  label: string;
+  description: string;
+  icon: string;
+  options: CupLayerOption[];
+}
+
+export interface CustomCupConfig {
+  base: CupLayerOption | null;
+  crema: CupLayerOption | null;
+  relleno: CupLayerOption | null;
+  topping: CupLayerOption | null;
+}
+
+export interface CustomCup {
+  layers: CustomCupConfig;
+  total: number;
+  cantidad: number;
 }
 

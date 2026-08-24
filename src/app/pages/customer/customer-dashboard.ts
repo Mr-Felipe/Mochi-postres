@@ -218,7 +218,6 @@ export class CustomerDashboardComponent {
 
   async handleSignOut() {
     await this.supabaseService.signOut();
-    this.dataService.favorites.set([]);
     this.cartService.clearCart();
     this.router.navigate(['/login']);
   }

@@ -301,7 +301,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   async onLogout() {
     this.close.emit();
     await this.supabase.signOut();
-    this.dataService.favorites.set([]);
     this.cartService.clearCart();
     this.router.navigate(['/']);
   }

@@ -1,18 +1,16 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Product, Category, Coupon, Review, BlogPost, VisualConfig, Order, POSSale, DetallePedido } from '../models/mochi.models';
+import { Product, Review, BlogPost, VisualConfig, Order, POSSale, DetallePedido } from '../models/mochi.models';
 import { SupabaseService } from './supabase.service';
 import { supabase } from '../supabase';
 
 const DEFAULT_CONFIG: VisualConfig = {
   heroTitulo: 'Descubre la magia del auténtico Mochi Japonés en La Dorada',
   heroSubtitulo: 'Postres artesanales elaborados con ingredientes premium, recetas tradicionales de Kioto y presentación de lujo.',
-  bannerPromocional: '🌸 ¡Envío GRATIS en compras superiores a $30.000 COP en La Dorada! Usa el cupón MOCHI10',
+  bannerPromocional: '🌸 ¡Pide tus mochis favoritos y recíbelos en La Dorada y alrededores!',
   mostrarBanner: true,
   telefonoWhatsApp: '+573001234567',
   direccionLocal: 'Calle 10 # 5-20, Centro, La Dorada, Caldas',
   horarioAtencion: 'Lunes a Domingo: 11:00 AM - 9:00 PM',
-  costoEnvioBase: 5000,
-  montoEnvioGratis: 30000,
   colorPrimarioHex: '#f472b6'
 };
 
@@ -22,19 +20,21 @@ const DEFAULT_CONFIG: VisualConfig = {
 export class MochiDataService {
   readonly supabaseService = inject(SupabaseService);
 
-  readonly categories = signal<Category[]>([]);
   readonly products = signal<Product[]>([]);
-  readonly coupons = signal<Coupon[]>([]);
   readonly reviews = signal<Review[]>([]);
   readonly blogPosts = signal<BlogPost[]>([]);
   readonly visualConfig = signal<VisualConfig>(DEFAULT_CONFIG);
   readonly orders = signal<Order[]>([]);
   readonly posSales = signal<POSSale[]>([]);
   readonly detallePedidos = signal<DetallePedido[]>([]);
-  readonly favorites = signal<number[]>([]);
 
   readonly activeProducts = computed(() => this.products().filter(p => p.disponible));
-  readonly featuredProducts = computed(() => this.products().filter(p => p.destacado && p.disponible));
+  readonly featuredProducts = computed(() => {
+    return [...this.products()]
+      .filter(p => p.disponible && p.num_resenas > 0)
+      .sort((a, b) => b.calificacion - a.calificacion || b.num_resenas - a.num_resenas)
+      .slice(0, 8);
+  });
   readonly detallePedidosOnline = computed(() => this.detallePedidos().filter(d => d.origen === 'online'));
   readonly detallePedidosLocal = computed(() => this.detallePedidos().filter(d => d.origen === 'local'));
 
@@ -58,40 +58,22 @@ export class MochiDataService {
   // --- DATA LOADING FROM SUPABASE ---
 
   async loadAllFromSupabase(): Promise<void> {
-    const [catsRes, prodsRes, cupsRes, revsRes, blogsRes] = await Promise.all([
-      supabase.from('categorias').select('*'),
+    const [prodsRes, revsRes, blogsRes] = await Promise.all([
       supabase.from('productos').select('*'),
-      supabase.from('cupones_descuento').select('*'),
-      supabase.from('resenas').select('*'),
+      supabase.from('resenas').select('*, usuarios:id_usuario(nombre_completo)'),
       supabase.from('blog').select('*')
     ]);
-
-    if (catsRes.data) {
-      this.categories.set(catsRes.data.map((c: Record<string, unknown>) => ({
-        id: c['id_categoria'] as number,
-        nombre: c['nombre'] as string,
-        descripcion: c['descripcion'] as string || '',
-        imagen: c['imagen'] as string || '',
-        activa: c['activa'] as boolean,
-        icono: ''
-      })));
-    }
 
     if (prodsRes.data) {
       this.products.set(prodsRes.data.map((p: Record<string, unknown>) => ({
         id: p['id_producto'] as number,
-        id_categoria: p['id_categoria'] as number,
         nombre_japones: p['nombre_japones'] as string || '',
         nombre_espanol: p['nombre_espanol'] as string,
-        descripcion_corta: p['descripcion_corta'] as string || '',
-        descripcion_completa: p['descripcion_completa'] as string || '',
-        ingredientes: typeof p['ingredientes'] === 'string' ? JSON.parse(p['ingredientes'] as string) : (p['ingredientes'] as string[]) || [],
+        descripcion: p['descripcion'] as string || '',
         precio: Number(p['precio']),
-        precio_oferta: p['precio_oferta'] ? Number(p['precio_oferta']) : undefined,
         imagen_principal: p['imagen_principal'] as string || '',
         galeria_imagenes: typeof p['galeria_imagenes'] === 'string' ? JSON.parse(p['galeria_imagenes'] as string) : (p['galeria_imagenes'] as string[]) || [],
         disponible: p['disponible'] as boolean,
-        destacado: p['destacado'] as boolean,
         stock: p['stock'] as number || 0,
         stock_minimo: p['stock_minimo'] as number || 10,
         stock_maximo: p['stock_maximo'] as number || 500,
@@ -101,27 +83,19 @@ export class MochiDataService {
       })));
     }
 
-    if (cupsRes.data) {
-      this.coupons.set(cupsRes.data.map((c: Record<string, unknown>) => ({
-        codigo: c['codigo'] as string,
-        descripcion: c['descripcion'] as string || '',
-        tipo: c['tipo_descuento'] as 'porcentaje' | 'monto_fijo' | 'envio_gratis',
-        valor: Number(c['valor_descuento']),
-        montoMinimo: Number(c['monto_minimo_compra'] || 0),
-        activo: c['activo'] as boolean
-      })));
-    }
-
     if (revsRes.data) {
-      this.reviews.set(revsRes.data.map((r: Record<string, unknown>) => ({
-        id: r['id_resena'] as number,
-        productoId: r['id_producto'] as number,
-        nombreCliente: '',
-        comentario: r['comentario'] as string || '',
-        calificacion: r['calificacion'] as number,
-        fecha: r['created_at'] as string || '',
-        aprobado: r['aprobado'] as boolean
-      })));
+      this.reviews.set(revsRes.data.map((r: Record<string, unknown>) => {
+        const usuario = r['usuarios'] as Record<string, unknown> | null;
+        return {
+          id: r['id_resena'] as number,
+          productoId: r['id_producto'] as number,
+          nombreCliente: (usuario?.['nombre_completo'] as string) || 'Cliente',
+          comentario: r['comentario'] as string || '',
+          calificacion: r['calificacion'] as number,
+          fecha: r['created_at'] as string || '',
+          aprobado: r['aprobado'] as boolean
+        };
+      }));
     }
 
     if (blogsRes.data) {
@@ -139,10 +113,7 @@ export class MochiDataService {
       })));
     }
 
-    // Cargar calificaciones de productos desde resenas
     this.updateProductRatings();
-
-    // Cargar pedidos desde Supabase
     await this.loadOrders();
   }
 
@@ -160,42 +131,33 @@ export class MochiDataService {
 
   // --- Product CRUD ---
 
-  async addProduct(product: Omit<Product, 'id' | 'calificacion' | 'num_resenas'>): Promise<void> {
-    const { error } = await supabase.from('productos').insert({
-      id_categoria: product.id_categoria,
+  async addProduct(product: Omit<Product, 'id' | 'calificacion' | 'num_resenas'>): Promise<number | null> {
+    const { data, error } = await supabase.from('productos').insert({
       nombre_japones: product.nombre_japones,
       nombre_espanol: product.nombre_espanol,
-      descripcion_corta: product.descripcion_corta,
-      descripcion_completa: product.descripcion_completa,
-      ingredientes: JSON.stringify(product.ingredientes),
+      descripcion: product.descripcion,
       precio: product.precio,
-      precio_oferta: product.precio_oferta || null,
       imagen_principal: product.imagen_principal,
       galeria_imagenes: JSON.stringify(product.galeria_imagenes),
       disponible: product.disponible,
-      destacado: product.destacado,
       stock: product.stock,
       stock_minimo: product.stock_minimo || 10,
       stock_maximo: product.stock_maximo || 500
-    });
-    if (error) { console.error('Error adding product:', error); return; }
+    }).select('id_producto').single();
+    if (error) { console.error('Error adding product:', error); return null; }
     await this.loadAllFromSupabase();
+    return data?.id_producto ?? null;
   }
 
   async updateProduct(product: Product): Promise<void> {
     const { error } = await supabase.from('productos').update({
-      id_categoria: product.id_categoria,
       nombre_japones: product.nombre_japones,
       nombre_espanol: product.nombre_espanol,
-      descripcion_corta: product.descripcion_corta,
-      descripcion_completa: product.descripcion_completa,
-      ingredientes: JSON.stringify(product.ingredientes),
+      descripcion: product.descripcion,
       precio: product.precio,
-      precio_oferta: product.precio_oferta || null,
       imagen_principal: product.imagen_principal,
       galeria_imagenes: JSON.stringify(product.galeria_imagenes),
       disponible: product.disponible,
-      destacado: product.destacado,
       stock: product.stock,
       stock_minimo: product.stock_minimo || 10,
       stock_maximo: product.stock_maximo || 500,
@@ -211,40 +173,6 @@ export class MochiDataService {
     await this.loadAllFromSupabase();
   }
 
-  // --- Favorites ---
-
-  async toggleFavorite(productId: number): Promise<void> {
-    const userId = this.supabaseService.activeUser()?.id;
-    if (!userId) return;
-    const current = this.favorites();
-    if (current.includes(productId)) {
-      await supabase.from('favoritos').delete().eq('id_usuario', userId).eq('id_producto', productId);
-      this.favorites.set(current.filter(id => id !== productId));
-    } else {
-      // Check if already exists in DB to avoid 409 conflict
-      const { data: existing } = await supabase
-        .from('favoritos')
-        .select('id_producto')
-        .eq('id_usuario', userId)
-        .eq('id_producto', productId)
-        .maybeSingle();
-
-      if (!existing) {
-        await supabase.from('favoritos').insert({ id_usuario: userId, id_producto: productId });
-      }
-      this.favorites.set([...current, productId]);
-    }
-  }
-
-  isFavorite(productId: number): boolean {
-    return this.favorites().includes(productId);
-  }
-
-  async loadFavorites(userId: string): Promise<void> {
-    const { data } = await supabase.from('favoritos').select('id_producto').eq('id_usuario', userId);
-    if (data) this.favorites.set(data.map((f: Record<string, unknown>) => f['id_producto'] as number));
-  }
-
   // --- Orders ---
 
   async loadOrders(): Promise<void> {
@@ -256,10 +184,7 @@ export class MochiDataService {
     if (error) { console.error('Error loading orders:', error); return; }
     if (!pedidos) return;
 
-    // Load all detalle_pedido
     const { data: detalles } = await supabase.from('detalle_pedido').select('*');
-
-    // Load productos for images/names
     const { data: productos } = await supabase.from('productos').select('id_producto, nombre_japones, nombre_espanol, imagen_principal');
 
     const prodMap = new Map<number, Record<string, unknown>>();
@@ -324,7 +249,6 @@ export class MochiDataService {
   async createOrder(orderData: Omit<Order, 'id' | 'fecha' | 'estado'>, rpcOrderId?: number): Promise<Order> {
     let id_pedido = rpcOrderId;
 
-    // Si el RPC ya creó el pedido, NO volver a insertar
     if (!id_pedido) {
       const { data: pedidoData, error: pedidoErr } = await supabase.from('pedidos').insert({
         id_usuario: orderData.id_usuario,
@@ -343,7 +267,6 @@ export class MochiDataService {
 
       id_pedido = pedidoData?.['id_pedido'] || Math.floor(1000 + Math.random() * 9000);
 
-      // Insertar detalle del pedido solo si no lo hizo el RPC
       if (orderData.items?.length) {
         const detalles = orderData.items.map(item => ({
           id_pedido,
@@ -380,7 +303,6 @@ export class MochiDataService {
         return;
       }
     }
-    // Reload from Supabase to ensure consistency
     await this.loadOrders();
   }
 
@@ -409,7 +331,7 @@ export class MochiDataService {
     return newSale;
   }
 
-  // --- Visual Config (hardcoded - solo en memoria) ---
+  // --- Visual Config ---
 
   updateVisualConfig(config: Partial<VisualConfig>) {
     const updated = { ...this.visualConfig(), ...config };
@@ -430,20 +352,5 @@ export class MochiDataService {
     });
     if (error) { console.error('Error adding review:', error); return; }
     await this.loadAllFromSupabase();
-  }
-
-  // --- Coupons ---
-
-  validateCoupon(code: string, subtotal: number): { valid: boolean; discount: number; message: string; coupon?: Coupon } {
-    const found = this.coupons().find(c => c.codigo.toUpperCase() === code.trim().toUpperCase() && c.activo);
-    if (!found) return { valid: false, discount: 0, message: 'Cupón no válido o expirado.' };
-    if (subtotal < found.montoMinimo) {
-      return { valid: false, discount: 0, message: `El cupón requiere una compra mínima de $${found.montoMinimo.toLocaleString()} COP.` };
-    }
-    let discount = 0;
-    if (found.tipo === 'porcentaje') discount = Math.round((subtotal * found.valor) / 100);
-    else if (found.tipo === 'monto_fijo') discount = found.valor;
-    else if (found.tipo === 'envio_gratis') discount = this.visualConfig().costoEnvioBase;
-    return { valid: true, discount, message: `¡Cupón ${found.codigo} aplicado correctamente!`, coupon: found };
   }
 }

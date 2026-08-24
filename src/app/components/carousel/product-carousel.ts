@@ -38,14 +38,8 @@ import { CartService } from '../../services/cart.service';
                   </div>
                   <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider text-white transition-all duration-700"
                     [style.background]="getTagBg(i)">
-                    {{ prod.nombre_japones.split(' ')[0] }}
+                    {{ (prod.nombre_japones || '').split(' ')[0] }}
                   </span>
-                  @if (prod.precio_oferta) {
-                    <span class="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-[#FDBA74] text-[#7C2D12] text-[7px] font-black uppercase"
-                      [style.opacity]="isActive(i) ? 1 : 0.5">
-                      OFERTA
-                    </span>
-                  }
                 </div>
 
                 <!-- Body -->
@@ -57,20 +51,11 @@ import { CartService } from '../../services/cart.service';
                     <h3 class="text-sm font-serif italic text-[#590E2A] font-bold leading-tight">
                       {{ prod.nombre_espanol }}
                     </h3>
-                    <p class="text-[9px] text-[#590E2A]/50 mt-0.5 line-clamp-1">
-                      {{ prod.descripcion_corta }}
-                    </p>
                   </div>
                   <div class="flex items-center justify-between pt-1.5 border-t border-[#E8D8D0]">
-                    @if (prod.precio_oferta) {
-                      <span class="text-xs font-serif italic font-bold text-[#D95578]">
-                        {{ '$' + prod.precio_oferta.toLocaleString('es-CO') }}
-                      </span>
-                    } @else {
-                      <span class="text-xs font-serif italic font-bold text-[#590E2A]">
-                        {{ '$' + prod.precio.toLocaleString('es-CO') }}
-                      </span>
-                    }
+                    <span class="text-xs font-serif italic font-bold text-[#590E2A]">
+                      {{ '$' + prod.precio.toLocaleString('es-CO') }}
+                    </span>
                     <button
                       (click)="cartService.addToCart(prod, 1); $event.stopPropagation()"
                       class="w-7 h-7 rounded-full bg-[#D95578] hover:bg-[#FF5277] text-white flex items-center justify-center transition-all active:scale-90"

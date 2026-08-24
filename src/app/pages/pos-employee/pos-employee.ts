@@ -80,7 +80,7 @@ interface POSCartItem {
                     </h3>
                     <div class="flex justify-between items-center mt-1">
                       <span class="text-xs font-serif italic text-[#D95578]">
-                        {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
+                        {{ '$' + prod.precio.toLocaleString('es-CO') }}
                       </span>
                       <span [class]="prod.stock <= 5 ? 'text-[#ff8a80] font-bold' : 'text-[#FDF8F4]/50'" class="text-[9px]">
                         Stock: {{ prod.stock }}
@@ -123,7 +123,7 @@ interface POSCartItem {
                 <div class="flex items-center justify-between p-2.5 rounded-2xl bg-[#2E0A16] border border-[#4A0D22] text-xs">
                   <div>
                     <span class="font-serif italic text-white block">{{ item.product.nombre_espanol }}</span>
-                    <span class="text-[10px] text-[#FDF8F4]/60">{{ '$' + (item.product.precio_oferta || item.product.precio).toLocaleString('es-CO') }} c/u</span>
+                    <span class="text-[10px] text-[#FDF8F4]/60">{{ '$' + (item.product.precio).toLocaleString('es-CO') }} c/u</span>
                   </div>
 
                   <div class="flex items-center gap-2">
@@ -251,7 +251,7 @@ export class PosEmployeePageComponent {
 
   posTotal = computed(() => {
     return this.posItems().reduce((sum, item) => {
-      const p = item.product.precio_oferta || item.product.precio;
+      const p = item.product.precio;
       return sum + (p * item.cantidad);
     }, 0);
   });
@@ -304,7 +304,7 @@ export class PosEmployeePageComponent {
         productoId: i.product.id,
         nombre: i.product.nombre_espanol,
         cantidad: i.cantidad,
-        precio: i.product.precio_oferta || i.product.precio
+        precio: i.product.precio
       })),
       subtotal: this.posTotal(),
       total: this.posTotal(),

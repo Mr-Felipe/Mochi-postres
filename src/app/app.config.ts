@@ -26,7 +26,6 @@ function initializeApp(sbService: SupabaseService, dataService: MochiDataService
         }
       }
       await sbService.loadDirecciones(session.user.id);
-      await dataService.loadFavorites(session.user.id);
     }
   };
 }

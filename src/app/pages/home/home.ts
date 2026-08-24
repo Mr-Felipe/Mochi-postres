@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { Component, inject, signal, computed, effect, ChangeDetectionStrategy, OnInit, PLATFORM_ID } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ProductCarouselComponent } from '../../components/carousel/product-carousel';
 import { MochiDataService } from '../../services/mochi-data.service';
@@ -52,7 +52,7 @@ import { isPlatformBrowser } from '@angular/common';
                 <span>Ver Catalogo</span>
                 <span class="material-icons text-base">arrow_forward</span>
               </a>
-              <a routerLink="/simulador" class="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 text-center flex items-center justify-center gap-2 border"
+              <a routerLink="/productos" class="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 text-center flex items-center justify-center gap-2 border"
                 [style.border-color]="heroBtnBorder()" [style.color]="heroBtnText2()" [style.background]="heroBtnBg2()">
                 <span>Calcular Pedido</span>
               </a>
@@ -112,7 +112,7 @@ import { isPlatformBrowser } from '@angular/common';
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row items-end justify-between mb-12 gap-4">
           <div>
-            <span class="text-xs font-bold uppercase tracking-widest font-serif" [style.color]="'var(--accent)'">Los Favoritos</span>
+            <span class="text-xs font-bold uppercase tracking-widest font-serif" [style.color]="'var(--accent)'">Los Más Populares</span>
             <h2 class="text-3xl sm:text-4xl font-serif italic mt-1" [style.color]="headingColor()">Lo Mas Pedidos</h2>
             <p class="text-xs uppercase tracking-wider mt-1 font-semibold" [style.color]="textColor()">Los postres mas aclamados por la comunidad de La Dorada</p>
           </div>
@@ -131,14 +131,8 @@ import { isPlatformBrowser } from '@angular/common';
                 <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 <span class="absolute top-4 left-4 px-3 py-1 rounded-full text-[#FDF8F4] text-[10px] font-bold uppercase tracking-wider backdrop-blur-md"
                   [style.background]="'var(--accent)/90'">
-                  {{ prod.nombre_japones.split(' ')[0] }}
+                  {{ (prod.nombre_japones || '').split(' ')[0] }}
                 </span>
-                <button (click)="dataService.toggleFavorite(prod.id)" class="absolute top-4 right-4 w-9 h-9 rounded-full border shadow-xs flex items-center justify-center hover:scale-110 transition-transform"
-                  [style.background]="cardBg()" [style.border-color]="'var(--border-soft)'">
-                  <span class="material-icons text-lg" [style.color]="dataService.isFavorite(prod.id) ? 'var(--accent)' : 'var(--text-muted)'">
-                    {{ dataService.isFavorite(prod.id) ? 'favorite' : 'favorite_border' }}
-                  </span>
-                </button>
               </div>
               <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
                 <div>
@@ -150,13 +144,12 @@ import { isPlatformBrowser } from '@angular/common';
                     </div>
                   </div>
                   <h3 class="text-xl font-serif italic font-bold" [style.color]="headingColor()">{{ prod.nombre_espanol }}</h3>
-                  <p class="text-xs mt-2 line-clamp-2 leading-relaxed" [style.color]="textColor()">{{ prod.descripcion_corta }}</p>
                 </div>
                 <div class="pt-4 border-t flex items-center justify-between" [style.border-color]="'var(--border-soft)'">
                   <div>
                     <span class="text-[10px] uppercase tracking-widest block font-bold" [style.color]="textColor()">Precio</span>
                     <span class="text-xl font-serif italic font-bold" [style.color]="headingColor()">
-                      {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
+                       {{ '$' + prod.precio.toLocaleString('es-CO') }}
                     </span>
                   </div>
                   <div class="flex items-center gap-2">
@@ -177,6 +170,56 @@ import { isPlatformBrowser } from '@angular/common';
       </div>
     </section>
 
+    <!-- ===================== CUSTOM CUP CTA ===================== -->
+    <section class="py-20 relative overflow-hidden" style="background: linear-gradient(135deg, #590E2A 0%, #3A0A1C 100%)">
+      <!-- Decorative -->
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-[#D95578]/10" style="filter: blur(80px)"></div>
+        <div class="absolute bottom-10 -left-10 w-60 h-60 rounded-full bg-[#FDF8F4]/5" style="filter: blur(60px)"></div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <!-- Left: Visual Cup -->
+          <div class="flex justify-center">
+            <div class="flex flex-col items-center gap-0 p-6 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10">
+              <div class="text-[10px] font-bold text-[#FDF8F4]/50 uppercase tracking-widest mb-3">7 Capas de Sabor</div>
+              <div class="w-36 h-7 rounded-t-full bg-[#8B4513] flex items-center justify-center text-[10px] font-bold text-white">Topping</div>
+              <div class="w-36 h-6 bg-[#FF6B6B] flex items-center justify-center text-[9px] font-bold text-white">Relleno</div>
+              <div class="w-36 h-6 bg-[#FFEAA7] flex items-center justify-center text-[9px] font-bold text-[#590E2A]">Crema Ganache</div>
+              <div class="w-36 h-6 bg-[#D4A574] flex items-center justify-center text-[9px] font-bold text-white">Base</div>
+              <div class="w-36 h-6 bg-[#FF6B6B] flex items-center justify-center text-[9px] font-bold text-white">Relleno</div>
+              <div class="w-36 h-6 bg-[#FFEAA7] flex items-center justify-center text-[9px] font-bold text-[#590E2A]">Crema Ganache</div>
+              <div class="w-36 h-6 rounded-b-lg bg-[#D4A574] flex items-center justify-center text-[9px] font-bold text-white">Base</div>
+              <div class="text-xs text-[#FDF8F4]/40 mt-3 font-medium">Desde $18.000 COP</div>
+            </div>
+          </div>
+
+          <!-- Right: Copy -->
+          <div class="space-y-6 text-center lg:text-left">
+            <span class="inline-block px-4 py-1.5 rounded-full bg-[#D95578]/20 text-[#D95578] text-[10px] font-bold uppercase tracking-widest border border-[#D95578]/30">
+              ✨ Nuevo
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-serif italic text-[#FDF8F4] font-bold leading-tight">
+              Arma tu Vaso <span class="text-[#D95578]">Personalizado</span>
+            </h2>
+            <p class="text-sm text-[#FDF8F4]/60 leading-relaxed max-w-md mx-auto lg:mx-0">
+              Elige cada una de las 7 capas: base, crema ganache, relleno y topping. 
+              Crea el vaso perfecto a tu gusto con ingredientes frescos y artesanales.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+              <a routerLink="/personalizar-vaso"
+                class="w-full sm:w-auto px-8 py-4 rounded-full bg-[#D95578] hover:bg-[#FF6080] text-white font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-[#D95578]/30">
+                <span>Crear Mi Vaso</span>
+                <span class="material-icons text-base">arrow_forward</span>
+              </a>
+              <span class="text-[11px] text-[#FDF8F4]/40 font-medium">Sin login required</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ===================== TESTIMONIOS ===================== -->
     <section class="py-20" [style.background]="sectionBg1()">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -186,33 +229,29 @@ import { isPlatformBrowser } from '@angular/common';
         </div>
 
         <!-- Carousel -->
-        <div class="relative overflow-hidden">
-          <div class="carousel-track" [style.transform]="'translateX(-' + (currentSlide() * 100) + '%)'">
-            @for (review of reviews(); track review.id; let i = $index) {
-              <div class="min-w-full px-4">
-                <div class="max-w-2xl mx-auto p-8 rounded-3xl text-center" [style.background]="cardBg()" [style.border]="'1px solid var(--border-soft)'">
-                  <!-- Stars -->
-                  <div class="flex items-center justify-center gap-1 mb-4">
-                    @for (star of [1,2,3,4,5]; track star) {
-                      <span class="material-icons text-lg" [style.color]="star <= review.calificacion ? 'var(--star)' : 'var(--border-soft)'">star</span>
-                    }
-                  </div>
-                  <p class="text-sm leading-relaxed italic font-medium mb-6" [style.color]="textColor()">
-                    "{{ review.comentario }}"
-                  </p>
-                  <div class="flex items-center justify-center gap-3">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold" [style.background]="'var(--accent)'">
-                      {{ review.nombreCliente.charAt(0) }}
-                    </div>
-                    <div class="text-left">
-                      <p class="text-xs font-bold" [style.color]="headingColor()">{{ review.nombreCliente }}</p>
-                      <p class="text-[10px]" [style.color]="textColor()">Cliente verificado</p>
-                    </div>
-                  </div>
+        <div class="relative overflow-hidden rounded-3xl" [style.background]="cardBg()" [style.border]="'1px solid var(--border-soft)'">
+          @for (review of reviews(); track review.id; let i = $index) {
+            <div class="p-8 text-center" [class.hidden]="currentSlide() !== i">
+              <!-- Stars -->
+              <div class="flex items-center justify-center gap-1 mb-4">
+                @for (star of [1,2,3,4,5]; track star) {
+                  <span class="material-icons text-lg" [style.color]="star <= review.calificacion ? 'var(--star)' : 'var(--border-soft)'">star</span>
+                }
+              </div>
+              <p class="text-sm leading-relaxed italic font-medium mb-6" [style.color]="textColor()">
+                "{{ review.comentario }}"
+              </p>
+              <div class="flex items-center justify-center gap-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold" [style.background]="'var(--accent)'">
+                  {{ (review.nombreCliente || 'C').charAt(0) }}
+                </div>
+                <div class="text-left">
+                  <p class="text-xs font-bold" [style.color]="headingColor()">{{ review.nombreCliente }}</p>
+                  <p class="text-[10px]" [style.color]="textColor()">Cliente verificado</p>
                 </div>
               </div>
-            }
-          </div>
+            </div>
+          }
 
           <!-- Dots -->
           <div class="flex items-center justify-center gap-2 mt-8">
@@ -242,33 +281,6 @@ import { isPlatformBrowser } from '@angular/common';
               </button>
               <div class="faq-answer px-6" [class.open]="openFaq() === i">
                 <p class="text-xs leading-relaxed pb-4" [style.color]="textColor()">{{ faq.a }}</p>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== ZONAS DE DELIVERY ===================== -->
-    <section class="py-20" [style.background]="sectionBg1()">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-          <span class="text-xs font-bold uppercase tracking-widest font-serif" [style.color]="'var(--accent)'">Cobertura</span>
-          <h2 class="text-3xl font-serif italic mt-1" [style.color]="headingColor()">Zonas de Delivery</h2>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          @for (zone of zones; track zone.name) {
-            <div class="p-6 rounded-3xl transition-all hover:shadow-lg"
-              [style.background]="cardBg()" [style.border]="'1px solid var(--border-soft)'">
-              <div class="flex items-center gap-3 mb-4">
-                <span class="material-icons text-2xl" [style.color]="'var(--accent)'">location_on</span>
-                <h3 class="font-serif italic font-bold text-lg" [style.color]="headingColor()">{{ zone.name }}</h3>
-              </div>
-              <p class="text-xs mb-3" [style.color]="textColor()">{{ zone.desc }}</p>
-              <div class="flex items-center justify-between text-xs font-bold">
-                <span [style.color]="'var(--accent)'">{{ zone.price }}</span>
-                <span [style.color]="textColor()">{{ zone.time }}</span>
               </div>
             </div>
           }
@@ -315,20 +327,18 @@ import { isPlatformBrowser } from '@angular/common';
     </section>
   `
 })
-export class HomePageComponent implements OnInit, OnDestroy {
+export class HomePageComponent implements OnInit {
   dataService = inject(MochiDataService);
   cartService = inject(CartService);
   private platformId = inject(PLATFORM_ID);
 
   config = this.dataService.visualConfig;
-  categories = this.dataService.categories;
   topProducts = this.dataService.featuredProducts;
   blogPosts = this.dataService.blogPosts;
   reviews = this.dataService.reviews;
 
   currentSlide = signal(0);
   openFaq = signal<number | null>(null);
-  private autoSlideTimer: any;
 
   pillars = [
     { icon: '\u{1F95B}', title: 'Leche de Pasto', desc: 'Fresca, sin conservadores, de tambores locales de La Dorada.' },
@@ -345,28 +355,21 @@ export class HomePageComponent implements OnInit, OnDestroy {
     { q: 'Puedo hacer pedidos para eventos?', a: 'Claro! Ofrecemos paquetes especiales para bodas, quinceaneras, bautizos y eventos corporativos. Contactanos con 72 horas de anticipacion.' }
   ];
 
-  zones = [
-    { name: 'Zona 1 - La Dorada', desc: 'Envio gratis en compras superiores a $50.000 COP.', price: 'Gratis >$50.000', time: '30-45 min' },
-    { name: 'Zona 2 - Municipios', desc: 'Victoria, Honda, Marquetalia, Puerto Boyaca y alrededores.', price: '$5.000 COP', time: '45-60 min' },
-    { name: 'Zona 3 - Nacional', desc: 'Envio a toda Colombia mediante Servientrega.', price: 'Variable', time: '1-3 dias habiles' }
-  ];
-
-  ngOnInit() {
+  constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      this.autoSlideTimer = setInterval(() => {
+      effect((onCleanup) => {
         const total = this.reviews().length;
-        if (total > 0) {
-          this.currentSlide.update(s => (s + 1) % total);
+        if (total > 1) {
+          const timer = setInterval(() => {
+            this.currentSlide.update(s => (s + 1) % this.reviews().length);
+          }, 5000);
+          onCleanup(() => clearInterval(timer));
         }
-      }, 5000);
+      });
     }
   }
 
-  ngOnDestroy() {
-    if (this.autoSlideTimer) {
-      clearInterval(this.autoSlideTimer);
-    }
-  }
+  ngOnInit() {}
 
   toggleFaq(i: number) {
     this.openFaq.update(current => current === i ? null : i);

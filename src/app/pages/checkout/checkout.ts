@@ -342,7 +342,7 @@ import { PaymentMethodType, Order, Direccion, StockValidation } from '../../mode
                         </div>
                       </div>
                       <span class="font-serif italic text-[#590E2A] font-bold">
-                        {{ '$' + (item.cantidad * (item.product.precio_oferta || item.product.precio)).toLocaleString('es-CO') }}
+                        {{ '$' + (item.cantidad * (item.product.precio)).toLocaleString('es-CO') }}
                       </span>
                     </div>
                   }
@@ -354,13 +354,6 @@ import { PaymentMethodType, Order, Direccion, StockValidation } from '../../mode
                     <span>Subtotal:</span>
                     <span class="font-bold text-[#590E2A]">{{ '$' + cartService.subtotal().toLocaleString('es-CO') }}</span>
                   </div>
-
-                  @if (cartService.couponDiscount() > 0) {
-                    <div class="flex justify-between text-[#065F46] font-bold">
-                      <span>Descuento Cupón:</span>
-                      <span>-{{ '$' + cartService.couponDiscount().toLocaleString('es-CO') }}</span>
-                    </div>
-                  }
 
                   <div class="flex justify-between font-medium">
                     <span>Costo de Envío:</span>
@@ -510,6 +503,7 @@ export class CheckoutPageComponent implements OnInit {
   selectAddress(dir: Direccion) {
     this.selectedAddressId.set(dir.id_direccion);
     this.clienteDireccion.set(dir.direccion_completa);
+    this.cartService.updateDeliveryZone(dir.direccion_completa + ' ' + (dir.barrio || '') + ' ' + (dir.ciudad || ''));
     if (dir.instrucciones_entrega) {
       this.notasEspeciales.set(dir.instrucciones_entrega);
     }
@@ -521,14 +515,19 @@ export class CheckoutPageComponent implements OnInit {
     this.isProcessing.set(true);
     this.stockErrors.set([]);
 
-    // 1. RPC: validar_stock_pedido before placing order
-    const stockItems = this.cartService.items().map(i => ({
+    const allItems = this.cartService.items();
+    const customItems = allItems.filter(i => i.configuracion_capas);
+    const toppingItems = allItems.filter(i => !i.configuracion_capas && i.toppings_seleccionados && i.toppings_seleccionados.length > 0);
+    const normalItems = allItems.filter(i => !i.configuracion_capas && (!i.toppings_seleccionados || i.toppings_seleccionados.length === 0));
+
+    // 1. Validate stock for all items
+    const stockItems = allItems.map(i => ({
       id_producto: i.product.id,
       cantidad: i.cantidad
     }));
 
     const stockValidation = await this.supabaseService.validarStockPedido(
-      stockItems, 
+      stockItems,
       this.dataService.products()
     );
 
@@ -547,17 +546,57 @@ export class CheckoutPageComponent implements OnInit {
     );
 
     if (paymentRes.success) {
-      // 3. RPC: crear_pedido_con_stock
       const currentUser = this.supabaseService.activeUser();
       if (!currentUser) { this.isProcessing.set(false); return; }
-      const sbOrderRes = await this.supabaseService.crearPedidoConStock({
-        p_id_usuario: currentUser.id,
-        p_id_direccion: this.selectedAddressId() ?? undefined,
-        p_productos: stockItems,
-        p_metodo_pago: this.selectedMethod(),
-        p_notas: this.notasEspeciales()
-      });
 
+      let sbOrderRes: { id_pedido: number; numero_pedido: string } | null = null;
+
+      // 3. Create orders in Supabase
+      if (normalItems.length > 0) {
+        const stockItems = normalItems.map(i => ({
+          id_producto: i.product.id,
+          cantidad: i.cantidad
+        }));
+        sbOrderRes = await this.supabaseService.crearPedidoConStock({
+          p_id_usuario: currentUser.id,
+          p_id_direccion: this.selectedAddressId() ?? undefined,
+          p_productos: stockItems,
+          p_metodo_pago: this.selectedMethod(),
+          p_notas: this.notasEspeciales()
+        });
+      }
+
+      if (customItems.length > 0) {
+        const customProducts = customItems.map(i => ({
+          id_producto: i.product.id,
+          cantidad: i.cantidad,
+          configuracion_capas: i.configuracion_capas!
+        }));
+        await this.supabaseService.crearPedidoVasoPersonalizado({
+          p_id_usuario: currentUser.id,
+          p_id_direccion: this.selectedAddressId() ?? undefined,
+          p_productos: customProducts,
+          p_metodo_pago: this.selectedMethod(),
+          p_notas: this.notasEspeciales()
+        });
+      }
+
+      if (toppingItems.length > 0) {
+        const toppingProducts = toppingItems.map(i => ({
+          id_producto: i.product.id,
+          cantidad: i.cantidad,
+          toppings: i.toppings_seleccionados!
+        }));
+        await this.supabaseService.crearPedidoConToppings({
+          p_id_usuario: currentUser.id,
+          p_id_direccion: this.selectedAddressId() ?? undefined,
+          p_productos: toppingProducts,
+          p_metodo_pago: this.selectedMethod(),
+          p_notas: this.notasEspeciales()
+        });
+      }
+
+      // 4. Create local order for UI
       const order = await this.dataService.createOrder({
         id_usuario: currentUser.id,
         id_direccion: this.selectedAddressId() ?? undefined,
@@ -569,17 +608,17 @@ export class CheckoutPageComponent implements OnInit {
           ciudad: 'La Dorada'
         },
         tipoEntrega: this.cartService.deliveryType(),
-        items: this.cartService.items().map(i => ({
+        items: allItems.map(i => ({
           productoId: i.product.id,
           nombreJapones: i.product.nombre_japones,
           nombreEspanol: i.product.nombre_espanol,
-          precio: i.product.precio_oferta || i.product.precio,
+          precio: i.customPrice || i.product.precio,
           cantidad: i.cantidad,
           imagen: i.product.imagen_principal
         })),
         subtotal: this.cartService.subtotal(),
         costoEnvio: this.cartService.shippingCost(),
-        descuento: this.cartService.couponDiscount(),
+        descuento: 0,
         total: this.cartService.total(),
         metodoPago: this.selectedMethod(),
         estadoPago: 'aprobado',

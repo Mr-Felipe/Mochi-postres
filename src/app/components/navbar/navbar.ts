@@ -1,9 +1,8 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, ViewChild, HostListener, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, HostListener, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
-import { FavoritesPanelComponent } from '../favorites-panel/favorites-panel';
 import { isPlatformBrowser } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -11,7 +10,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, FavoritesPanelComponent],
+  imports: [RouterLink, RouterLinkActive],
   changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <header
@@ -58,14 +57,6 @@ import { Subscription } from 'rxjs';
               <span class="material-icons text-xl">login</span>
             </a>
           }
-          <button (click)="favoritesPanel.toggle()" class="relative p-2 transition-colors" [style.color]="navColor()">
-            <span class="material-icons text-xl">favorite_border</span>
-            @if (dataService.favorites().length > 0) {
-              <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center font-mono shadow px-1" [style.background]="'var(--accent)'">
-                {{ dataService.favorites().length }}
-              </span>
-            }
-          </button>
           <button (click)="cartService.toggleDrawer()" class="relative p-2 transition-colors" [style.color]="navColor()">
             <span class="material-icons text-xl">shopping_bag</span>
             <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 rounded-full text-[9px] font-bold flex items-center justify-center font-mono shadow"
@@ -87,7 +78,7 @@ import { Subscription } from 'rxjs';
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link" [style.color]="navColor()">Inicio</a>
           <a routerLink="/productos" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Catalogo</a>
           <a routerLink="/sobre-nosotros" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Nuestra Historia</a>
-          <a routerLink="/simulador" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Simulador</a>
+          <a routerLink="/contacto" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Contacto</a>
           <a routerLink="/blog" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Blog</a>
           <a routerLink="/contacto" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Contacto</a>
         </nav>
@@ -143,14 +134,6 @@ import { Subscription } from 'rxjs';
               <span class="hidden xl:inline">Iniciar Sesion</span>
             </a>
           }
-          <button (click)="favoritesPanel.toggle()" class="relative flex items-center gap-2 py-2 transition-colors focus:outline-none" [style.color]="navColor()">
-            <span class="material-icons text-xl">favorite_border</span>
-            @if (dataService.favorites().length > 0) {
-              <span class="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center font-mono shadow px-1" [style.background]="'var(--accent)'">
-                {{ dataService.favorites().length }}
-              </span>
-            }
-          </button>
           <button (click)="cartService.toggleDrawer()" class="relative flex items-center gap-2 py-2 transition-colors focus:outline-none" [style.color]="navColor()">
             <span class="material-icons text-xl">shopping_bag</span>
             <span class="hidden sm:inline text-xs font-bold uppercase tracking-wider">Carrito</span>
@@ -164,8 +147,6 @@ import { Subscription } from 'rxjs';
         </div>
       </div>
     </header>
-
-    <app-favorites-panel />
 
     @if (isMobileMenuOpen()) {
       <div class="fixed inset-0 bg-black/40 z-40 md:hidden" (click)="isMobileMenuOpen.set(false)" style="animation: fadeIn 0.2s ease-out"></div>
@@ -189,8 +170,8 @@ import { Subscription } from 'rxjs';
           <a routerLink="/sobre-nosotros" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
             <span class="material-icons text-[20px]">info</span> Nuestra Historia
           </a>
-          <a routerLink="/simulador" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
-            <span class="material-icons text-[20px]">calculate</span> Simulador
+          <a routerLink="/contacto" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
+            <span class="material-icons text-[20px]">mail</span> Contacto
           </a>
           <a routerLink="/blog" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
             <span class="material-icons text-[20px]">article</span> Blog
@@ -238,7 +219,6 @@ import { Subscription } from 'rxjs';
   `
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  @ViewChild(FavoritesPanelComponent) favoritesPanel!: FavoritesPanelComponent;
   cartService = inject(CartService);
   dataService = inject(MochiDataService);
   supabaseService = inject(SupabaseService);
@@ -327,7 +307,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.userMenuOpen.set(false);
     this.isMobileMenuOpen.set(false);
     await this.supabaseService.signOut();
-    this.dataService.favorites.set([]);
     this.cartService.clearCart();
     this.router.navigate(['/']);
   }

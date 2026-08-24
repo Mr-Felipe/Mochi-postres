@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { CartService } from '../../services/cart.service';
 
@@ -57,25 +57,6 @@ import { CartService } from '../../services/cart.service';
               </select>
             </div>
           </div>
-
-          <!-- Category Filter Pills -->
-          <div class="flex items-center gap-2 overflow-x-auto pt-2 pb-1 scrollbar-none">
-            <button 
-              (click)="selectedCategory.set(null)"
-              [class]="selectedCategory() === null ? 'bg-[#D95578] text-[#FDF8F4] font-bold' : 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0] hover:bg-[#FFA0B4]/30 font-bold'"
-              class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider whitespace-nowrap transition-all shadow-xs">
-              🍡 Todos los Postres
-            </button>
-            @for (cat of categories(); track cat.id) {
-              <button 
-                (click)="selectedCategory.set(cat.id)"
-                [class]="selectedCategory() === cat.id ? 'bg-[#D95578] text-white font-bold' : 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0] hover:bg-[#FFA0B4]/30 font-bold'"
-                class="px-5 py-2.5 rounded-full text-xs uppercase tracking-wider whitespace-nowrap transition-all shadow-xs flex items-center gap-1.5">
-                <span>{{ cat.icono }}</span>
-                <span>{{ cat.nombre }}</span>
-              </button>
-            }
-          </div>
         </div>
 
         <!-- Products Grid -->
@@ -87,16 +68,8 @@ import { CartService } from '../../services/cart.service';
                 <div class="relative h-56 bg-[#FDF8F4] overflow-hidden">
                   <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                   <span class="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#D95578]/90 backdrop-blur-md text-[#FDF8F4] text-[10px] font-bold uppercase tracking-wider">
-                    {{ prod.nombre_japones.split(' ')[0] }}
+                    {{ (prod.nombre_japones || '').split(' ')[0] }}
                   </span>
-                  @if (prod.precio_oferta) {
-                    <span class="absolute top-3 left-16 px-2.5 py-1 rounded-full bg-[#FDBA74] text-[#7C2D12] text-[10px] font-black border border-[#FB923C]">
-                      OFERTA
-                    </span>
-                  }
-                  <button (click)="dataService.toggleFavorite(prod.id)" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white text-[#590E2A] border border-[#E8D8D0] shadow-xs flex items-center justify-center hover:scale-110 transition-transform">
-                    <span class="material-icons text-lg" [class.text-[#D95578]]="dataService.isFavorite(prod.id)">{{ dataService.isFavorite(prod.id) ? 'favorite' : 'favorite_border' }}</span>
-                  </button>
                 </div>
 
                 <!-- Product Content -->
@@ -113,17 +86,13 @@ import { CartService } from '../../services/cart.service';
                     <h3 class="text-lg font-serif italic text-[#590E2A] font-bold">
                       {{ prod.nombre_espanol }}
                     </h3>
-
-                    <p class="text-xs text-[#590E2A]/75 mt-1 line-clamp-2 leading-relaxed">
-                      {{ prod.descripcion_corta }}
-                    </p>
                   </div>
 
                   <div class="pt-3 border-t border-[#E8D8D0] flex items-center justify-between">
                     <div>
                       <span class="text-[10px] text-[#590E2A]/60 uppercase tracking-widest block font-bold">Precio</span>
                       <span class="text-lg font-serif italic text-[#590E2A] font-bold">
-                        {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
+                        {{ '$' + prod.precio.toLocaleString('es-CO') }}
                       </span>
                     </div>
 
@@ -147,8 +116,8 @@ import { CartService } from '../../services/cart.service';
               🔍
             </div>
             <h3 class="text-xl font-serif italic text-[#590E2A]">No encontramos postres coincidentes</h3>
-            <p class="text-[#590E2A]/70 text-xs mt-1 max-w-md mx-auto uppercase tracking-wider">Prueba buscando con otros términos o seleccionando otra categoría de nuestro menú.</p>
-            <button (click)="searchQuery.set(''); selectedCategory.set(null)" class="mt-4 px-6 py-3 rounded-full bg-[#D95578] text-[#FDF8F4] font-bold text-xs uppercase tracking-wider hover:bg-[#FF6078]">
+            <p class="text-[#590E2A]/70 text-xs mt-1 max-w-md mx-auto uppercase tracking-wider">Prueba buscando con otros términos.</p>
+            <button (click)="searchQuery.set('')" class="mt-4 px-6 py-3 rounded-full bg-[#D95578] text-[#FDF8F4] font-bold text-xs uppercase tracking-wider hover:bg-[#FF6078]">
               Ver Todos los Postres
             </button>
           </div>
@@ -160,28 +129,12 @@ import { CartService } from '../../services/cart.service';
 export class CatalogPageComponent {
   dataService = inject(MochiDataService);
   cartService = inject(CartService);
-  route = inject(ActivatedRoute);
 
-  categories = this.dataService.categories;
-  selectedCategory = signal<number | null>(null);
   searchQuery = signal<string>('');
   sortBy = signal<string>('destacados');
 
-  constructor() {
-    this.route.queryParams.subscribe(params => {
-      if (params['categoria']) {
-        this.selectedCategory.set(Number(params['categoria']));
-      }
-    });
-  }
-
   filteredProducts = computed(() => {
     let list = [...this.dataService.activeProducts()];
-
-    // Category filter
-    if (this.selectedCategory() !== null) {
-      list = list.filter(p => p.id_categoria === this.selectedCategory());
-    }
 
     // Search query filter
     const query = this.searchQuery().trim().toLowerCase();
@@ -189,20 +142,20 @@ export class CatalogPageComponent {
       list = list.filter(p =>
         p.nombre_espanol.toLowerCase().includes(query) ||
         p.nombre_japones.toLowerCase().includes(query) ||
-        p.descripcion_corta.toLowerCase().includes(query)
+        p.descripcion.toLowerCase().includes(query)
       );
     }
 
     // Sort
     if (this.sortBy() === 'precio_menor') {
-      list.sort((a, b) => (a.precio_oferta || a.precio) - (b.precio_oferta || b.precio));
+      list.sort((a, b) => a.precio - b.precio);
     } else if (this.sortBy() === 'precio_mayor') {
-      list.sort((a, b) => (b.precio_oferta || b.precio) - (a.precio_oferta || a.precio));
+      list.sort((a, b) => b.precio - a.precio);
     } else if (this.sortBy() === 'calificacion') {
       list.sort((a, b) => b.calificacion - a.calificacion);
     } else {
-      // 'destacados'
-      list.sort((a, b) => (b.destacado ? 1 : 0) - (a.destacado ? 1 : 0));
+      // 'destacados' - best rated by reviews
+      list.sort((a, b) => b.calificacion - a.calificacion || b.num_resenas - a.num_resenas);
     }
 
     return list;

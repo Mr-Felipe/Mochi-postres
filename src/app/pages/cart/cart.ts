@@ -1,6 +1,7 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../services/cart.service';
+import { CartItem } from '../../models/mochi.models';
 
 @Component({
   selector: 'app-cart',
@@ -39,8 +40,15 @@ import { CartService } from '../../services/cart.service';
                       <h3 class="font-serif italic text-[#590E2A] text-base">
                         {{ item.product.nombre_espanol }}
                       </h3>
+                      @if (item.toppings_seleccionados && item.toppings_seleccionados.length > 0) {
+                        <div class="flex flex-wrap gap-1 mt-1">
+                          @for (t of item.toppings_seleccionados; track t.id) {
+                            <span class="text-[9px] px-2 py-0.5 rounded-full bg-[#D95578]/10 text-[#D95578] font-bold">+{{ t.nombre }}</span>
+                          }
+                        </div>
+                      }
                       <span class="text-xs text-[#590E2A]/70 block mt-0.5">
-                        Precio Unitario: {{ '$' + (item.product.precio_oferta || item.product.precio).toLocaleString('es-CO') }}
+                        Precio Unitario: {{ '$' + (item.customPrice || item.product.precio).toLocaleString('es-CO') }}
                       </span>
                     </div>
                   </div>
@@ -61,9 +69,9 @@ import { CartService } from '../../services/cart.service';
                     <!-- Item Subtotal -->
                     <div class="text-right">
                       <span class="text-base font-serif italic text-[#590E2A] block">
-                        {{ '$' + (item.cantidad * (item.product.precio_oferta || item.product.precio)).toLocaleString('es-CO') }}
+                        {{ '$' + itemTotal(item).toLocaleString('es-CO') }}
                       </span>
-                      <button (click)="cartService.removeFromCart(item.product.id)" class="text-[11px] text-[#590E2A]/60 hover:text-[#590E2A] font-bold uppercase tracking-wider">
+                      <button (click)="cartService.removeFromCart(item.product.id, item.configuracion_capas)" class="text-[11px] text-[#590E2A]/60 hover:text-[#590E2A] font-bold uppercase tracking-wider">
                         Eliminar
                       </button>
                     </div>
@@ -76,41 +84,9 @@ import { CartService } from '../../services/cart.service';
               </button>
             </div>
 
-            <!-- Order Summary & Coupon -->
+            <!-- Order Summary -->
             <div class="lg:col-span-4 bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-8 shadow-xs space-y-6 sticky top-28">
               <h2 class="text-lg font-serif italic text-[#590E2A] pb-3 border-b border-[#E8D8D0]">Resumen del Pedido</h2>
-
-              <!-- Coupon Code Section -->
-              <div class="space-y-2">
-                <label for="coupon-input" class="text-xs font-bold uppercase tracking-wider text-[#590E2A] block">¿Tienes un Cupón de Descuento?</label>
-                <div class="flex gap-2">
-                  <input 
-                    #couponInput 
-                    id="coupon-input"
-                    type="text" 
-                    placeholder="MOCHI10"
-                    class="flex-1 px-4 py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-xs text-[#590E2A] focus:outline-none focus:border-[#590E2A] font-mono uppercase"
-                  />
-                  <button 
-                    (click)="applyCoupon(couponInput.value); couponInput.value=''"
-                    class="px-5 py-2.5 rounded-full bg-[#590E2A] text-[#FDF8F4] font-bold text-xs uppercase tracking-wider hover:bg-[#3A0A1C] transition-colors">
-                    Aplicar
-                  </button>
-                </div>
-
-                @if (couponMessage()) {
-                  <p [class]="couponSuccess() ? 'text-[#2C5350]' : 'text-[#8C3A3A]'" class="text-xs font-semibold">
-                    {{ couponMessage() }}
-                  </p>
-                }
-
-                @if (cartService.appliedCoupon()) {
-                  <div class="flex items-center justify-between p-3 rounded-full bg-[#E0F2F1] text-[#2C5350] text-xs border border-[#b2dfdb] font-semibold uppercase tracking-wider">
-                    <span>Cupón {{ cartService.appliedCoupon()?.codigo }} activo</span>
-                    <button (click)="cartService.removeCoupon()" class="text-[#8C3A3A] font-bold">Remover</button>
-                  </div>
-                }
-              </div>
 
               <!-- Cost Summary -->
               <div class="space-y-2.5 text-xs text-[#590E2A]/80 pt-3 border-t border-[#E8D8D0]">
@@ -118,13 +94,6 @@ import { CartService } from '../../services/cart.service';
                   <span>Subtotal:</span>
                   <span class="font-bold text-[#590E2A]">{{ '$' + cartService.subtotal().toLocaleString('es-CO') }}</span>
                 </div>
-
-                @if (cartService.couponDiscount() > 0) {
-                  <div class="flex justify-between text-[#2C5350] font-bold">
-                    <span>Descuento Cupón:</span>
-                    <span>-{{ '$' + cartService.couponDiscount().toLocaleString('es-CO') }}</span>
-                  </div>
-                }
 
                 <div class="flex justify-between">
                   <span>Envío a La Dorada:</span>
@@ -168,13 +137,9 @@ import { CartService } from '../../services/cart.service';
 export class CartPageComponent {
   cartService = inject(CartService);
 
-  couponMessage = signal<string | null>(null);
-  couponSuccess = signal<boolean>(false);
-
-  applyCoupon(code: string) {
-    if (!code) return;
-    const res = this.cartService.applyCouponCode(code);
-    this.couponMessage.set(res.message);
-    this.couponSuccess.set(res.success);
+  itemTotal(item: CartItem): number {
+    const base = item.customPrice || item.product.precio;
+    const toppings = item.toppings_seleccionados?.reduce((s, t) => s + t.precio, 0) || 0;
+    return (base + toppings) * item.cantidad;
   }
 }

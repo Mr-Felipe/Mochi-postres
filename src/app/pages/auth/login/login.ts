@@ -154,7 +154,6 @@ export class LoginComponent {
     const rol = this.supabase.activeUser()?.rol ?? 'cliente';
     const userId = this.supabase.activeUser()?.id;
     if (userId) {
-      await this.dataService.loadFavorites(userId);
       await this.cartService.loadCart();
     }
 

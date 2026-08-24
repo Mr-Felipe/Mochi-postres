@@ -6,6 +6,7 @@ import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { NotificationService } from '../../services/notification.service';
 import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../../models/mochi.models';
+import { supabase } from '../../supabase';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -125,7 +126,6 @@ import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../..
                   <thead>
                     <tr class="border-b border-[#E8D8D0] bg-[#FDF8F4]">
                       <th class="text-left p-4 font-bold text-[#590E2A]">Producto</th>
-                      <th class="text-left p-4 font-bold text-[#590E2A]">Categoría</th>
                       <th class="text-right p-4 font-bold text-[#590E2A]">Precio</th>
                       <th class="text-center p-4 font-bold text-[#590E2A]">Stock</th>
                       <th class="text-center p-4 font-bold text-[#590E2A]">Mín</th>
@@ -146,18 +146,10 @@ import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../..
                             </div>
                           </div>
                         </td>
-                        <td class="p-4">
-                          <span class="bg-[#FDF8F4] text-[#590E2A] px-3 py-1 rounded-full text-[10px] font-bold">
-                            Cat. {{ prod.id_categoria }}
-                          </span>
-                        </td>
                         <td class="p-4 text-right">
                           <span class="font-serif italic font-bold text-[#590E2A]">
-                            {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
+                            {{ '$' + prod.precio.toLocaleString('es-CO') }}
                           </span>
-                          @if (prod.precio_oferta) {
-                            <span class="text-[#590E2A]/40 line-through block text-[10px]">{{ '$' + prod.precio.toLocaleString('es-CO') }}</span>
-                          }
                         </td>
                         <td class="p-4 text-center">
                           <span class="font-mono font-bold" [class]="prod.stock <= prod.stock_minimo ? 'text-[#8C3A3A]' : prod.stock >= prod.stock_maximo ? 'text-[#2C5350]' : 'text-[#590E2A]'">
@@ -280,9 +272,38 @@ import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../..
 
                 <!-- Description -->
                 <div>
-                  <label class="font-bold text-[#590E2A] block mb-1.5 text-xs">Descripción Corta</label>
-                  <input #mdesc type="text" [value]="editingProduct()?.descripcion_corta || ''" placeholder="Postre japonés artesanal..." 
-                    class="w-full p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-sm focus:outline-none focus:border-[#D95578]">
+                  <label class="font-bold text-[#590E2A] block mb-1.5 text-xs">Descripción</label>
+                  <textarea #mdesc rows="3" [value]="editingProduct()?.descripcion || ''" placeholder="Postre japonés artesanal..." 
+                    class="w-full p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-sm focus:outline-none focus:border-[#D95578]"></textarea>
+                </div>
+
+                <!-- Ingredient Selector -->
+                <div class="bg-[#FDF8F4] rounded-2xl p-4 space-y-3">
+                  <h3 class="text-xs font-bold text-[#590E2A] uppercase tracking-wider">Ingredientes del Producto</h3>
+                  @for (tipo of ['base', 'crema', 'relleno', 'topping']; track tipo) {
+                    @if (ingredientsByTipo(tipo).length > 0) {
+                      <div>
+                        <span class="text-[10px] font-bold text-[#590E2A]/60 uppercase tracking-wider block mb-1.5">{{ tipo }}</span>
+                        <div class="flex flex-wrap gap-1.5">
+                          @for (ing of ingredientsByTipo(tipo); track ing.id) {
+                            <button
+                              (click)="toggleIngredient(ing)"
+                              [class]="isIngredientSelected(ing.id)
+                                ? 'bg-[#D95578] text-white border-[#D95578]'
+                                : 'bg-white text-[#590E2A] border-[#E8D8D0] hover:border-[#D95578]/50'"
+                              class="px-2.5 py-1 rounded-full border text-[10px] font-bold transition-all">
+                              {{ ing.nombre }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  }
+                  @if (selectedIngredientes().length > 0) {
+                    <div class="pt-2 border-t border-[#E8D8D0]/50">
+                      <span class="text-[10px] text-[#590E2A]/50">{{ selectedIngredientes().length }} ingredientes seleccionados</span>
+                    </div>
+                  }
                 </div>
 
                 <!-- Toggles -->
@@ -291,11 +312,6 @@ import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../..
                     <input type="checkbox" #mdisp [checked]="editingProduct()?.disponible ?? true" 
                       class="w-4 h-4 rounded border-[#E8D8D0] text-[#D95578] focus:ring-[#D95578]">
                     <span class="text-xs font-bold text-[#590E2A]">Disponible</span>
-                  </label>
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" #mdest [checked]="editingProduct()?.destacado ?? false" 
-                      class="w-4 h-4 rounded border-[#E8D8D0] text-[#D95578] focus:ring-[#D95578]">
-                    <span class="text-xs font-bold text-[#590E2A]">Destacado</span>
                   </label>
                 </div>
               </div>
@@ -307,7 +323,7 @@ import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../..
                     class="flex-1 py-3 rounded-full border border-[#E8D8D0] text-[#590E2A] font-bold text-xs uppercase tracking-widest hover:bg-[#FDF8F4] transition-colors">
                     Cancelar
                   </button>
-                  <button (click)="saveProductModal(mesp.value, mjap.value, mprice.value, mstock.value, mstockmin.value, mstockmax.value, mdesc.value, mdisp.checked, mdest.checked)" 
+                  <button (click)="saveProductModal(mesp.value, mjap.value, mprice.value, mstock.value, mstockmin.value, mstockmax.value, mdesc.value, mdisp.checked)" 
                     class="flex-1 py-3 rounded-full bg-[#D95578] hover:bg-[#FF6080] text-white font-bold text-xs uppercase tracking-widest shadow-xs transition-colors">
                     {{ editingProduct() ? '✓ Guardar Cambios' : '+ Crear Producto' }}
                   </button>
@@ -825,16 +841,7 @@ import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../..
                 />
               </div>
 
-              <div>
-                <label for="free-shipping" class="font-bold text-[#590E2A] block mb-1">Monto para Envío Gratis ($ COP)</label>
-                <input 
-                  id="free-shipping"
-                  type="number" 
-                  [value]="config().montoEnvioGratis" 
-                  (input)="dataService.updateVisualConfig({ montoEnvioGratis: Number($any($event.target).value) })"
-                  class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] font-medium"
-                />
-              </div>
+
             </div>
           </div>
         }
@@ -862,6 +869,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   userAddresses = signal<Direccion[]>([]);
   highlightedPedidoId = signal<number | null>(null);
   activeOrderFilter = signal<string>('all');
+  availableIngredientes = signal<{ id: number; nombre: string; tipo: string }[]>([]);
+  selectedIngredientes = signal<{ id: number; nombre: string; tipo: string }[]>([]);
 
   private el = inject(ElementRef);
 
@@ -1019,13 +1028,16 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.userAddresses.set((data as Direccion[]) || []);
   }
 
-  openProductModal(product?: Product) {
+  async openProductModal(product?: Product) {
+    await this.loadIngredientes();
     if (product) {
       this.editingProduct.set({ ...product });
       this.productImagePreview.set(product.imagen_principal || null);
+      await this.loadProductIngredients(product.id);
     } else {
       this.editingProduct.set(null);
       this.productImagePreview.set(null);
+      this.selectedIngredientes.set([]);
     }
     this.selectedProductFile.set(null);
     this.showProductModal.set(true);
@@ -1035,6 +1047,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     this.showProductModal.set(false);
     this.editingProduct.set(null);
     this.productImagePreview.set(null);
+    this.selectedIngredientes.set([]);
     this.selectedProductFile.set(null);
   }
 
@@ -1101,7 +1114,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  async saveProductModal(esp: string, jap: string, price: string, stock: string, stockMin: string, stockMax: string, desc: string, disp: boolean, dest: boolean) {
+  async saveProductModal(esp: string, jap: string, price: string, stock: string, stockMin: string, stockMax: string, desc: string, disp: boolean) {
     if (!esp || !price) return;
     
     const current = this.editingProduct();
@@ -1126,33 +1139,94 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         stock: Number(stock) || current.stock,
         stock_minimo: Number(stockMin) || current.stock_minimo,
         stock_maximo: Number(stockMax) || current.stock_maximo,
-        descripcion_corta: desc || current.descripcion_corta,
-        disponible: disp,
-        destacado: dest
+        descripcion: desc || current.descripcion,
+        disponible: disp
       };
       await this.dataService.updateProduct(updated);
+      if (this.selectedIngredientes().length > 0) {
+        await this.saveProductIngredients(current.id);
+      }
     } else {
       const fallbackImg = 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80';
       const finalImg = imageUrl || fallbackImg;
-      await this.dataService.addProduct({
-        id_categoria: 1,
+      const newProduct = await this.dataService.addProduct({
         nombre_japones: jap || esp,
         nombre_espanol: esp,
-        descripcion_corta: desc || 'Postre japonés artesanal recién preparado.',
-        descripcion_completa: 'Elaborado artesanalmente en La Dorada con ingredientes de alta calidad.',
-        ingredientes: ['Arroz Mochiko', 'Azúcar refinada'],
+        descripcion: desc || 'Postre japonés artesanal recién preparado.',
         precio: Number(price),
         imagen_principal: finalImg,
         galeria_imagenes: [finalImg],
         disponible: disp,
-        destacado: dest,
         stock: Number(stock) || 20,
         stock_minimo: Number(stockMin) || 10,
         stock_maximo: Number(stockMax) || 500
       });
+      if (newProduct && this.selectedIngredientes().length > 0) {
+        await this.saveProductIngredients(newProduct);
+      }
     }
     
     this.closeProductModal();
+  }
+
+  // --- INGREDIENTES ---
+
+  async loadIngredientes() {
+    const { data } = await supabase
+      .from('ingredientes')
+      .select('id, nombre, tipo')
+      .eq('activo', true)
+      .order('tipo')
+      .order('nombre');
+    if (data) this.availableIngredientes.set(data);
+  }
+
+  async loadProductIngredients(productId: number) {
+    const { data } = await supabase
+      .from('producto_ingrediente')
+      .select('id_ingrediente, ingredientes(id, nombre, tipo)')
+      .eq('id_producto', productId);
+    if (data) {
+      const selected = data
+        .map((row: Record<string, unknown>) => {
+          const ing = row['ingredientes'] as Record<string, unknown> | null;
+          if (!ing) return null;
+          return { id: ing['id'] as number, nombre: ing['nombre'] as string, tipo: ing['tipo'] as string };
+        })
+        .filter(Boolean) as { id: number; nombre: string; tipo: string }[];
+      this.selectedIngredientes.set(selected);
+    }
+  }
+
+  ingredientsByTipo(tipo: string): { id: number; nombre: string; tipo: string }[] {
+    return this.availableIngredientes().filter(i => i.tipo === tipo);
+  }
+
+  isIngredientSelected(id: number): boolean {
+    return this.selectedIngredientes().some(i => i.id === id);
+  }
+
+  toggleIngredient(ing: { id: number; nombre: string; tipo: string }) {
+    const current = this.selectedIngredientes();
+    if (current.some(i => i.id === ing.id)) {
+      this.selectedIngredientes.set(current.filter(i => i.id !== ing.id));
+    } else {
+      this.selectedIngredientes.set([...current, ing]);
+    }
+  }
+
+  async saveProductIngredients(productId: number) {
+    // Delete existing
+    await supabase.from('producto_ingrediente').delete().eq('id_producto', productId);
+    // Insert new
+    const rows = this.selectedIngredientes().map((ing, idx) => ({
+      id_producto: productId,
+      id_ingrediente: ing.id,
+      orden: idx + 1
+    }));
+    if (rows.length > 0) {
+      await supabase.from('producto_ingrediente').insert(rows);
+    }
   }
 }
 

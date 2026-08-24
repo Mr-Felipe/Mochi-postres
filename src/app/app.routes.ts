@@ -50,10 +50,6 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/about/about').then(m => m.AboutPageComponent)
   },
   {
-    path: 'simulador',
-    loadComponent: () => import('./pages/simulator/simulator').then(m => m.SimulatorPageComponent)
-  },
-  {
     path: 'carrito',
     loadComponent: () => import('./pages/cart/cart').then(m => m.CartPageComponent)
   },
@@ -79,6 +75,10 @@ export const routes: Routes = [
   {
     path: 'contacto',
     loadComponent: () => import('./pages/contact/contact').then(m => m.ContactPageComponent)
+  },
+  {
+    path: 'personalizar-vaso',
+    loadComponent: () => import('./pages/custom-cup/custom-cup').then(m => m.CustomCupComponent)
   },
 
   // ========================

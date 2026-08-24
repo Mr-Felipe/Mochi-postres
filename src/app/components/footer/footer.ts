@@ -45,7 +45,7 @@ import { MochiDataService } from '../../services/mochi-data.service';
             <h3 class="italic text-lg mb-4" [style.color]="'var(--footer-heading)'">Explora Mochi.</h3>
             <ul class="space-y-2.5 text-xs uppercase tracking-widest font-semibold opacity-80">
               <li><a routerLink="/productos" class="hover:opacity-100 transition-opacity">Catalogo de Postres</a></li>
-              <li><a routerLink="/simulador" class="hover:opacity-100 transition-opacity">Simulador de Pedidos</a></li>
+
               <li><a routerLink="/sobre-nosotros" class="hover:opacity-100 transition-opacity">Nuestra Historia</a></li>
               <li><a routerLink="/blog" class="hover:opacity-100 transition-opacity">Blog de Cultura Japonesa</a></li>
               <li><a routerLink="/pedidos" class="hover:opacity-100 transition-opacity">Seguimiento de Pedidos</a></li>

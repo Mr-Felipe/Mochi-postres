@@ -105,6 +105,13 @@ export class SupabaseService {
     return { data, error: null };
   }
 
+  async checkEmailExists(email: string): Promise<{ data: { exists: boolean } | null; error: string | null }> {
+    const trimmedEmail = email.trim().toLowerCase();
+    const { data, error } = await this.sb.rpc('check_email_exists', { p_email: trimmedEmail });
+    if (error) return { data: null, error: error.message };
+    return { data: { exists: data as boolean }, error: null };
+  }
+
   async signOut() {
     await this.sb.auth.signOut();
     this.activeUser.set(null);
@@ -218,6 +225,60 @@ export class SupabaseService {
       return { id_pedido: id, numero_pedido: `MOCHI-2026-${id}` };
     }
     return null;
+  }
+
+  // --- RPC: CREAR PEDIDO VASO PERSONALIZADO ---
+
+  async crearPedidoVasoPersonalizado(params: {
+    p_id_usuario: string;
+    p_id_direccion?: number;
+    p_productos: {
+      id_producto: number;
+      cantidad: number;
+      configuracion_capas: { base: number; crema: number; relleno: number; topping: number };
+    }[];
+    p_metodo_pago: string;
+    p_notas?: string;
+  }): Promise<{ success: boolean; id_pedido?: number; numero_pedido?: string; total_calculado?: number; error?: string; items_insuficientes?: unknown[] } | null> {
+    const { data, error } = await this.sb.rpc('crear_pedido_vaso_personalizado', {
+      p_id_usuario: params.p_id_usuario,
+      p_id_direccion: params.p_id_direccion,
+      p_productos: params.p_productos,
+      p_metodo_pago: params.p_metodo_pago,
+      p_notas: params.p_notas
+    });
+    if (error) {
+      console.error('RPC error:', error);
+      return { success: false, error: error.message };
+    }
+    return data;
+  }
+
+  // --- RPC: CREAR PEDIDO CON TOPPINGS ---
+
+  async crearPedidoConToppings(params: {
+    p_id_usuario: string;
+    p_id_direccion?: number;
+    p_productos: {
+      id_producto: number;
+      cantidad: number;
+      toppings?: { id: string; nombre: string; precio: number }[];
+    }[];
+    p_metodo_pago: string;
+    p_notas?: string;
+  }): Promise<{ success: boolean; id_pedido?: number; numero_pedido?: string; total_calculado?: number; error?: string; items_insuficientes?: unknown[] } | null> {
+    const { data, error } = await this.sb.rpc('crear_pedido_con_toppings', {
+      p_id_usuario: params.p_id_usuario,
+      p_id_direccion: params.p_id_direccion,
+      p_productos: params.p_productos,
+      p_metodo_pago: params.p_metodo_pago,
+      p_notas: params.p_notas
+    });
+    if (error) {
+      console.error('RPC error:', error);
+      return { success: false, error: error.message };
+    }
+    return data;
   }
 
   // --- DIRECCIONES CRUD ---

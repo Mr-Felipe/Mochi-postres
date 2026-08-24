@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@a
 import { Router } from '@angular/router';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { CartService } from '../../services/cart.service';
-import { Product } from '../../models/mochi.models';
+import { Product, DeliveryZone, getDeliveryPrice } from '../../models/mochi.models';
 
 interface SimulatedItem {
   product: Product;
@@ -51,14 +51,14 @@ interface SimulatedItem {
                       <span class="text-[10px] font-bold text-[#D95578] font-serif italic uppercase tracking-wider block">{{ prod.nombre_japones }}</span>
                       <h3 class="font-serif italic text-[#590E2A] text-sm leading-snug font-bold">{{ prod.nombre_espanol }}</h3>
                       <span class="text-xs font-serif italic text-[#590E2A] font-bold mt-1 block">
-                        {{ '$' + (prod.precio_oferta || prod.precio).toLocaleString('es-CO') }}
+                        {{ '$' + (prod.precio).toLocaleString('es-CO') }}
                       </span>
                     </div>
                   </div>
 
                   <!-- Controls -->
                   <div class="flex items-center justify-between pt-2 border-t border-[#E8D8D0]">
-                    <span class="text-[11px] text-[#590E2A]/80 font-bold">Subtotal: {{ '$' + (simulatedQty * (prod.precio_oferta || prod.precio)).toLocaleString('es-CO') }}</span>
+                    <span class="text-[11px] text-[#590E2A]/80 font-bold">Subtotal: {{ '$' + (simulatedQty * (prod.precio)).toLocaleString('es-CO') }}</span>
                     
                     <div class="flex items-center rounded-full bg-white border border-[#E8D8D0] p-1 shadow-xs">
                       <button (click)="updateQuantity(prod, -1)" class="w-6 h-6 rounded-full bg-[#FDF8F4] text-[#590E2A] font-bold hover:bg-[#D95578] hover:text-white transition-colors flex items-center justify-center text-xs cursor-pointer">
@@ -89,10 +89,10 @@ interface SimulatedItem {
                   <div class="flex items-center justify-between p-2.5 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]/50">
                     <div>
                       <span class="font-serif italic text-[#590E2A] font-bold block text-sm">{{ item.product.nombre_espanol }}</span>
-                      <span class="text-[10px] text-[#590E2A]/70 font-medium">x{{ item.cantidad }} a {{ '$' + (item.product.precio_oferta || item.product.precio).toLocaleString('es-CO') }} c/u</span>
+                      <span class="text-[10px] text-[#590E2A]/70 font-medium">x{{ item.cantidad }} a {{ '$' + (item.product.precio).toLocaleString('es-CO') }} c/u</span>
                     </div>
                     <span class="font-serif italic text-[#590E2A] font-bold">
-                      {{ '$' + (item.cantidad * (item.product.precio_oferta || item.product.precio)).toLocaleString('es-CO') }}
+                      {{ '$' + (item.cantidad * (item.product.precio)).toLocaleString('es-CO') }}
                     </span>
                   </div>
                 }
@@ -121,25 +121,6 @@ interface SimulatedItem {
                 </button>
               </div>
             </div>
-
-            <!-- Free Delivery Progress Bar -->
-            @if (tipoEntrega() === 'domicilio') {
-              <div class="p-4 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] text-xs space-y-1.5">
-                @if (subtotal() >= config().montoEnvioGratis) {
-                  <span class="font-bold text-[#065F46] flex items-center gap-1 uppercase tracking-wider text-[11px]">
-                    🎉 ¡Felicidades! Tienes envío GRATIS a todo La Dorada.
-                  </span>
-                } @else {
-                  <div class="flex justify-between text-[#590E2A] font-medium">
-                    <span>Faltan <strong class="text-[#D95578]">{{ '$' + (config().montoEnvioGratis - subtotal()).toLocaleString('es-CO') }}</strong> para Envío Gratis</span>
-                    <span class="font-bold">{{ Math.round((subtotal() / config().montoEnvioGratis) * 100) }}%</span>
-                  </div>
-                  <div class="w-full bg-[#E8D8D0] rounded-full h-2 overflow-hidden">
-                    <div class="bg-[#D95578] h-2 rounded-full transition-all duration-300" [style.width.%]="Math.min(100, (subtotal() / config().montoEnvioGratis) * 100)"></div>
-                  </div>
-                }
-              </div>
-            }
 
             <!-- Costs Breakdown -->
             <div class="space-y-2 text-xs pt-2 border-t border-[#E8D8D0]">
@@ -183,8 +164,8 @@ export class SimulatorPageComponent {
   router = inject(Router);
 
   Math = Math;
-  config = this.dataService.visualConfig;
   activeProducts = this.dataService.activeProducts;
+  deliveryZone = signal<DeliveryZone>('La Dorada');
 
   simulatedItems = signal<SimulatedItem[]>([
     { product: this.activeProducts()[0], cantidad: 2 },
@@ -218,15 +199,18 @@ export class SimulatorPageComponent {
 
   subtotal = computed(() => {
     return this.simulatedItems().reduce((sum, item) => {
-      const price = item.product.precio_oferta || item.product.precio;
+      const price = item.product.precio;
       return sum + (price * item.cantidad);
     }, 0);
   });
 
+  totalQuantity = computed(() => {
+    return this.simulatedItems().reduce((sum, item) => sum + item.cantidad, 0);
+  });
+
   costoEnvio = computed(() => {
     if (this.tipoEntrega() === 'recogida') return 0;
-    if (this.subtotal() >= this.config().montoEnvioGratis) return 0;
-    return this.config().costoEnvioBase;
+    return getDeliveryPrice(this.deliveryZone(), this.totalQuantity());
   });
 
   total = computed(() => {
@@ -238,7 +222,7 @@ export class SimulatorPageComponent {
     for (const item of this.simulatedItems()) {
       this.cartService.addToCart(item.product, item.cantidad);
     }
-    this.cartService.setDeliveryType(this.tipoEntrega());
+    this.cartService.deliveryType.set(this.tipoEntrega());
     this.router.navigate(['/checkout']);
   }
 }

@@ -94,7 +94,6 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   async onLogout() {
     this.notificationService.stopListening();
     await this.supabase.signOut();
-    this.dataService.favorites.set([]);
     this.cartService.clearCart();
     this.router.navigate(['/']);
   }
