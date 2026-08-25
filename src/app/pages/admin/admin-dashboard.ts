@@ -5,7 +5,7 @@ import { filter } from 'rxjs/operators';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { NotificationService } from '../../services/notification.service';
-import { UserRole, Usuario, Direccion, Product, Order, OrderStatus } from '../../models/mochi.models';
+import { UserRole, Usuario, Direccion, Product, Order, OrderStatus, DetallePedido } from '../../models/mochi.models';
 import { supabase } from '../../supabase';
 
 @Component({
@@ -189,7 +189,6 @@ import { supabase } from '../../supabase';
                 </table>
               </div>
             </div>
-
           </div>
         }
 
@@ -540,37 +539,8 @@ import { supabase } from '../../supabase';
               </div>
             </div>
 
-            <!-- Top Products + Filters -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-              <!-- Top Products -->
-              <div class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 shadow-xs">
-                <h3 class="text-sm font-serif italic text-[#590E2A] font-bold mb-4">Top Productos</h3>
-                @if (topProducts().length > 0) {
-                  <div class="space-y-3">
-                    @for (prod of topProducts(); track prod.nombre; let i = $index) {
-                      <div class="flex items-center gap-3">
-                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                          [class]="i === 0 ? 'bg-[#D95578] text-white' : i === 1 ? 'bg-[#E8D8D0] text-[#590E2A]' : 'bg-[#FDF8F4] text-[#590E2A]/60'">
-                          {{ i + 1 }}
-                        </span>
-                        @if (prod.imagen) {
-                          <img [src]="prod.imagen" class="w-8 h-8 rounded-lg object-cover border border-[#E8D8D0]">
-                        }
-                        <div class="flex-1 min-w-0">
-                          <span class="text-xs font-bold text-[#590E2A] block truncate">{{ prod.nombre }}</span>
-                          <span class="text-[10px] text-[#590E2A]/50">{{ prod.cantidad }} uds · {{ '$' + prod.subtotal.toLocaleString('es-CO') }}</span>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                } @else {
-                  <p class="text-xs text-[#590E2A]/40 text-center py-4">Sin ventas registradas</p>
-                }
-              </div>
-
-              <!-- Sales Table -->
-              <div class="lg:col-span-2 bg-white rounded-[24px] border border-[#E8D8D0] shadow-xs overflow-hidden">
+            <!-- Sales Table -->
+            <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-xs overflow-hidden">
 
                 <!-- Filter Tabs -->
                 <div class="flex gap-2 p-4 border-b border-[#E8D8D0]/50">
@@ -599,6 +569,7 @@ import { supabase } from '../../supabase';
                         <th class="p-3 rounded-l-2xl">Producto</th>
                         <th class="p-3">Origen</th>
                         <th class="p-3">Pedido</th>
+                        <th class="p-3">Empleado</th>
                         <th class="p-3 text-center">Cant.</th>
                         <th class="p-3 text-right">P. Unit.</th>
                         <th class="p-3 text-right rounded-r-2xl">Subtotal</th>
@@ -606,10 +577,10 @@ import { supabase } from '../../supabase';
                     </thead>
                     <tbody class="divide-y divide-[#E8D8D0]">
                       @for (det of filteredDetalles(); track det.id_detalle) {
-                        <tr class="hover:bg-[#FDF8F4] transition-colors">
+                        <tr class="hover:bg-[#FDF8F4] transition-colors cursor-pointer" (click)="viewingDetalle.set(det)">
                           <td class="p-3">
                             <div class="flex items-center gap-2">
-                              @if (det.producto?.imagen_principal) {
+                               @if (det.producto?.imagen_principal) {
                                 <img [src]="det.producto?.imagen_principal" class="w-8 h-8 rounded-lg object-cover border border-[#E8D8D0]">
                               }
                               <span class="font-medium text-[#590E2A]">{{ det.producto?.nombre_espanol || ' #' + det.id_producto }}</span>
@@ -623,13 +594,23 @@ import { supabase } from '../../supabase';
                             </span>
                           </td>
                           <td class="p-3 font-mono text-[#590E2A]/70">#{{ det.id_pedido }}</td>
+                          <td class="p-3 text-xs text-[#590E2A]/70">
+                            @if (det.empleado_nombre) {
+                              <span class="flex items-center gap-1">
+                                <span class="material-icons text-[12px] text-[#590E2A]/40">person</span>
+                                {{ det.empleado_nombre }}
+                              </span>
+                            } @else {
+                              <span class="text-[#590E2A]/30">—</span>
+                            }
+                          </td>
                           <td class="p-3 text-center font-bold text-[#590E2A]">{{ det.cantidad }}</td>
                           <td class="p-3 text-right font-mono text-[#590E2A]/70">{{ '$' + det.precio_unitario.toLocaleString('es-CO') }}</td>
                           <td class="p-3 text-right font-bold font-serif italic text-[#590E2A]">{{ '$' + det.subtotal.toLocaleString('es-CO') }}</td>
                         </tr>
                       } @empty {
                         <tr>
-                          <td colspan="6" class="p-8 text-center text-[#590E2A]/40">
+                          <td colspan="7" class="p-8 text-center text-[#590E2A]/40">
                             <span class="material-icons text-3xl block mb-2 text-[#E8D8D0]">receipt_long</span>
                             No hay ventas registradas aún
                           </td>
@@ -639,9 +620,7 @@ import { supabase } from '../../supabase';
                   </table>
                 </div>
               </div>
-
             </div>
-          </div>
         }
 
         <!-- TAB 5: USUARIOS & ROLES -->
@@ -839,10 +818,8 @@ import { supabase } from '../../supabase';
                   (input)="dataService.updateVisualConfig({ telefonoWhatsApp: $any($event.target).value })"
                   class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] font-medium"
                 />
+                </div>
               </div>
-
-
-            </div>
           </div>
         }
 
@@ -875,6 +852,91 @@ import { supabase } from '../../supabase';
           </div>
         }
 
+        <!-- Sale Detail Modal -->
+        @if (viewingDetalle()) {
+          @let det = viewingDetalle()!;
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="viewingDetalle.set(null)"></div>
+            <div class="relative bg-white rounded-[28px] shadow-2xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-serif italic font-bold text-[#590E2A]">Detalle de Venta</h3>
+                <button (click)="viewingDetalle.set(null)" class="p-2 rounded-xl hover:bg-[#FDF8F4] text-[#590E2A]/60 transition-colors">
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-4 p-4 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]">
+                @if (det.producto?.imagen_principal) {
+                  <img [src]="det.producto?.imagen_principal" class="w-16 h-16 rounded-2xl object-cover border border-[#E8D8D0]">
+                }
+                <div class="flex-1">
+                  <span class="text-[10px] text-[#D95578] font-serif italic uppercase tracking-wider">{{ det.producto?.nombre_japones }}</span>
+                  <h4 class="text-sm font-serif italic font-bold text-[#590E2A]">{{ det.producto?.nombre_espanol }}</h4>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span [class]="det.origen === 'online' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FFF3E0] text-[#E65100]'"
+                      class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
+                      {{ det.origen === 'online' ? '🌐 Online' : '🏪 Local' }}
+                    </span>
+                    @if (det.empleado_nombre) {
+                      <span class="text-[10px] text-[#590E2A]/50 flex items-center gap-1">
+                        <span class="material-icons text-[12px]">person</span>
+                        {{ det.empleado_nombre }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                @if (det.configuracion_capas) {
+                  <div class="p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] space-y-1">
+                    <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider">🎸 Vaso Personalizado</span>
+                    <p class="text-xs text-[#590E2A]">Base: #{{ det.configuracion_capas.base }} · Crema: #{{ det.configuracion_capas.crema }} · Relleno: #{{ det.configuracion_capas.relleno }} · Topping: #{{ det.configuracion_capas.topping }}</p>
+                  </div>
+                }
+
+                @if (det.toppings_seleccionados && det.toppings_seleccionados.length > 0) {
+                  <div class="p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] space-y-1">
+                    <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider">🧀 Toppings</span>
+                    <div class="flex flex-wrap gap-1">
+                      @for (t of det.toppings_seleccionados; track t.id) {
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#D95578]/10 text-[#D95578] font-bold">+{{ t.nombre }} (+{{ '$' + t.precio.toLocaleString('es-CO') }})</span>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (det.frase_personalizada) {
+                  <div class="p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] space-y-1">
+                    <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider">📝 Frase Personalizada</span>
+                    <p class="text-xs text-[#590E2A] italic">"{{ det.frase_personalizada }}"</p>
+                  </div>
+                } @else if (det.producto?.frase) {
+                  <div class="p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] space-y-1">
+                    <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider">✨ Frase por Defecto</span>
+                    <p class="text-xs text-[#590E2A] italic">"{{ det.producto?.frase }}"</p>
+                  </div>
+                }
+
+                <div class="p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="text-[#590E2A]/60">Cantidad: <strong class="text-[#590E2A]">{{ det.cantidad }}</strong></span>
+                    <span class="text-[#590E2A]/60">Precio unitario: <strong class="text-[#590E2A]">{{ '$' + det.precio_unitario.toLocaleString('es-CO') }}</strong></span>
+                  </div>
+                  <div class="flex justify-between items-center text-sm font-bold pt-2 mt-2 border-t border-[#E8D8D0]">
+                    <span class="text-[#590E2A]">Subtotal</span>
+                    <span class="font-serif italic text-[#D95578]">{{ '$' + det.subtotal.toLocaleString('es-CO') }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-center text-[10px] text-[#590E2A]/40">
+                Pedido #{{ det.id_pedido }} · Detalle #{{ det.id_detalle }}
+              </div>
+            </div>
+          </div>
+        }
+
       </div>
     </div>
   `
@@ -902,6 +964,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   selectedIngredientes = signal<{ id: number; nombre: string; tipo: string }[]>([]);
   productToDelete = signal<Product | null>(null);
   showDeleteModal = signal<boolean>(false);
+  viewingDetalle = signal<DetallePedido | null>(null);
 
   private el = inject(ElementRef);
 

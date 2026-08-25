@@ -40,7 +40,12 @@ export interface DetallePedido {
     nombre_espanol: string;
     nombre_japones?: string;
     imagen_principal?: string;
+    frase?: string;
   };
+  empleado_nombre?: string;
+  configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null;
+  toppings_seleccionados?: { id: string; nombre: string; precio: number }[];
+  frase_personalizada?: string;
 }
 
 export interface StockValidation {

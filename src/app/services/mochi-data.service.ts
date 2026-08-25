@@ -185,10 +185,59 @@ export class MochiDataService {
     if (!pedidos) return;
 
     const { data: detalles } = await supabase.from('detalle_pedido').select('*');
-    const { data: productos } = await supabase.from('productos').select('id_producto, nombre_japones, nombre_espanol, imagen_principal');
+    const { data: productos } = await supabase.from('productos').select('id_producto, nombre_japones, nombre_espanol, imagen_principal, frase');
+
+    // Build employee name map from pedidos with id_empleado_registro
+    const empleadoById = new Map<string, string>();
+    const empleadoByPedidoId = new Map<number, string>();
+    if (pedidos) {
+      const empIds = [...new Set(pedidos.filter((p: Record<string, unknown>) => p['id_empleado_registro']).map((p: Record<string, unknown>) => p['id_empleado_registro'] as string))];
+      if (empIds.length > 0) {
+        const { data: empleados } = await supabase.from('usuarios').select('id, nombre_completo').in('id', empIds);
+        if (empleados) {
+          empleados.forEach((e: Record<string, unknown>) => empleadoById.set(e['id'] as string, e['nombre_completo'] as string));
+        }
+      }
+      pedidos.forEach((p: Record<string, unknown>) => {
+        const empId = p['id_empleado_registro'] as string | null;
+        const pedidoId = p['id_pedido'] as number;
+        if (empId && empleadoById.has(empId)) {
+          empleadoByPedidoId.set(pedidoId, empleadoById.get(empId)!);
+        }
+      });
+    }
 
     const prodMap = new Map<number, Record<string, unknown>>();
     if (productos) productos.forEach(p => prodMap.set(p['id_producto'] as number, p));
+
+    // Populate detallePedidos signal
+    if (detalles) {
+      const parsedDetalle: DetallePedido[] = detalles.map((d: Record<string, unknown>) => {
+        const prod = prodMap.get(d['id_producto'] as number);
+        const pedidoId = d['id_pedido'] as number;
+        return {
+          id_detalle: d['id_detalle'] as number,
+          id_pedido: pedidoId,
+          id_producto: d['id_producto'] as number,
+          cantidad: d['cantidad'] as number,
+          precio_unitario: Number(d['precio_unitario']),
+          subtotal: Number(d['subtotal']),
+          origen: (d['origen'] as 'online' | 'local') || 'online',
+          created_at: d['created_at'] as string,
+          producto: prod ? {
+            nombre_espanol: prod['nombre_espanol'] as string,
+            nombre_japones: prod['nombre_japones'] as string,
+            imagen_principal: prod['imagen_principal'] as string,
+            frase: prod['frase'] as string || ''
+          } : undefined,
+          empleado_nombre: empleadoByPedidoId.get(pedidoId) || undefined,
+          configuracion_capas: d['configuracion_capas'] as DetallePedido['configuracion_capas'] || null,
+          toppings_seleccionados: (d['toppings_seleccionados'] as { id: string; nombre: string; precio: number }[]) || [],
+          frase_personalizada: (d['frase_personalizada'] as string) || ''
+        };
+      });
+      this.detallePedidos.set(parsedDetalle);
+    }
 
     const detallesMap = new Map<number, Record<string, unknown>[]>();
     if (detalles) {
@@ -310,7 +359,7 @@ export class MochiDataService {
 
   async recordPOSSale(saleData: Omit<POSSale, 'id' | 'fecha'>): Promise<POSSale> {
     const randNum = Math.floor(1000 + Math.random() * 9000);
-    const { error } = await supabase.from('pedidos').insert({
+    const { data: pedidoData, error: pedidoErr } = await supabase.from('pedidos').insert({
       id_empleado_registro: saleData.id_empleado || '',
       numero_pedido: `POS-${randNum}`,
       subtotal: saleData.subtotal,
@@ -318,13 +367,29 @@ export class MochiDataService {
       metodo_pago: saleData.metodoPago,
       estado: 'entregado',
       creado_por: 'local'
-    });
-    if (error) console.error('Error recording POS sale:', error);
+    }).select().single();
+    if (pedidoErr) console.error('Error recording POS sale:', pedidoErr);
+
+    const idPedido = pedidoData?.['id_pedido'] || randNum;
+
+    if (saleData.items?.length) {
+      const detalles = saleData.items.map(item => ({
+        id_pedido: idPedido,
+        id_producto: item.productoId,
+        cantidad: item.cantidad,
+        precio_unitario: item.precio,
+        subtotal: item.precio * item.cantidad,
+        origen: 'local' as const
+      }));
+      await supabase.from('detalle_pedido').insert(detalles);
+    }
+
+    await this.loadOrders();
 
     const newSale: POSSale = {
       ...saleData,
       id: `POS-${randNum}`,
-      id_pedido: randNum,
+      id_pedido: idPedido,
       fecha: new Date().toISOString()
     };
     this.posSales.set([newSale, ...this.posSales()]);

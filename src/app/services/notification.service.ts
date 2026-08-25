@@ -38,9 +38,10 @@ export class NotificationService implements OnDestroy {
         table: 'pedidos'
       }, (payload) => {
         const pedido = payload.new as Record<string, unknown>;
+        const esLocal = pedido['creado_por'] === 'local';
         const notif: AppNotification = {
           id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          titulo: 'Nuevo Pedido Online',
+          titulo: esLocal ? 'Nueva Venta en Local' : 'Nuevo Pedido Online',
           mensaje: `Pedido #${pedido['numero_pedido']} — $${Number(pedido['total']).toLocaleString('es-CO')}`,
           tipo: 'nuevo_pedido',
           leida: false,
