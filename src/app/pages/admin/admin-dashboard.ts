@@ -178,7 +178,7 @@ import { supabase } from '../../supabase';
                             <button (click)="openProductModal(prod)" class="p-2 rounded-xl hover:bg-[#E0F2F1] text-[#2C5350] transition-colors" title="Editar">
                               <span class="material-icons text-sm">edit</span>
                             </button>
-                            <button (click)="dataService.deleteProduct(prod.id)" class="p-2 rounded-xl hover:bg-[#8C3A3A]/10 text-[#8C3A3A] transition-colors" title="Eliminar">
+                            <button (click)="productToDelete.set(prod); showDeleteModal.set(true)" class="p-2 rounded-xl hover:bg-[#8C3A3A]/10 text-[#8C3A3A] transition-colors" title="Eliminar">
                               <span class="material-icons text-sm">delete</span>
                             </button>
                           </div>
@@ -846,6 +846,35 @@ import { supabase } from '../../supabase';
           </div>
         }
 
+        <!-- Delete Product Confirmation Modal -->
+        @if (showDeleteModal()) {
+          <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" (click)="showDeleteModal.set(false)"></div>
+            <div class="relative bg-white rounded-[28px] shadow-2xl w-full max-w-md p-8 space-y-6 text-center">
+              <div class="w-16 h-16 rounded-full bg-[#8C3A3A]/10 flex items-center justify-center mx-auto">
+                <span class="material-icons text-[#8C3A3A] text-3xl">warning</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-serif italic font-bold text-[#590E2A]">Eliminar Producto</h3>
+                <p class="text-sm text-[#590E2A]/70 mt-2">
+                  ¿Estás seguro de eliminar <span class="font-bold">"{{ productToDelete()?.nombre_espanol }}"</span>?
+                </p>
+                <p class="text-xs text-[#590E2A]/50 mt-1">Esta acción eliminará las reseñas y relaciones del producto. El historial de pedidos se mantendrá.</p>
+              </div>
+              <div class="flex gap-3">
+                <button (click)="showDeleteModal.set(false)" 
+                  class="flex-1 py-3 rounded-full border border-[#E8D8D0] text-[#590E2A] font-bold text-xs uppercase tracking-wider hover:bg-[#FDF8F4] transition-colors">
+                  Cancelar
+                </button>
+                <button (click)="confirmDeleteProduct()" 
+                  class="flex-1 py-3 rounded-full bg-[#8C3A3A] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#6D2E2E] transition-colors">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
       </div>
     </div>
   `
@@ -871,6 +900,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   activeOrderFilter = signal<string>('all');
   availableIngredientes = signal<{ id: number; nombre: string; tipo: string }[]>([]);
   selectedIngredientes = signal<{ id: number; nombre: string; tipo: string }[]>([]);
+  productToDelete = signal<Product | null>(null);
+  showDeleteModal = signal<boolean>(false);
 
   private el = inject(ElementRef);
 
@@ -1026,6 +1057,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       m.supabase.from('direcciones').select('*').eq('id_usuario', user.id)
     );
     this.userAddresses.set((data as Direccion[]) || []);
+  }
+
+  async confirmDeleteProduct() {
+    const prod = this.productToDelete();
+    if (prod) {
+      await this.dataService.deleteProduct(prod.id);
+    }
+    this.showDeleteModal.set(false);
+    this.productToDelete.set(null);
   }
 
   async openProductModal(product?: Product) {

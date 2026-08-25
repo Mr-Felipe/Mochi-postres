@@ -1,15 +1,17 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { CartItem, Product, DeliveryZone, getDeliveryPrice, detectZoneFromAddress } from '../models/mochi.models';
 import { SupabaseService } from './supabase.service';
 import { ToastService } from './toast.service';
 import { supabase } from '../supabase';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 @Injectable({
   providedIn: 'root'
 })
-export class CartService {
+export class CartService implements OnDestroy {
   private sbService = inject(SupabaseService);
   private toastService = inject(ToastService);
+  private cartChannel: RealtimeChannel | null = null;
 
   readonly items = signal<CartItem[]>([]);
   readonly deliveryType = signal<'domicilio' | 'recogida'>('domicilio');
@@ -90,6 +92,41 @@ export class CartService {
       const fullAddress = [defaultDir.direccion_completa, defaultDir.barrio, defaultDir.ciudad].filter(Boolean).join(' ');
       this.deliveryZone.set(detectZoneFromAddress(fullAddress));
     }
+
+    // Subscribe to realtime changes on carrito_compras
+    this.subscribeToCartChanges(userId);
+  }
+
+  private subscribeToCartChanges(userId: string) {
+    if (this.cartChannel) {
+      supabase.removeChannel(this.cartChannel);
+    }
+
+    this.cartChannel = supabase
+      .channel('carrito-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'carrito_compras',
+        filter: `id_usuario=eq.${userId}`
+      }, (payload) => {
+        if (payload.eventType === 'DELETE') {
+          const deletedProductoId = (payload.old as Record<string, unknown>)?.['id_producto'];
+          if (deletedProductoId) {
+            this.items.update(items => items.filter(item => item.product.id !== deletedProductoId));
+          }
+        }
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          this.loadCart();
+        }
+      })
+      .subscribe();
+  }
+
+  ngOnDestroy() {
+    if (this.cartChannel) {
+      supabase.removeChannel(this.cartChannel);
+    }
   }
 
   async addToCart(product: Product, quantity: number = 1, notas?: string, configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null, customPrice?: number, toppings?: { id: string; nombre: string; precio: number }[], frase_personalizada?: string): Promise<void> {
@@ -157,6 +194,10 @@ export class CartService {
   }
 
   async clearCartOnLogout(): Promise<void> {
+    if (this.cartChannel) {
+      supabase.removeChannel(this.cartChannel);
+      this.cartChannel = null;
+    }
     this.items.set([]);
   }
 }
