@@ -25,8 +25,14 @@ export class App {
 
   constructor() {
     this.supabase.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      if (event === 'SIGNED_IN') {
         setTimeout(() => this.cartService.loadCart(), 500);
+      }
+      if (event === 'INITIAL_SESSION') {
+        // Solo cargar carrito si no hay items (evita duplicar con SIGNED_IN)
+        if (this.cartService.itemCount() === 0) {
+          setTimeout(() => this.cartService.loadCart(), 500);
+        }
       }
       if (event === 'SIGNED_OUT') {
         this.cartService.clearCartOnLogout();

@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { UpperCasePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { Product, POSSale } from '../../models/mochi.models';
@@ -12,7 +12,7 @@ interface POSCartItem {
 @Component({
   selector: 'app-pos-employee',
   standalone: true,
-  imports: [UpperCasePipe],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="h-full flex flex-col gap-4 overflow-hidden">
@@ -89,6 +89,21 @@ interface POSCartItem {
                 </div>
               </button>
             }
+
+            <!-- Personalizado Button -->
+            <a routerLink="/personalizar-vaso"
+              class="p-3.5 rounded-[24px] bg-gradient-to-br from-[#D95578] to-[#A33D5E] hover:shadow-md text-left transition-all active:scale-95 space-y-2 group">
+              <div class="w-full h-24 rounded-[16px] flex items-center justify-center">
+                <span class="material-icons text-white/30 text-4xl group-hover:scale-110 transition-transform">local_cafe</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-white/70 block font-serif italic">カスタム</span>
+                <h3 class="text-xs font-serif italic text-white group-hover:text-white transition-colors">
+                  Personalizado
+                </h3>
+                <span class="text-[9px] text-white/60 mt-1 block">Configurar</span>
+              </div>
+            </a>
           </div>
         </div>
 

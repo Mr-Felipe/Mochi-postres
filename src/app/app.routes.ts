@@ -59,11 +59,6 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'pedidos',
-    loadComponent: () => import('./pages/orders/orders').then(m => m.OrdersPageComponent),
-    canActivate: [authGuard]
-  },
-  {
     path: 'cliente/dashboard',
     loadComponent: () => import('./pages/customer/customer-dashboard').then(m => m.CustomerDashboardComponent),
     canActivate: [authGuard]

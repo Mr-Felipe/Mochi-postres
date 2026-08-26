@@ -135,7 +135,7 @@ import { CartService } from '../../services/cart.service';
                 <h2 class="text-xl font-serif italic text-[#590E2A]">Historial de Mis Pedidos</h2>
                 <p class="text-xs text-[#590E2A]/60">Monitoreo en tiempo real de cocina y delivery</p>
               </div>
-              <a routerLink="/pedidos" class="text-xs font-bold text-[#590E2A] uppercase tracking-wider hover:underline">
+              <a routerLink="/perfil" class="text-xs font-bold text-[#590E2A] uppercase tracking-wider hover:underline">
                 Ver Todos →
               </a>
             </div>
@@ -195,10 +195,7 @@ export class CustomerDashboardComponent {
   userOrders = computed(() => {
     const user = this.activeUser();
     if (!user) return [];
-    return this.dataService.orders().filter(o => 
-      o.cliente.email?.toLowerCase() === user.email.toLowerCase() ||
-      o.cliente.nombre.toLowerCase().includes(user.nombre_completo.toLowerCase())
-    );
+    return this.dataService.orders().filter(o => o.id_usuario === user.id);
   });
 
   saveAddress(alias: string, dir: string, barrio: string) {

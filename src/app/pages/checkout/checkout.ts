@@ -440,7 +440,7 @@ import { PaymentMethodType, Order, Direccion, StockValidation } from '../../mode
             </div>
 
             <div class="flex flex-col sm:flex-row gap-3 pt-4">
-              <a routerLink="/pedidos" class="flex-1 py-4 px-6 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors text-center">
+              <a routerLink="/perfil" class="flex-1 py-4 px-6 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors text-center">
                 📍 Ver Seguimiento del Pedido
               </a>
 

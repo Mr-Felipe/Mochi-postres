@@ -149,6 +149,53 @@ export class SupabaseService {
     return { data, error: null };
   }
 
+  async updateProfile(updates: { nombre_completo?: string; telefono?: string; foto_perfil?: string }) {
+    const currentUser = this.activeUser();
+    if (!currentUser) return { data: null, error: { message: 'No user logged in' } };
+
+    const { data, error } = await this.sb
+      .from('usuarios')
+      .update(updates)
+      .eq('id', currentUser.id)
+      .select()
+      .single();
+
+    if (error) return { data: null, error: { message: error.message } };
+
+    this.activeUser.set(data);
+    return { data, error: null };
+  }
+
+  async updateEmail(newEmail: string) {
+    const { data, error } = await this.sb.auth.updateUser({ email: newEmail });
+    if (error) return { data: null, error: { message: error.message } };
+    return { data, error: null };
+  }
+
+  async uploadAvatar(file: File): Promise<{ data: string | null; error: { message: string } | null }> {
+    const currentUser = this.activeUser();
+    if (!currentUser) return { data: null, error: { message: 'No user logged in' } };
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser.id}/avatar.${fileExt}`;
+
+    const { error: uploadError } = await this.sb.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) return { data: null, error: { message: uploadError.message } };
+
+    const { data: urlData } = this.sb.storage
+      .from('avatars')
+      .getPublicUrl(fileName);
+
+    const publicUrl = urlData.publicUrl;
+
+    await this.updateProfile({ foto_perfil: publicUrl });
+
+    return { data: publicUrl, error: null };
+  }
+
   // --- ROLE SWITCHING (for admin preview) ---
 
   switchUserRole(role: UserRole) {

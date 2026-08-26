@@ -23,14 +23,19 @@ interface Topping {
       <div class="bg-[#FDF8F4] min-h-screen py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <!-- Breadcrumb Navigation -->
-          <nav class="flex items-center gap-2 text-xs uppercase tracking-wider text-[#590E2A]/60 mb-8 font-semibold">
-            <a routerLink="/" class="hover:text-[#590E2A] transition-colors">Inicio</a>
-            <span>/</span>
-            <a routerLink="/productos" class="hover:text-[#590E2A] transition-colors">Catálogo</a>
-            <span>/</span>
-            <span class="text-[#D95578] font-bold">{{ prod.nombre_espanol }}</span>
-          </nav>
+          <!-- Back + Breadcrumb -->
+          <div class="flex items-center gap-4 mb-8">
+            <a routerLink="/productos" class="w-10 h-10 rounded-full border border-[#E8D8D0] flex items-center justify-center text-[#590E2A]/60 hover:text-[#590E2A] hover:border-[#590E2A]/30 transition-colors shrink-0">
+              <span class="material-icons text-lg">arrow_back</span>
+            </a>
+            <nav class="flex items-center gap-2 text-xs uppercase tracking-wider text-[#590E2A]/60 font-semibold">
+              <a routerLink="/" class="hover:text-[#590E2A] transition-colors">Inicio</a>
+              <span>/</span>
+              <a routerLink="/productos" class="hover:text-[#590E2A] transition-colors">Catálogo</a>
+              <span>/</span>
+              <span class="text-[#D95578] font-bold">{{ prod.nombre_espanol }}</span>
+            </nav>
+          </div>
 
           <!-- Main Product Card Layout -->
           <div class="bg-white rounded-[40px] border border-[#E8D8D0] p-6 sm:p-10 shadow-xs mb-12">

@@ -88,13 +88,20 @@ import { CartItem } from '../../models/mochi.models';
                   style="color: #C62828" title="Eliminar producto">
                   <span class="material-icons text-base">delete_outline</span>
                 </button>
+                @if (item.configuracion_capas) {
+                  <button (click)="editCustomCup(item)"
+                    class="hover:opacity-70 p-1.5 rounded-full transition-colors"
+                    style="color: #D95578" title="Editar personalización">
+                    <span class="material-icons text-base">edit</span>
+                  </button>
+                }
               </div>
             }
           } @else {
             <div class="text-center py-12 px-4 space-y-4">
-              <div class="w-20 h-20 rounded-full text-white flex items-center justify-center text-3xl mx-auto shadow-sm"
+              <div class="w-20 h-20 rounded-full text-white flex items-center justify-center mx-auto shadow-sm"
                 [style.background]="'var(--accent)'" [style.border]="'1px solid ' + borderColor()">
-                &#127845;
+                <span class="material-icons text-3xl">shopping_bag</span>
               </div>
               <div class="space-y-1">
                 <h3 class="font-serif italic text-xl" [style.color]="headingColor()">Tu Carrito esta Vacio</h3>
@@ -140,14 +147,16 @@ import { CartItem } from '../../models/mochi.models';
             <!-- Actions -->
             <div class="space-y-2 pt-1">
               <button (click)="goTo('/carrito')"
-                class="w-full py-3.5 rounded-full text-white font-bold text-xs uppercase tracking-widest shadow-md transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
-                [style.background]="'var(--accent)'">
-                <span>Finalizar Compra</span>
-              </button>
-              <button (click)="goTo('/checkout')"
                 class="w-full py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-xs"
                 [style.background]="'var(--accent)'" style="color: white">
-                <span>Proceder al Checkout Directo</span>
+                <span class="material-icons text-base">shopping_cart</span>
+                <span>Ver Carrito</span>
+              </button>
+              <button (click)="goTo('/checkout')"
+                class="w-full py-3.5 rounded-full text-white font-bold text-xs uppercase tracking-widest shadow-md transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-2"
+                [style.background]="'var(--accent)'">
+                <span class="material-icons text-base">payment</span>
+                <span>Finalizar Compra</span>
               </button>
             </div>
           </div>
@@ -179,5 +188,12 @@ export class CartDrawerComponent {
     const base = item.customPrice || item.product.precio;
     const toppings = item.toppings_seleccionados?.reduce((s, t) => s + t.precio, 0) || 0;
     return (base + toppings) * item.cantidad;
+  }
+
+  editCustomCup(item: CartItem) {
+    const idx = this.cartService.items().indexOf(item);
+    this.cartService.removeFromCart(item.product.id, item.configuracion_capas);
+    this.cartService.closeDrawer();
+    this.router.navigate(['/personalizar-vaso'], { queryParams: { capas: JSON.stringify(item.configuracion_capas), precio: item.customPrice } });
   }
 }

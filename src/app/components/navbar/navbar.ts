@@ -69,37 +69,37 @@ import { Subscription } from 'rxjs';
         </div>
 
         <!-- DESKTOP -->
-        <a routerLink="/" class="hidden md:flex items-center gap-3 group">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-xl font-serif italic group-hover:scale-105 transition-transform duration-300 shadow-sm" [style.background]="'var(--accent)'">M</div>
-          <span class="text-3xl font-serif italic tracking-tighter block leading-none group-hover:opacity-80 transition-opacity" [style.color]="navColor()">Mochi.</span>
+        <a routerLink="/" class="hidden md:flex items-center gap-2 lg:gap-3 group">
+          <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center text-white text-lg lg:text-xl font-serif italic group-hover:scale-105 transition-transform duration-300 shadow-sm" [style.background]="'var(--accent)'">M</div>
+          <span class="text-2xl lg:text-3xl font-serif italic tracking-tighter block leading-none group-hover:opacity-80 transition-opacity" [style.color]="navColor()">Mochi.</span>
         </a>
 
-        <nav class="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-bold">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link" [style.color]="navColor()">Inicio</a>
-          <a routerLink="/productos" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Catalogo</a>
-          <a routerLink="/sobre-nosotros" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Nuestra Historia</a>
-          <a routerLink="/contacto" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Contacto</a>
-          <a routerLink="/blog" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Blog</a>
-          <a routerLink="/contacto" routerLinkActive="active" class="nav-link" [style.color]="navColor()">Contacto</a>
+        <nav class="hidden md:flex items-center gap-4 lg:gap-6 text-[10px] lg:text-[11px] uppercase tracking-widest font-bold">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link font-serif italic" [style.color]="navColor()">Inicio</a>
+          <a routerLink="/productos" routerLinkActive="active" class="nav-link font-serif italic" [style.color]="navColor()">Catalogo</a>
+          <a routerLink="/personalizar-vaso" routerLinkActive="active" class="nav-link font-serif italic" [style.color]="navColor()">Vaso</a>
+          <a routerLink="/sobre-nosotros" routerLinkActive="active" class="nav-link font-serif italic" [style.color]="navColor()">Historia</a>
+          <a routerLink="/contacto" routerLinkActive="active" class="nav-link font-serif italic" [style.color]="navColor()">Contacto</a>
+          <a routerLink="/blog" routerLinkActive="active" class="nav-link font-serif italic" [style.color]="navColor()">Blog</a>
         </nav>
 
-        <div class="hidden md:flex items-center gap-2">
-          @if (isEmpleadoOrAdmin()) {
-            <a routerLink="/empleado" class="hidden lg:flex items-center gap-1.5 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors" [style.color]="'var(--wine)'">
-              <span class="material-icons text-base">point_of_sale</span><span>POS</span>
+        <div class="hidden md:flex items-center gap-1 lg:gap-2">
+          @if (isEmpleado()) {
+            <a routerLink="/empleado" class="hidden lg:flex items-center gap-1 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors" [style.color]="navColor()">
+              <span class="material-icons text-sm">point_of_sale</span><span>POS</span>
             </a>
           }
           @if (isAdmin()) {
-            <a routerLink="/admin" class="hidden lg:flex items-center gap-1.5 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors" [style.color]="'var(--accent)'">
-              <span class="material-icons text-base">settings</span><span>Admin</span>
+            <a routerLink="/admin" class="hidden lg:flex items-center gap-1 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors" [style.color]="navColor()">
+              <span class="material-icons text-sm">settings</span><span>Admin</span>
             </a>
           }
           @if (isLoggedIn()) {
             <div class="relative">
-              <button (click)="userMenuOpen.set(!userMenuOpen())" class="flex items-center gap-1.5 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors" [style.color]="navColor()">
-                <span class="material-icons text-base">person</span>
-                <span class="hidden xl:inline truncate max-w-[90px]">{{ userName() }}</span>
-                <span class="material-icons text-sm">expand_more</span>
+              <button (click)="userMenuOpen.set(!userMenuOpen())" class="flex items-center gap-1 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors" [style.color]="navColor()">
+                <span class="material-icons text-sm">person</span>
+                <span class="hidden xl:inline truncate max-w-[80px]">{{ userName() }}</span>
+                <span class="material-icons text-xs">expand_more</span>
               </button>
               @if (userMenuOpen()) {
                 <div class="absolute right-0 mt-2 w-56 bg-white rounded-2xl border shadow-lg py-2 z-50" [style.border-color]="'var(--border-soft)'">
@@ -110,13 +110,13 @@ import { Subscription } from 'rxjs';
                   <a (click)="goToPanel()" class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer hover:opacity-70" [style.color]="'var(--text-main)'">
                     <span class="material-icons text-base">dashboard</span> Mi Panel
                   </a>
-                  @if (isEmpleadoOrAdmin()) {
-                    <a routerLink="/empleado" (click)="userMenuOpen.set(false)" class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold transition-colors" [style.color]="'var(--wine)'">
+                  @if (isEmpleado()) {
+                    <a routerLink="/empleado" (click)="userMenuOpen.set(false)" class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold transition-colors" [style.color]="'var(--text-main)'">
                       <span class="material-icons text-base">point_of_sale</span> Ventas POS
                     </a>
                   }
                   @if (isAdmin()) {
-                    <a routerLink="/admin" (click)="userMenuOpen.set(false)" class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold transition-colors" [style.color]="'var(--accent)'">
+                    <a routerLink="/admin" (click)="userMenuOpen.set(false)" class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold transition-colors" [style.color]="'var(--text-main)'">
                       <span class="material-icons text-base">settings</span> Admin Panel
                     </a>
                   }
@@ -129,18 +129,18 @@ import { Subscription } from 'rxjs';
               }
             </div>
           } @else {
-            <a routerLink="/login" class="flex items-center gap-1.5 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors" [style.color]="navColor()">
-              <span class="material-icons text-base">login</span>
+            <a routerLink="/login" class="flex items-center gap-1 py-2 text-[10px] font-bold uppercase tracking-wider transition-colors" [style.color]="navColor()">
+              <span class="material-icons text-sm">login</span>
               <span class="hidden xl:inline">Iniciar Sesion</span>
             </a>
           }
-          <button (click)="cartService.toggleDrawer()" class="relative flex items-center gap-2 py-2 transition-colors focus:outline-none" [style.color]="navColor()">
-            <span class="material-icons text-xl">shopping_bag</span>
-            <span class="hidden sm:inline text-xs font-bold uppercase tracking-wider">Carrito</span>
-            <span class="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full text-[9px] font-bold flex items-center justify-center font-mono shadow"
+          <button (click)="cartService.toggleDrawer()" class="relative flex items-center gap-1 py-2 transition-colors focus:outline-none" [style.color]="navColor()">
+            <span class="material-icons text-lg">shopping_bag</span>
+            <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider">Carrito</span>
+            <span class="absolute -top-1 -right-1 min-w-[14px] h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center font-mono shadow"
               [style.background]="cartService.itemCount() > 0 ? 'var(--accent)' : 'var(--border-soft)'"
               [style.color]="cartService.itemCount() > 0 ? 'white' : '#590E2A'"
-              [class.px-1]="cartService.itemCount() < 10">
+              [class.px-0.5]="cartService.itemCount() < 10">
               {{ cartService.itemCount() }}
             </span>
           </button>
@@ -167,6 +167,9 @@ import { Subscription } from 'rxjs';
           <a routerLink="/productos" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
             <span class="material-icons text-[20px]">cake</span> Catalogo
           </a>
+          <a routerLink="/personalizar-vaso" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
+            <span class="material-icons text-[20px]">local_cafe</span> Vaso Personalizado
+          </a>
           <a routerLink="/sobre-nosotros" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
             <span class="material-icons text-[20px]">info</span> Nuestra Historia
           </a>
@@ -176,16 +179,13 @@ import { Subscription } from 'rxjs';
           <a routerLink="/blog" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
             <span class="material-icons text-[20px]">article</span> Blog
           </a>
-          <a routerLink="/contacto" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors hover:opacity-70" [style.color]="navColor()">
-            <span class="material-icons text-[20px]">mail</span> Contacto
-          </a>
           <div class="my-3" [style.border-top]="'1px solid ' + sidebarBorderColor()"></div>
           @if (isLoggedIn()) {
             <a (click)="goToPanel(); isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer hover:opacity-70" [style.color]="navColor()">
               <span class="material-icons text-[20px]">person</span> Mi Perfil
             </a>
-            @if (isEmpleadoOrAdmin()) {
-              <a routerLink="/empleado" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors" [style.color]="'var(--wine)'">
+            @if (isEmpleado()) {
+              <a routerLink="/empleado" (click)="isMobileMenuOpen.set(false)" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors" [style.color]="navColor()">
                 <span class="material-icons text-[20px]">point_of_sale</span> Ventas POS
               </a>
             }
@@ -298,6 +298,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isLoggedIn = computed(() => !!this.supabaseService.activeUser());
   userRole = computed(() => this.supabaseService.activeUser()?.rol ?? 'cliente');
   isAdmin = computed(() => this.userRole() === 'admin');
+  isEmpleado = computed(() => this.userRole() === 'empleado');
   isEmpleadoOrAdmin = computed(() => this.userRole() === 'admin' || this.userRole() === 'empleado');
   userFullName = computed(() => this.supabaseService.activeUser()?.nombre_completo ?? '');
   userEmail = computed(() => this.supabaseService.activeUser()?.email ?? '');

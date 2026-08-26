@@ -221,10 +221,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   userRole = computed(() => this.supabase.activeUser()?.rol ?? 'cliente');
   userName = computed(() => this.supabase.activeUser()?.nombre_completo ?? '');
 
-  perfilRoute = computed(() => {
-    const role = this.userRole();
-    return role === 'admin' ? '/admin/perfil' : '/empleado/perfil';
-  });
+  perfilRoute = computed(() => '/perfil');
 
   isCollapsed = computed(() => {
     return !this.isMobile() && this.sidebarState.collapsed();
@@ -236,13 +233,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     if (mobile) {
       return this.open()
-        ? 'fixed inset-y-0 left-0 z-50 w-64 flex flex-col transform transition-transform duration-300 translate-x-0'
-        : 'fixed inset-y-0 left-0 z-50 w-64 flex flex-col transform -translate-x-full transition-transform duration-300';
+        ? 'fixed inset-y-0 left-0 z-50 w-56 flex flex-col transform transition-transform duration-300 translate-x-0'
+        : 'fixed inset-y-0 left-0 z-50 w-56 flex flex-col transform -translate-x-full transition-transform duration-300';
     }
 
     return collapsed
-      ? 'sticky top-0 h-screen flex flex-col transition-all duration-300 w-[72px] shrink-0'
-      : 'sticky top-0 h-screen flex flex-col transition-all duration-300 w-64 shrink-0';
+      ? 'sticky top-0 h-screen flex flex-col transition-all duration-300 w-[60px] shrink-0'
+      : 'sticky top-0 h-screen flex flex-col transition-all duration-300 w-56 shrink-0';
   });
 
   navItems = computed(() => {
@@ -251,12 +248,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     if (role === 'admin') {
       items.push(
-        { route: '/admin', icon: 'dashboard', label: 'Dashboard', exact: true },
+        { route: '/admin/detalles', icon: 'point_of_sale', label: 'Ventas', exact: true },
         { route: '/admin/productos', icon: 'inventory_2', label: 'Productos', exact: false },
         { route: '/admin/pedidos', icon: 'shopping_cart', label: 'Pedidos', exact: false },
-        { route: '/admin/detalles', icon: 'point_of_sale', label: 'Ventas', exact: false },
         { route: '/admin/usuarios', icon: 'people', label: 'Usuarios', exact: false },
-        { route: '/empleado', icon: 'point_of_sale', label: 'Punto de Venta', exact: false },
       );
     }
 

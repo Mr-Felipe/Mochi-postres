@@ -1,21 +1,21 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy, AfterViewInit, ChangeDetectionStrategy, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
-import { DatePipe, UpperCasePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { MochiDataService } from '../../services/mochi-data.service';
+import { OrdersPanelComponent } from '../../components/orders-panel/orders-panel';
 import { SupabaseService } from '../../services/supabase.service';
 import { NotificationService } from '../../services/notification.service';
-import { UserRole, Usuario, Direccion, Product, Order, OrderStatus, DetallePedido } from '../../models/mochi.models';
+import { UserRole, Usuario, Direccion, Product, Order, DetallePedido } from '../../models/mochi.models';
 import { supabase } from '../../supabase';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [DatePipe, UpperCasePipe],
+  imports: [OrdersPanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-[#FDF8F4] text-[#590E2A] min-h-screen p-4 sm:p-8 font-sans">
-      <div class="max-w-7xl mx-auto space-y-8">
+      <div class="max-w-full mx-auto space-y-8">
         
         <!-- Admin Header -->
         <div class="bg-white rounded-[32px] p-6 sm:p-8 border border-[#E8D8D0] shadow-xs">
@@ -30,76 +30,7 @@ import { supabase } from '../../supabase';
           <p class="text-xs text-[#590E2A]/70 uppercase tracking-wider mt-1 font-medium">Gestión de catálogo, pedidos, usuarios y configuración</p>
         </div>
 
-        <!-- TAB 1: DASHBOARD METRICS -->
-        @if (activeTab() === 'dashboard') {
-          <div class="space-y-8">
-            <!-- Key Stats Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="p-6 rounded-[28px] bg-white border border-[#E8D8D0] shadow-xs space-y-2">
-                <span class="text-[10px] font-bold text-[#590E2A]/60 uppercase tracking-widest block">Ventas Online Totales</span>
-                <span class="text-3xl font-serif italic text-[#590E2A]">{{ '$' + onlineRevenueTotal().toLocaleString('es-CO') }}</span>
-                <span class="text-[11px] text-[#2C5350] font-bold block">↑ +18% esta semana</span>
-              </div>
-
-              <div class="p-6 rounded-[28px] bg-white border border-[#E8D8D0] shadow-xs space-y-2">
-                <span class="text-[10px] font-bold text-[#590E2A]/60 uppercase tracking-widest block">Ventas POS Presencial</span>
-                <span class="text-3xl font-serif italic text-[#590E2A]">{{ '$' + posRevenueTotal().toLocaleString('es-CO') }}</span>
-                <span class="text-[11px] text-[#2C5350] font-bold block">Sucursal La Dorada</span>
-              </div>
-
-              <div class="p-6 rounded-[28px] bg-white border border-[#E8D8D0] shadow-xs space-y-2">
-                <span class="text-[10px] font-bold text-[#590E2A]/60 uppercase tracking-widest block">Pedidos Recibidos</span>
-                <span class="text-3xl font-serif italic text-[#590E2A]">{{ orders().length }}</span>
-                <span class="text-[11px] text-[#8C3A3A] font-bold block">{{ pendingOrdersCount() }} pendientes de envío</span>
-              </div>
-
-              <div class="p-6 rounded-[28px] bg-white border border-[#E8D8D0] shadow-xs space-y-2">
-                <span class="text-[10px] font-bold text-[#590E2A]/60 uppercase tracking-widest block">Postres en Menú</span>
-                <span class="text-3xl font-serif italic text-[#590E2A]">{{ products().length }}</span>
-                <span class="text-[11px] text-[#590E2A]/60 font-medium">Sincronizados en Supabase</span>
-              </div>
-            </div>
-
-            <!-- Recent Orders Preview -->
-            <div class="bg-white rounded-[32px] border border-[#E8D8D0] p-6 shadow-xs space-y-4">
-              <h2 class="text-lg font-serif italic text-[#590E2A]">Últimos Pedidos Registrados</h2>
-              <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                  <thead class="bg-[#FDF8F4] text-[#590E2A]/60 font-bold uppercase tracking-wider">
-                    <tr>
-                      <th class="p-3 rounded-l-2xl">ID Pedido</th>
-                      <th class="p-3">Cliente</th>
-                      <th class="p-3">Método</th>
-                      <th class="p-3">Total</th>
-                      <th class="p-3">Estado</th>
-                      <th class="p-3 rounded-r-2xl">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-[#E8D8D0]">
-                    @for (ord of orders(); track ord.id) {
-                      <tr>
-                        <td class="p-3 font-mono font-bold">{{ ord.id }}</td>
-                        <td class="p-3 font-medium">{{ ord.cliente.nombre }}</td>
-                        <td class="p-3 uppercase">{{ ord.metodoPago }}</td>
-                        <td class="p-3 font-serif italic text-sm">{{ '$' + ord.total.toLocaleString('es-CO') }}</td>
-                        <td class="p-3">
-                          <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#D95578] text-[#590E2A]">
-                            {{ ord.estado }}
-                          </span>
-                        </td>
-                        <td class="p-3">
-                          <button (click)="activeTab.set('pedidos')" class="text-[#590E2A] font-bold uppercase tracking-wider text-[10px] hover:underline">Gestionar</button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- TAB 2: PRODUCT & STOCK MANAGEMENT (CRUD) -->
+        <!-- TAB: PRODUCT & STOCK MANAGEMENT (CRUD) -->
         @if (activeTab() === 'productos') {
           <div class="space-y-6">
             
@@ -335,172 +266,7 @@ import { supabase } from '../../supabase';
 
         <!-- TAB 3: ORDER STATUS MANAGEMENT -->
         @if (activeTab() === 'pedidos') {
-          <div class="space-y-6">
-
-            <!-- Header with Stats -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h2 class="text-2xl font-serif italic text-[#590E2A] font-bold">Pedidos Online</h2>
-                <p class="text-xs text-[#590E2A]/60 mt-1">Gestiona los estados de los pedidos recibidos</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-[#E8D8D0] text-xs">
-                  <div class="text-center">
-                    <span class="block text-lg font-bold text-[#D95578]">{{ pendingCount() }}</span>
-                    <span class="text-[9px] text-[#590E2A]/50 uppercase tracking-wider">Pendientes</span>
-                  </div>
-                  <div class="border-l border-[#E8D8D0] pl-4 text-center">
-                    <span class="block text-lg font-bold text-[#065F46]">{{ activeCount() }}</span>
-                    <span class="text-[9px] text-[#590E2A]/50 uppercase tracking-wider">Activos</span>
-                  </div>
-                  <div class="border-l border-[#E8D8D0] pl-4 text-center">
-                    <span class="block text-lg font-bold text-[#590E2A]/40">{{ deliveredTodayCount() }}</span>
-                    <span class="text-[9px] text-[#590E2A]/50 uppercase tracking-wider">Entregados Hoy</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Filter Tabs -->
-            <div class="flex gap-2 overflow-x-auto pb-1">
-              <button (click)="activeOrderFilter.set('all')"
-                [class]="activeOrderFilter() === 'all' ? 'bg-[#590E2A] text-white' : 'bg-white text-[#590E2A] border border-[#E8D8D0]'"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
-                Todos ({{ orders().length }})
-              </button>
-              <button (click)="activeOrderFilter.set('pendiente')"
-                [class]="activeOrderFilter() === 'pendiente' ? 'bg-[#D95578] text-white' : 'bg-white text-[#D95578] border border-[#D95578]/30'"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
-                📝 Pendientes ({{ pendingCount() }})
-              </button>
-              <button (click)="activeOrderFilter.set('en_preparacion')"
-                [class]="activeOrderFilter() === 'en_preparacion' ? 'bg-[#D95578] text-white' : 'bg-white text-[#D95578] border border-[#D95578]/30'"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
-                🍡 En Cocina ({{ prepCount() }})
-              </button>
-              <button (click)="activeOrderFilter.set('en_camino')"
-                [class]="activeOrderFilter() === 'en_camino' ? 'bg-[#3B82F6] text-white' : 'bg-white text-[#3B82F6] border border-[#3B82F6]/30'"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
-                🛵 En Camino ({{ deliveryCount() }})
-              </button>
-              <button (click)="activeOrderFilter.set('entregado')"
-                [class]="activeOrderFilter() === 'entregado' ? 'bg-[#065F46] text-white' : 'bg-white text-[#065F46] border border-[#065F46]/30'"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors">
-                ✅ Entregados ({{ deliveredCount() }})
-              </button>
-            </div>
-
-            <!-- Orders List -->
-            @if (filteredOrdersForTab().length > 0) {
-              <div class="space-y-4">
-                @for (ord of filteredOrdersForTab(); track ord.id) {
-                  <div [id]="'pedido-' + ord.id_pedido"
-                    class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 sm:p-6 shadow-xs transition-all hover:shadow-md"
-                    [class.ring-2]="highlightedPedidoId() === ord.id_pedido"
-                    [class.ring-[#D95578]]="highlightedPedidoId() === ord.id_pedido"
-                    [class.ring-offset-2]="highlightedPedidoId() === ord.id_pedido">
-                    <!-- Order Header -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#E8D8D0]/50">
-                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                          [class]="getStatusIconClass(ord.estado)">
-                          {{ getStatusEmoji(ord.estado) }}
-                        </div>
-                        <div>
-                          <span class="font-mono font-bold text-[#590E2A] text-sm block">{{ ord.id }}</span>
-                          <span class="text-[11px] text-[#590E2A]/60">{{ ord.fecha | date:'short' }}</span>
-                        </div>
-                      </div>
-                      <div class="flex items-center gap-3">
-                        <span class="text-lg font-serif italic text-[#590E2A]">{{ '$' + ord.total.toLocaleString('es-CO') }}</span>
-                        <span [class]="getStatusBadgeClass(ord.estado)" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                          {{ getStatusLabel(ord.estado) }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <!-- Client Info -->
-                    <div class="py-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                      <div>
-                        <span class="text-[#590E2A]/50 block text-[10px] uppercase tracking-wider">Cliente</span>
-                        <span class="font-bold text-[#590E2A]">{{ ord.cliente.nombre }}</span>
-                        <span class="text-[#590E2A]/60 block">{{ ord.cliente.telefono }}</span>
-                      </div>
-                      <div>
-                        <span class="text-[#590E2A]/50 block text-[10px] uppercase tracking-wider">Direccion</span>
-                        <span class="text-[#590E2A]">{{ ord.cliente.direccion }}</span>
-                      </div>
-                      <div>
-                        <span class="text-[#590E2A]/50 block text-[10px] uppercase tracking-wider">Pago</span>
-                        <span class="text-[#590E2A]">{{ ord.metodoPago | uppercase }} — {{ ord.estadoPago }}</span>
-                      </div>
-                    </div>
-
-                    <!-- Items -->
-                    <div class="py-3 border-t border-[#E8D8D0]/50">
-                      <div class="flex flex-wrap gap-2">
-                        @for (item of ord.items; track item.productoId) {
-                          <div class="flex items-center gap-2 bg-[#FDF8F4] px-3 py-1.5 rounded-full text-[11px]">
-                            <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
-                            <span class="font-medium text-[#590E2A]">{{ item.nombreEspanol }}</span>
-                            <span class="text-[#590E2A]/50">x{{ item.cantidad }}</span>
-                          </div>
-                        }
-                      </div>
-                    </div>
-
-                    <!-- Status Update Actions -->
-                    <div class="pt-3 border-t border-[#E8D8D0]/50">
-                      <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-[#590E2A]/40">Avanzar Estado:</span>
-                        <div class="flex gap-2 flex-wrap justify-end">
-                          @if (ord.estado === 'pendiente') {
-                            <button (click)="updateOrderStatusAdmin(ord, 'en_preparacion')"
-                              class="px-4 py-2 rounded-full bg-[#D95578] text-white text-xs font-bold hover:bg-[#FF6078] transition-colors shadow-xs">
-                              🍡 Poner en Cocina
-                            </button>
-                          }
-                          @if (ord.estado === 'en_preparacion') {
-                            <button (click)="updateOrderStatusAdmin(ord, 'en_camino')"
-                              class="px-4 py-2 rounded-full bg-[#3B82F6] text-white text-xs font-bold hover:bg-[#2563EB] transition-colors shadow-xs">
-                              🛵 Marcar En Camino
-                            </button>
-                          }
-                          @if (ord.estado === 'en_camino') {
-                            <button (click)="updateOrderStatusAdmin(ord, 'entregado')"
-                              class="px-4 py-2 rounded-full bg-[#065F46] text-white text-xs font-bold hover:bg-[#047857] transition-colors shadow-xs">
-                              ✅ Marcar Entregado
-                            </button>
-                          }
-                          @if (ord.estado !== 'entregado' && ord.estado !== 'cancelado') {
-                            <button (click)="updateOrderStatusAdmin(ord, 'cancelado')"
-                              class="px-3 py-2 rounded-full bg-white border border-red-200 text-red-500 text-xs font-bold hover:bg-red-50 transition-colors">
-                              Cancelar
-                            </button>
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-            } @else {
-              <div class="text-center py-16 bg-white rounded-[32px] border border-[#E8D8D0] space-y-4">
-                <span class="material-icons text-5xl text-[#E8D8D0]">inventory_2</span>
-                <div>
-                  <h3 class="text-lg font-serif italic text-[#590E2A]">Sin pedidos</h3>
-                  <p class="text-xs text-[#590E2A]/50 mt-1">
-                    @if (activeOrderFilter() === 'all') {
-                      No hay pedidos online todavia.
-                    } @else {
-                      No hay pedidos con este estado.
-                    }
-                  </p>
-                </div>
-              </div>
-            }
-
-          </div>
+          <app-orders-panel role="admin" [externalHighlightId]="highlightedPedidoId()" />
         }
 
         <!-- TAB 4: VENTAS -->
@@ -949,7 +715,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   Number = Number;
 
-  activeTab = signal<'dashboard' | 'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'>('dashboard');
+  activeTab = signal<'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'>('detalles');
   detalleOrigenFilter = signal<'todos' | 'online' | 'local'>('todos');
   editingUser = signal<Usuario | null>(null);
   editingProduct = signal<Product | null>(null);
@@ -959,7 +725,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   viewingAddresses = signal<Usuario | null>(null);
   userAddresses = signal<Direccion[]>([]);
   highlightedPedidoId = signal<number | null>(null);
-  activeOrderFilter = signal<string>('all');
   availableIngredientes = signal<{ id: number; nombre: string; tipo: string }[]>([]);
   selectedIngredientes = signal<{ id: number; nombre: string; tipo: string }[]>([]);
   productToDelete = signal<Product | null>(null);
@@ -979,6 +744,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.notificationService.startListening(user.id);
     }
     // Sync sidebar navigation with internal tabs
+    if (this.router.url === '/admin' || this.router.url === '/admin/') {
+      this.router.navigate(['/admin/detalles']);
+    }
     this.syncTabFromRoute(this.router.url);
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -1013,15 +781,15 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   private syncTabFromRoute(url: string) {
     const segment = url.replace('/admin', '').replace(/^\//, '');
-    const tabMap: Record<string, 'dashboard' | 'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'> = {
-      '': 'dashboard',
+    const tabMap: Record<string, 'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'> = {
+      '': 'detalles',
       'productos': 'productos',
       'pedidos': 'pedidos',
       'detalles': 'detalles',
       'usuarios': 'usuarios',
-      'blog': 'dashboard',
+      'blog': 'detalles',
     };
-    this.activeTab.set(tabMap[segment] ?? 'dashboard');
+    this.activeTab.set(tabMap[segment] ?? 'detalles');
   }
 
   config = this.dataService.visualConfig;
@@ -1033,35 +801,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     if (filter === 'online') return this.dataService.detallePedidosOnline();
     if (filter === 'local') return this.dataService.detallePedidosLocal();
     return this.dataService.detallePedidos();
-  });
-
-  pendingOrdersCount = computed(() => {
-    return this.orders().filter(o => o.estado !== 'entregado').length;
-  });
-
-  onlineRevenueTotal = computed(() => {
-    return this.orders().reduce((sum, o) => sum + o.total, 0);
-  });
-
-  posRevenueTotal = computed(() => {
-    return this.dataService.posSales().reduce((sum, s) => sum + s.total, 0);
-  });
-
-  filteredOrdersForTab = computed(() => {
-    const filter = this.activeOrderFilter();
-    const orders = this.orders();
-    if (filter === 'all') return orders;
-    return orders.filter(o => o.estado === filter);
-  });
-
-  pendingCount = computed(() => this.orders().filter(o => o.estado === 'pendiente').length);
-  prepCount = computed(() => this.orders().filter(o => o.estado === 'en_preparacion').length);
-  deliveryCount = computed(() => this.orders().filter(o => o.estado === 'en_camino').length);
-  deliveredCount = computed(() => this.orders().filter(o => o.estado === 'entregado').length);
-  activeCount = computed(() => this.orders().filter(o => ['pendiente', 'en_preparacion', 'en_camino'].includes(o.estado)).length);
-  deliveredTodayCount = computed(() => {
-    const today = new Date().toISOString().split('T')[0];
-    return this.orders().filter(o => o.estado === 'entregado' && o.fecha?.startsWith(today)).length;
   });
 
   totalSalesRevenue = computed(() => {
@@ -1167,54 +906,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   clearProductImage() {
     this.productImagePreview.set(null);
     this.selectedProductFile.set(null);
-  }
-
-  async updateOrderStatusAdmin(order: Order, newStatus: OrderStatus) {
-    await this.dataService.updateOrderStatus(order.id, newStatus, order.id_pedido);
-  }
-
-  getStatusEmoji(status: OrderStatus): string {
-    switch (status) {
-      case 'pendiente': return '📝';
-      case 'en_preparacion': return '🍡';
-      case 'en_camino': return '🛵';
-      case 'entregado': return '✅';
-      case 'cancelado': return '❌';
-      default: return '📋';
-    }
-  }
-
-  getStatusIconClass(status: OrderStatus): string {
-    switch (status) {
-      case 'pendiente': return 'bg-[#FFF3E0] text-[#6B4E28]';
-      case 'en_preparacion': return 'bg-[#D95578] text-[#590E2A]';
-      case 'en_camino': return 'bg-[#E8EAF6] text-[#283593]';
-      case 'entregado': return 'bg-[#E0F2F1] text-[#2C5350]';
-      case 'cancelado': return 'bg-red-50 text-red-500';
-      default: return 'bg-[#FDF8F4] text-[#590E2A]';
-    }
-  }
-
-  getStatusBadgeClass(status: OrderStatus): string {
-    switch (status) {
-      case 'pendiente': return 'bg-[#FFF3E0] text-[#6B4E28] border border-[#ffe0b2]';
-      case 'en_preparacion': return 'bg-[#D95578] text-[#590E2A] border border-[#E8D8D0]';
-      case 'en_camino': return 'bg-[#E8EAF6] text-[#283593] border border-[#c5cae9]';
-      case 'entregado': return 'bg-[#E0F2F1] text-[#2C5350] border border-[#b2dfdb]';
-      case 'cancelado': return 'bg-red-50 text-red-500 border border-red-200';
-      default: return 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0]';
-    }
-  }
-
-  getStatusLabel(status: OrderStatus): string {
-    switch (status) {
-      case 'pendiente': return 'Recibido';
-      case 'en_preparacion': return 'En Cocina';
-      case 'en_camino': return 'En Camino';
-      case 'entregado': return 'Entregado';
-      case 'cancelado': return 'Cancelado';
-      default: return status;
-    }
   }
 
   async saveProductModal(esp: string, jap: string, price: string, stock: string, stockMin: string, stockMax: string, desc: string, disp: boolean) {

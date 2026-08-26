@@ -36,7 +36,7 @@ import { CartService } from '../../services/cart.service';
               <span class="material-icons absolute left-3.5 top-1/2 -translate-y-1/2 text-[#590E2A]/50 text-xl">search</span>
               <input 
                 type="text" 
-                placeholder="Buscar por nombre (ej. Fresa, Matcha)..."
+                placeholder="Buscar postre..."
                 [value]="searchQuery()"
                 (input)="searchQuery.set($any($event.target).value)"
                 class="w-full pl-11 pr-4 py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-xs text-[#590E2A] font-medium focus:outline-none focus:border-[#D95578] transition-colors"
@@ -50,10 +50,9 @@ import { CartService } from '../../services/cart.service';
                 [value]="sortBy()"
                 (change)="sortBy.set($any($event.target).value)"
                 class="px-4 py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-xs font-bold text-[#590E2A] focus:outline-none focus:border-[#D95578]">
-                <option value="destacados">⭐ Más Populares</option>
-                <option value="precio_menor">💵 Precio: Menor a Mayor</option>
-                <option value="precio_mayor">💰 Precio: Mayor a Menor</option>
-                <option value="calificacion">★ Mejor Calificados</option>
+                <option value="destacados">Más Populares</option>
+                <option value="precio_menor">Precio: Menor a Mayor</option>
+                <option value="precio_mayor">Precio: Mayor a Menor</option>
               </select>
             </div>
           </div>
@@ -63,9 +62,9 @@ import { CartService } from '../../services/cart.service';
         @if (filteredProducts().length > 0) {
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @for (prod of filteredProducts(); track prod.id) {
-              <div class="bg-white rounded-[32px] border border-[#E8D8D0] overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col group">
+              <div class="bg-white rounded-[32px] border border-[#E8D8D0] overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col group cursor-pointer" [routerLink]="['/productos', prod.id]">
                 <!-- Image Container -->
-                <div class="relative h-56 bg-[#FDF8F4] overflow-hidden">
+                <div class="relative h-72 bg-[#FDF8F4] overflow-hidden">
                   <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                   <span class="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#D95578]/90 backdrop-blur-md text-[#FDF8F4] text-[10px] font-bold uppercase tracking-wider">
                     {{ (prod.nombre_japones || '').split(' ')[0] }}
@@ -73,11 +72,11 @@ import { CartService } from '../../services/cart.service';
                 </div>
 
                 <!-- Product Content -->
-                <div class="p-5 flex-1 flex flex-col justify-between space-y-3">
+                <div class="p-4 flex-1 flex flex-col justify-between space-y-2">
                   <div>
-                    <div class="flex items-center justify-between text-xs mb-1">
-                      <span class="font-serif italic font-bold text-[#D95578]">{{ prod.nombre_japones }}</span>
-                      <span class="text-[#590E2A] font-bold flex items-center gap-0.5">
+                    <div class="flex items-center justify-between mb-1">
+                      <span class="font-serif italic font-bold text-[#D95578] text-sm">{{ prod.nombre_japones }}</span>
+                      <span class="text-[#590E2A] font-bold flex items-center gap-0.5 text-xs">
                         <span class="material-icons text-xs text-amber-500">star</span>
                         {{ prod.calificacion }}
                       </span>
@@ -88,19 +87,16 @@ import { CartService } from '../../services/cart.service';
                     </h3>
                   </div>
 
-                  <div class="pt-3 border-t border-[#E8D8D0] flex items-center justify-between">
-                    <div>
-                      <span class="text-[10px] text-[#590E2A]/60 uppercase tracking-widest block font-bold">Precio</span>
-                      <span class="text-lg font-serif italic text-[#590E2A] font-bold">
-                        {{ '$' + prod.precio.toLocaleString('es-CO') }}
-                      </span>
-                    </div>
+                  <div class="pt-2 border-t border-[#E8D8D0]/60 flex items-center justify-between">
+                    <span class="text-lg font-serif italic text-[#590E2A] font-bold">
+                      {{ '$' + prod.precio.toLocaleString('es-CO') }}
+                    </span>
 
-                    <div class="flex items-center gap-1.5">
-                      <button (click)="cartService.addToCart(prod, 1)" class="p-2.5 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] transition-all hover:scale-105 active:scale-95" title="Añadir al Carrito">
+                    <div class="flex items-center gap-1.5" (click)="$event.stopPropagation()">
+                      <button (click)="cartService.addToCart(prod, 1)" class="w-9 h-9 rounded-xl bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Añadir al Carrito">
                         <span class="material-icons text-base">add_shopping_cart</span>
                       </button>
-                      <a [routerLink]="['/productos', prod.id]" class="px-3.5 py-2.5 rounded-full bg-[#D95578] hover:bg-[#FF5277] text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs">
+                      <a [routerLink]="['/productos', prod.id]" class="px-3 h-9 rounded-xl bg-[#590E2A] hover:bg-[#7A1540] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all hover:scale-105 active:scale-95">
                         Ver
                       </a>
                     </div>
@@ -108,12 +104,31 @@ import { CartService } from '../../services/cart.service';
                 </div>
               </div>
             }
+
+            <!-- Personalizado Card -->
+            <a routerLink="/personalizar-vaso" class="bg-gradient-to-br from-[#D95578] to-[#A33D5E] rounded-[32px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col group cursor-pointer">
+              <div class="relative h-72 flex items-center justify-center overflow-hidden">
+                <span class="material-icons text-white/20 text-[120px] group-hover:scale-110 transition-transform duration-500">local_cafe</span>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                <span class="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider border border-white/30">
+                  Tú lo armas
+                </span>
+              </div>
+              <div class="p-4">
+                <span class="font-serif italic font-bold text-white/80 text-sm block mb-1">カスタム</span>
+                <h3 class="text-lg font-serif italic text-white font-bold">Personalizado</h3>
+                <p class="text-white/70 text-xs mt-1">Elige base, crema, relleno y topping a tu gusto</p>
+                <div class="mt-3 flex items-center gap-2 text-white text-xs font-bold uppercase tracking-wider">
+                  <span class="material-icons text-sm">arrow_forward</span> Crear mi vaso
+                </div>
+              </div>
+            </a>
           </div>
         } @else {
           <!-- Empty Search / Filter State -->
           <div class="text-center py-20 bg-white rounded-[32px] border border-[#E8D8D0] p-8">
-            <div class="w-16 h-16 rounded-full bg-[#FDF8F4] text-[#590E2A] flex items-center justify-center mx-auto mb-4 text-3xl border border-[#E8D8D0]">
-              🔍
+            <div class="w-16 h-16 rounded-full bg-[#FDF8F4] text-[#590E2A] flex items-center justify-center mx-auto mb-4 border border-[#E8D8D0]">
+              <span class="material-icons text-3xl">search_off</span>
             </div>
             <h3 class="text-xl font-serif italic text-[#590E2A]">No encontramos postres coincidentes</h3>
             <p class="text-[#590E2A]/70 text-xs mt-1 max-w-md mx-auto uppercase tracking-wider">Prueba buscando con otros términos.</p>
@@ -151,10 +166,7 @@ export class CatalogPageComponent {
       list.sort((a, b) => a.precio - b.precio);
     } else if (this.sortBy() === 'precio_mayor') {
       list.sort((a, b) => b.precio - a.precio);
-    } else if (this.sortBy() === 'calificacion') {
-      list.sort((a, b) => b.calificacion - a.calificacion);
     } else {
-      // 'destacados' - best rated by reviews
       list.sort((a, b) => b.calificacion - a.calificacion || b.num_resenas - a.num_resenas);
     }
 

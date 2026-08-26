@@ -1,5 +1,5 @@
 import { Component, signal, computed, inject, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CupLayer, CupLayerOption, CustomCupConfig, Product } from '../../models/mochi.models';
 import { CartService } from '../../services/cart.service';
 import { supabase } from '../../supabase';
@@ -253,11 +253,13 @@ import { supabase } from '../../supabase';
 export class CustomCupComponent implements OnInit {
   private cartService = inject(CartService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   currentStep = signal(0);
   quantity = signal(1);
   addedToCart = signal(false);
   layers = signal<CupLayer[]>([]);
+  editMode = signal(false);
 
   config = signal<CustomCupConfig>({
     base: null,
@@ -305,6 +307,26 @@ export class CustomCupComponent implements OnInit {
       }));
 
     this.layers.set(built);
+
+    // Check for edit mode
+    const capasStr = this.route.snapshot.queryParamMap.get('capas');
+    if (capasStr) {
+      this.editMode.set(true);
+      try {
+        const capas = JSON.parse(capasStr);
+        const findOpt = (tipo: string, id: number) => {
+          const layer = grouped[tipo];
+          return layer.find(o => o.id === String(id)) || null;
+        };
+        this.config.set({
+          base: capas.base ? findOpt('base', capas.base) : null,
+          crema: capas.crema ? findOpt('crema', capas.crema) : null,
+          relleno: capas.relleno ? findOpt('relleno', capas.relleno) : null,
+          topping: capas.topping ? findOpt('topping', capas.topping) : null
+        });
+        this.currentStep.set(0);
+      } catch {}
+    }
   }
 
   currentLayerData = computed(() => this.layers()[this.currentStep()]);
@@ -416,8 +438,8 @@ export class CustomCupComponent implements OnInit {
 
     const customProduct: Product = {
       id: GENERIC_CUSTOM_CUP_ID,
-      nombre_japones: 'Vaso Personalizado',
-      nombre_espanol: `Vaso: ${parts.join(' + ')}`,
+      nombre_japones: 'カスタム',
+      nombre_espanol: `Personalizado: ${parts.join(' + ')}`,
       descripcion: `Base: ${cfg.base!.name} | Crema: ${cfg.crema!.name} | Relleno: ${cfg.relleno!.name}${cfg.topping ? ' | Topping: ' + cfg.topping.name : ''}`,
       precio: 0,
       imagen_principal: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=400&q=80',
@@ -438,7 +460,12 @@ export class CustomCupComponent implements OnInit {
     };
 
     this.cartService.addToCart(customProduct, this.quantity(), undefined, layerConfig, this.cupTotal());
-    this.addedToCart.set(true);
-    setTimeout(() => this.addedToCart.set(false), 2000);
+
+    if (this.editMode()) {
+      this.router.navigate(['/carrito']);
+    } else {
+      this.addedToCart.set(true);
+      setTimeout(() => this.addedToCart.set(false), 2000);
+    }
   }
 }

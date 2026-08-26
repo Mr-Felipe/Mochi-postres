@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, effect, ChangeDetectionStrategy, OnDestroy, NgZone, PLATFORM_ID } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { CartService } from '../../services/cart.service';
@@ -9,7 +10,7 @@ import type * as L from 'leaflet';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="min-h-screen bg-[#FDF8F4] py-8 px-4">
@@ -17,22 +18,27 @@ import type * as L from 'leaflet';
 
         @if (user(); as u) {
           <!-- Header Card -->
-          <div class="bg-white rounded-3xl border border-[#E8D8D0] overflow-hidden shadow-sm">
-            <div class="h-24 bg-gradient-to-r from-[#D95578] to-[#FF6078]"></div>
-            <div class="px-6 sm:px-8 pb-6 -mt-10 relative">
-              <div class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-                <div class="w-20 h-20 rounded-full bg-[#D95578] border-4 border-white flex items-center justify-center text-white text-3xl font-serif italic font-bold shadow-lg">
+          <div class="bg-white rounded-3xl border border-[#E8D8D0] shadow-sm p-6 sm:p-8">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              @if (u.foto_perfil) {
+                <img [src]="u.foto_perfil" class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg shrink-0">
+              } @else {
+                <div class="w-24 h-24 rounded-full bg-[#D95578] border-4 border-white flex items-center justify-center text-white text-4xl font-serif italic font-bold shadow-lg shrink-0">
                   {{ u.nombre_completo?.charAt(0) || '?' }}
                 </div>
-                <div class="flex-1 pt-2">
-                  <h1 class="text-2xl font-serif italic text-[#590E2A] font-bold">{{ u.nombre_completo }}</h1>
-                  <p class="text-xs text-[#590E2A]/60 mt-0.5">{{ u.email }}</p>
-                </div>
-                <span class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                  [class]="u.rol === 'admin' ? 'bg-[#D95578]/10 text-[#D95578]' : u.rol === 'empleado' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0]'">
+              }
+              <div class="flex-1 text-center sm:text-left min-w-0">
+                <h1 class="text-2xl font-serif italic text-[#590E2A] font-bold">{{ u.nombre_completo }}</h1>
+                <p class="text-sm text-[#590E2A]/60 mt-1">{{ u.email }}</p>
+                <p class="text-sm text-[#590E2A]/60">{{ u.telefono || 'Sin telefono' }}</p>
+                <span class="inline-block mt-3 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                  [class]="u.rol === 'admin' ? 'bg-[#590E2A]/10 text-[#590E2A]' : u.rol === 'empleado' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0]'">
                   {{ u.rol }}
                 </span>
               </div>
+              <button (click)="startEdit()" class="px-5 py-2.5 rounded-full bg-white border border-[#E8D8D0] text-[#590E2A] text-xs font-bold hover:bg-[#FDF8F4] transition-colors flex items-center gap-2 shrink-0">
+                <span class="material-icons" style="font-size: 14px">edit</span> Editar
+              </button>
             </div>
           </div>
 
@@ -40,17 +46,17 @@ import type * as L from 'leaflet';
           <div class="bg-white rounded-3xl border border-[#E8D8D0] shadow-sm overflow-hidden">
             <div class="flex border-b border-[#E8D8D0]">
               <button (click)="activeTab.set('cuenta')" class="flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold uppercase tracking-wider transition-colors border-b-2"
-                [class]="activeTab() === 'cuenta' ? 'border-[#D95578] text-[#D95578] bg-[#D95578]/5' : 'border-transparent text-[#590E2A]/40 hover:text-[#590E2A]/60'">
+                [class]="activeTab() === 'cuenta' ? 'border-[#590E2A] text-[#590E2A] bg-[#590E2A]/5' : 'border-transparent text-[#590E2A]/40 hover:text-[#590E2A]/60'">
                 <span class="material-icons" style="font-size: 16px">person</span>
                 Mi Cuenta
               </button>
               <button (click)="activeTab.set('direcciones')" class="flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold uppercase tracking-wider transition-colors border-b-2"
-                [class]="activeTab() === 'direcciones' ? 'border-[#D95578] text-[#D95578] bg-[#D95578]/5' : 'border-transparent text-[#590E2A]/40 hover:text-[#590E2A]/60'">
+                [class]="activeTab() === 'direcciones' ? 'border-[#590E2A] text-[#590E2A] bg-[#590E2A]/5' : 'border-transparent text-[#590E2A]/40 hover:text-[#590E2A]/60'">
                 <span class="material-icons" style="font-size: 16px">location_on</span>
                 Direcciones
               </button>
               <button (click)="activeTab.set('pedidos')" class="flex-1 flex items-center justify-center gap-2 py-4 text-xs font-bold uppercase tracking-wider transition-colors border-b-2"
-                [class]="activeTab() === 'pedidos' ? 'border-[#D95578] text-[#D95578] bg-[#D95578]/5' : 'border-transparent text-[#590E2A]/40 hover:text-[#590E2A]/60'">
+                [class]="activeTab() === 'pedidos' ? 'border-[#590E2A] text-[#590E2A] bg-[#590E2A]/5' : 'border-transparent text-[#590E2A]/40 hover:text-[#590E2A]/60'">
                 <span class="material-icons" style="font-size: 16px">receipt_long</span>
                 Pedidos
               </button>
@@ -162,38 +168,6 @@ import type * as L from 'leaflet';
                         </form>
                       </div>
                     }
-                  </div>
-
-                  <!-- Accesos Directos -->
-                  <div>
-                    <div class="flex items-center gap-3 mb-5">
-                      <div class="w-9 h-9 rounded-xl bg-[#FFF3E0] flex items-center justify-center">
-                        <span class="material-icons text-[#FB923C]" style="font-size: 18px">bolt</span>
-                      </div>
-                      <h2 class="text-sm font-bold text-[#590E2A] uppercase tracking-wider">Accesos Directos</h2>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <a routerLink="/carrito" class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-[#FDF8F4] hover:bg-[#E0F2F1] transition-colors text-center">
-                        <span class="material-icons text-[#D95578]" style="font-size: 24px">shopping_cart</span>
-                        <span class="text-[10px] font-bold text-[#590E2A]">Carrito</span>
-                      </a>
-                      <a routerLink="/productos" class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-[#FDF8F4] hover:bg-[#FFF3E0] transition-colors text-center">
-                        <span class="material-icons text-[#FB923C]" style="font-size: 24px">restaurant_menu</span>
-                        <span class="text-[10px] font-bold text-[#590E2A]">Catálogo</span>
-                      </a>
-                      @if (u.rol === 'admin') {
-                        <a routerLink="/admin" class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-[#FDF8F4] hover:bg-[#FFF3E0] transition-colors text-center">
-                          <span class="material-icons text-[#FB923C]" style="font-size: 24px">admin_panel_settings</span>
-                          <span class="text-[10px] font-bold text-[#7C2D12]">Admin</span>
-                        </a>
-                      }
-                      @if (u.rol === 'admin' || u.rol === 'empleado') {
-                        <a routerLink="/empleado" class="flex flex-col items-center gap-2 p-4 rounded-2xl bg-[#FDF8F4] hover:bg-[#E0F2F1] transition-colors text-center">
-                          <span class="material-icons text-[#2C5350]" style="font-size: 24px">point_of_sale</span>
-                          <span class="text-[10px] font-bold text-[#133834]">POS</span>
-                        </a>
-                      }
-                    </div>
                   </div>
 
                   <!-- Cerrar Sesión -->
@@ -334,7 +308,13 @@ import type * as L from 'leaflet';
                               {{ ord.estado }}
                             </span>
                           </div>
-                          <span class="text-sm font-serif italic font-bold text-[#590E2A]">{{ '$' + ord.total.toLocaleString('es-CO') }}</span>
+                          <div class="text-right">
+                            <span class="text-sm font-serif italic font-bold text-[#590E2A] block">{{ '$' + ord.total.toLocaleString('es-CO') }}</span>
+                            <div class="inline-flex items-center gap-1.5 h-5 px-2 mt-1 rounded bg-white border border-[#E8D8D0]">
+                              <img [src]="getPaymentLogo(ord.metodoPago)" [alt]="ord.metodoPago" class="h-3 object-contain">
+                              <span class="text-[9px] font-bold text-[#590E2A]/60 uppercase">{{ ord.metodoPago }}</span>
+                            </div>
+                          </div>
                         </div>
 
                         <div class="flex items-center gap-4 text-[11px] text-[#590E2A]/60">
@@ -343,15 +323,47 @@ import type * as L from 'leaflet';
                             {{ ord.items.length }} postres
                           </div>
                           <div class="flex items-center gap-1">
-                            <span class="material-icons" style="font-size: 12px">payment</span>
-                            {{ ord.metodoPago }}
+                            <span class="material-icons" style="font-size: 12px">calendar_today</span>
+                            {{ ord.fecha | date:'short' }}
                           </div>
                         </div>
 
-                        <div class="flex items-center gap-1 text-[10px] text-[#590E2A]/40 border-t border-[#E8D8D0]/60 pt-2">
-                          <span class="material-icons" style="font-size: 10px">location_on</span>
-                          {{ ord.cliente.direccion }}
+                        <!-- Products Toggle -->
+                        <div class="border-t border-[#E8D8D0]/60 pt-3">
+                          <button (click)="toggleOrderItems(ord.id)" class="w-full flex items-center justify-between text-left">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              @for (item of ord.items.slice(0, 3); track item.productoId) {
+                                <img [src]="item.imagen" class="w-7 h-7 rounded-full object-cover border-2 border-white -ml-2 first:ml-0" [title]="item.nombreEspanol">
+                              }
+                              @if (ord.items.length > 3) {
+                                <span class="w-7 h-7 rounded-full bg-[#590E2A]/10 text-[#590E2A] text-[9px] font-bold flex items-center justify-center border-2 border-white -ml-2">
+                                  +{{ ord.items.length - 3 }}
+                                </span>
+                              }
+                            </div>
+                            <span class="material-icons text-[#590E2A]/40 transition-transform" style="font-size: 18px"
+                              [class.rotate-180]="expandedOrderItems() === ord.id">expand_more</span>
+                          </button>
+
+                          <div class="faq-answer" [class.open]="expandedOrderItems() === ord.id">
+                            <div class="flex flex-wrap gap-2 pt-3">
+                              @for (item of ord.items; track item.productoId) {
+                                <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full text-[11px] border border-[#E8D8D0]/50">
+                                  <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
+                                  <span class="font-medium text-[#590E2A]">{{ item.nombreEspanol }}</span>
+                                  <span class="text-[#590E2A]/50">x{{ item.cantidad }}</span>
+                                </div>
+                              }
+                            </div>
+                          </div>
                         </div>
+
+                        @if (ord.cliente.direccion) {
+                          <div class="flex items-center gap-1 text-[10px] text-[#590E2A]/40 pt-1">
+                            <span class="material-icons" style="font-size: 10px">location_on</span>
+                            {{ ord.cliente.direccion }}
+                          </div>
+                        }
                       </div>
                     } @empty {
                       <div class="py-10 text-center">
@@ -368,6 +380,71 @@ import type * as L from 'leaflet';
 
             </div>
           </div>
+
+          <!-- Edit Profile Modal -->
+          @if (isEditing()) {
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="cancelEdit()">
+              <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg p-6 sm:p-8" (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-lg font-serif italic text-[#590E2A] font-bold">Editar Perfil</h2>
+                  <button (click)="cancelEdit()" class="p-2 rounded-full hover:bg-[#FDF8F4] transition-colors">
+                    <span class="material-icons text-[#590E2A]/40">close</span>
+                  </button>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-6">
+                  <!-- Avatar Section -->
+                  <div class="flex flex-col items-center gap-3 shrink-0">
+                    <div class="relative group">
+                      @if (avatarPreview()) {
+                        <img [src]="avatarPreview()" class="w-24 h-24 rounded-full object-cover border-4 border-[#E8D8D0]">
+                      } @else {
+                        <div class="w-24 h-24 rounded-full bg-[#D95578] flex items-center justify-center text-white text-4xl font-serif italic font-bold border-4 border-[#E8D8D0]">
+                          {{ u.nombre_completo?.charAt(0) || '?' }}
+                        </div>
+                      }
+                      <label class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                        <span class="material-icons text-white">photo_camera</span>
+                        <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)">
+                      </label>
+                    </div>
+                    <span class="text-[10px] text-[#590E2A]/40 text-center">Click para cambiar foto</span>
+                  </div>
+
+                  <!-- Form Fields -->
+                  <div class="flex-1 space-y-4">
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider font-bold text-[#590E2A]/50 block mb-1 flex items-center gap-1">
+                        <span class="material-icons" style="font-size: 14px">person</span> Nombre Completo
+                      </label>
+                      <input [(ngModel)]="editName" class="w-full text-sm text-[#590E2A] bg-[#FDF8F4] border border-[#E8D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#590E2A] transition-colors" placeholder="Tu nombre">
+                    </div>
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider font-bold text-[#590E2A]/50 block mb-1 flex items-center gap-1">
+                        <span class="material-icons" style="font-size: 14px">email</span> Correo Electronico
+                      </label>
+                      <input [(ngModel)]="editEmail" type="email" class="w-full text-sm text-[#590E2A] bg-[#FDF8F4] border border-[#E8D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#590E2A] transition-colors" placeholder="tu@email.com">
+                    </div>
+                    <div>
+                      <label class="text-[10px] uppercase tracking-wider font-bold text-[#590E2A]/50 block mb-1 flex items-center gap-1">
+                        <span class="material-icons" style="font-size: 14px">phone</span> Telefono
+                      </label>
+                      <input [(ngModel)]="editPhone" class="w-full text-sm text-[#590E2A] bg-[#FDF8F4] border border-[#E8D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#590E2A] transition-colors" placeholder="Tu telefono">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                  <button (click)="cancelEdit()" class="flex-1 px-5 py-3 rounded-full bg-white border border-[#E8D8D0] text-[#590E2A] text-xs font-bold hover:bg-[#FDF8F4] transition-colors">
+                    Cancelar
+                  </button>
+                  <button (click)="saveProfile()" [disabled]="isSaving()" class="flex-1 px-5 py-3 rounded-full bg-[#590E2A] text-white text-xs font-bold hover:bg-[#3A0A1C] transition-colors disabled:opacity-50">
+                    {{ isSaving() ? 'Guardando...' : 'Guardar Cambios' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
         }
       </div>
     </div>
@@ -394,6 +471,15 @@ export class ProfileComponent implements OnDestroy {
   showNewAddress = signal(false);
   mapAddress = signal('');
   mapLoading = signal(false);
+
+  isEditing = signal(false);
+  isSaving = signal(false);
+  editName = '';
+  editEmail = '';
+  editPhone = '';
+  avatarPreview = signal<string | null>(null);
+  avatarFile: File | null = null;
+  expandedOrderItems = signal<string | null>(null);
 
   private map: any = null;
   private marker: any = null;
@@ -423,10 +509,7 @@ export class ProfileComponent implements OnDestroy {
   userOrders = computed(() => {
     const u = this.user();
     if (!u) return [];
-    return this.dataService.orders().filter(o =>
-      o.cliente.email?.toLowerCase() === u.email.toLowerCase() ||
-      o.cliente.nombre.toLowerCase().includes(u.nombre_completo.toLowerCase())
-    );
+    return this.dataService.orders().filter(o => o.id_usuario === u.id);
   });
 
   ngOnDestroy() {
@@ -575,6 +658,82 @@ export class ProfileComponent implements OnDestroy {
     }
 
     this.passwordLoading.set(false);
+  }
+
+  toggleOrderItems(orderId: string) {
+    this.expandedOrderItems.set(this.expandedOrderItems() === orderId ? null : orderId);
+  }
+
+  getPaymentLogo(method: string): string {
+    const logos: Record<string, string> = {
+      'nequi': 'https://ayuda.nequi.com.co/hc/theming_assets/01K33KNDSV01JCWCVQN8EPN9D7',
+      'daviplata': 'https://http2.mlstatic.com/storage/logos-api-admin/72df52b0-f3c4-11eb-a186-1134488bf456-m.svg',
+      'pse': 'https://http2.mlstatic.com/storage/logos-api-admin/254f9960-57b9-11e8-a82b-59483d0f8e12-m.svg',
+      'bancolombia': 'https://http2.mlstatic.com/storage/logos-api-admin/5c2bfa10-7d35-11f0-b528-71999009c8ad-m.svg',
+      'tarjeta_credito': 'https://http2.mlstatic.com/storage/logos-api-admin/a5f047d0-9be0-11ec-aad4-c3381f368aaf-m.svg',
+      'tarjeta_debito': 'https://http2.mlstatic.com/storage/logos-api-admin/9cf818e0-723a-11f0-a459-cf21d0937aeb-m.svg',
+      'efectivo': 'https://d1b4gd4m8561gs.cloudfront.net/sites/default/files/images/bre-b-identifica.png',
+      'contraentrega': 'https://d1b4gd4m8561gs.cloudfront.net/sites/default/files/images/bre-b-identifica.png',
+    };
+    const key = method.toLowerCase().replace(/\s+/g, '_');
+    return logos[key] || 'https://http2.mlstatic.com/storage/logos-api-admin/254f9960-57b9-11e8-a82b-59483d0f8e12-m.svg';
+  }
+
+  startEdit() {
+    const u = this.user();
+    if (u) {
+      this.editName = u.nombre_completo || '';
+      this.editEmail = u.email || '';
+      this.editPhone = u.telefono || '';
+      this.avatarPreview.set(u.foto_perfil || null);
+      this.avatarFile = null;
+    }
+    this.isEditing.set(true);
+  }
+
+  cancelEdit() {
+    this.isEditing.set(false);
+    this.avatarPreview.set(null);
+    this.avatarFile = null;
+  }
+
+  onAvatarSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.avatarFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.avatarPreview.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(this.avatarFile);
+    }
+  }
+
+  async saveProfile() {
+    this.isSaving.set(true);
+
+    const nameChanged = this.editName !== (this.user()?.nombre_completo || '');
+    const phoneChanged = this.editPhone !== (this.user()?.telefono || '');
+    const emailChanged = this.editEmail !== (this.user()?.email || '');
+
+    if (nameChanged || phoneChanged) {
+      await this.supabaseService.updateProfile({
+        nombre_completo: this.editName,
+        telefono: this.editPhone
+      });
+    }
+
+    if (emailChanged) {
+      await this.supabaseService.updateEmail(this.editEmail);
+    }
+
+    if (this.avatarFile) {
+      await this.supabaseService.uploadAvatar(this.avatarFile);
+    }
+
+    this.isEditing.set(false);
+    this.avatarFile = null;
+    this.isSaving.set(false);
   }
 
   async onLogout() {
