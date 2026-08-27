@@ -58,6 +58,7 @@ export interface StockValidation {
 export interface StockCheckItem {
   id_producto: number;
   cantidad: number;
+  frase_personalizada?: string;
 }
 
 export interface Category {
@@ -94,7 +95,6 @@ export interface CartItem {
   frase_personalizada?: string;
   configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null;
   customPrice?: number;
-  toppings_seleccionados?: { id: string; nombre: string; precio: number }[];
 }
 
 export type OrderStatus = 'pendiente' | 'en_preparacion' | 'en_camino' | 'listo_recogida' | 'entregado' | 'cancelado';
@@ -122,6 +122,7 @@ export interface Order {
     precio: number;
     cantidad: number;
     imagen: string;
+    frase_personalizada?: string;
   }[];
   subtotal: number;
   costoEnvio: number;

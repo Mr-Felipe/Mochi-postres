@@ -71,8 +71,45 @@ export class NotificationService implements OnDestroy {
           this.addNotification(notif);
           this.showToast(notif);
         }
-        // Reload orders so all views update immediately
         this.dataService.loadOrders();
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'productos'
+      }, (payload) => {
+        const old = payload.old as Record<string, unknown>;
+        const updated = payload.new as Record<string, unknown>;
+        const oldStock = old['stock'] as number;
+        const newStock = updated['stock'] as number;
+        const stockMinimo = updated['stock_minimo'] as number;
+        const nombre = updated['nombre_espanol'] as string;
+
+        if (newStock <= 0 && oldStock > 0) {
+          const notif: AppNotification = {
+            id: `stock-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            titulo: 'Stock Agotado',
+            mensaje: `"${nombre}" se quedó sin stock`,
+            tipo: 'stock_bajo',
+            leida: false,
+            created_at: new Date().toISOString()
+          };
+          this.addNotification(notif);
+          this.showToast(notif);
+        } else if (newStock > 0 && newStock <= stockMinimo && oldStock > stockMinimo) {
+          const notif: AppNotification = {
+            id: `stock-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            titulo: 'Stock Bajo',
+            mensaje: `"${nombre}" tiene solo ${newStock} unidades (mínimo: ${stockMinimo})`,
+            tipo: 'stock_bajo',
+            leida: false,
+            created_at: new Date().toISOString()
+          };
+          this.addNotification(notif);
+          this.showToast(notif);
+        }
+
+        this.dataService.loadAllFromSupabase();
       })
       .subscribe();
 

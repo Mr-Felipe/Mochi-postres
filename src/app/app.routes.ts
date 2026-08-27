@@ -108,6 +108,10 @@ export const routes: Routes = [
         path: 'perfil',
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
       },
+      {
+        path: 'personalizar-vaso',
+        loadComponent: () => import('./pages/custom-cup/custom-cup').then(m => m.CustomCupComponent)
+      },
     ]
   },
   {
@@ -126,6 +130,10 @@ export const routes: Routes = [
       {
         path: 'perfil',
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'personalizar-vaso',
+        loadComponent: () => import('./pages/custom-cup/custom-cup').then(m => m.CustomCupComponent)
       },
     ]
   },

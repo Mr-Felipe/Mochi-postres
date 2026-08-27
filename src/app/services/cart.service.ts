@@ -23,6 +23,12 @@ export class CartService implements OnDestroy {
   readonly deliveryZone = signal<DeliveryZone>('La Dorada');
   readonly isDrawerOpen = signal<boolean>(false);
 
+  // POS: pending custom cup from configurator
+  readonly pendingCustomCup = signal<{ product: Product; cantidad: number; configuracion_capas: any; customPrice: number } | null>(null);
+
+  // POS: cart items (persist across navigation)
+  readonly posItems = signal<{ product: Product; cantidad: number; configuracion_capas?: any; customPrice?: number }[]>([]);
+
   openDrawer() { this.isDrawerOpen.set(true); }
   closeDrawer() { this.isDrawerOpen.set(false); }
   toggleDrawer() { this.isDrawerOpen.update(v => !v); }
@@ -30,12 +36,9 @@ export class CartService implements OnDestroy {
   readonly itemCount = computed(() => this.items().reduce((sum, item) => sum + item.cantidad, 0));
   readonly subtotal = computed(() => this.items().reduce((sum, item) => {
     if (item.customPrice) {
-      const toppingsTotal = item.toppings_seleccionados?.reduce((s, t) => s + t.precio, 0) || 0;
-      return sum + ((item.customPrice + toppingsTotal) * item.cantidad);
+      return sum + (item.customPrice * item.cantidad);
     }
-    const price = item.product.precio;
-    const toppingsTotal = item.toppings_seleccionados?.reduce((s, t) => s + t.precio, 0) || 0;
-    return sum + ((price + toppingsTotal) * item.cantidad);
+    return sum + (item.product.precio * item.cantidad);
   }, 0));
   readonly totalQuantity = computed(() => this.items().reduce((sum, item) => sum + item.cantidad, 0));
   readonly shippingCost = computed(() => {
@@ -63,8 +66,7 @@ export class CartService implements OnDestroy {
       notas: item.notas,
       frase_personalizada: item.frase_personalizada,
       configuracion_capas: item.configuracion_capas,
-      customPrice: item.customPrice,
-      toppings_seleccionados: item.toppings_seleccionados
+      customPrice: item.customPrice
     }));
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData));
   }
@@ -223,7 +225,7 @@ export class CartService implements OnDestroy {
     }
   }
 
-  async addToCart(product: Product, quantity: number = 1, notas?: string, configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null, customPrice?: number, toppings?: { id: string; nombre: string; precio: number }[], frase_personalizada?: string): Promise<void> {
+  async addToCart(product: Product, quantity: number = 1, notas?: string, configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null, customPrice?: number, frase_personalizada?: string): Promise<void> {
     const userId = this.sbService.activeUser()?.id;
 
     if (userId) {
@@ -239,14 +241,19 @@ export class CartService implements OnDestroy {
     }
 
     const current = this.items();
-    const existingIndex = current.findIndex(i => i.product.id === product.id && !i.configuracion_capas && !customPrice);
+    const existingIndex = current.findIndex(i =>
+      i.product.id === product.id &&
+      !i.configuracion_capas &&
+      !customPrice &&
+      (i.frase_personalizada || '') === (frase_personalizada || '')
+    );
 
     if (existingIndex >= 0) {
       const updated = [...current];
       updated[existingIndex] = { ...updated[existingIndex], cantidad: updated[existingIndex].cantidad + quantity };
       this.items.set(updated);
     } else {
-      this.items.set([...current, { product, cantidad: quantity, notas, configuracion_capas: configuracion_capas || null, customPrice, toppings_seleccionados: toppings, frase_personalizada }]);
+      this.items.set([...current, { product, cantidad: quantity, notas, configuracion_capas: configuracion_capas || null, customPrice, frase_personalizada }]);
     }
 
     // Persistir en localStorage si no hay usuario logueado

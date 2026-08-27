@@ -1,15 +1,9 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MochiDataService } from '../../../services/mochi-data.service';
 import { CartService } from '../../../services/cart.service';
 import { SupabaseService } from '../../../services/supabase.service';
 import { supabase } from '../../../supabase';
-
-interface Topping {
-  id: string;
-  nombre: string;
-  precio: number;
-}
 
 @Component({
   selector: 'app-product-detail',
@@ -104,46 +98,6 @@ interface Topping {
                     <h3 class="font-serif italic text-[#590E2A] text-base font-bold">Descripción</h3>
                     <p>{{ prod.descripcion }}</p>
                   </div>
-
-                  <!-- Ingredients -->
-                  @if (productIngredients().length > 0) {
-                    <div class="mt-6">
-                      <h3 class="font-serif italic text-[#590E2A] text-sm mb-2 font-bold">Ingredientes Selección:</h3>
-                      <div class="flex flex-wrap gap-2">
-                        @for (ing of productIngredients(); track ing.nombre) {
-                          <span class="px-3.5 py-1 rounded-full bg-[#FDF8F4] text-[#590E2A] text-xs font-semibold border border-[#E8D8D0]">
-                            🌱 {{ ing.nombre }}
-                          </span>
-                        }
-                      </div>
-                    </div>
-                  }
-
-                  <!-- Toppings Selector -->
-                  @if (toppings().length > 0) {
-                    <div class="mt-6">
-                      <h3 class="font-serif italic text-[#590E2A] text-sm mb-3 font-bold">
-                        Toppings Adicionales
-                        <span class="text-[10px] text-[#590E2A]/50 font-normal not-italic ml-1">(Opcional)</span>
-                      </h3>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        @for (topping of toppings(); track topping.id) {
-                          <button
-                            (click)="toggleTopping(topping)"
-                            [class]="isToppingSelected(topping.id)
-                              ? 'bg-[#D95578] text-white border-[#D95578]'
-                              : 'bg-[#FDF8F4] text-[#590E2A] border-[#E8D8D0] hover:border-[#D95578]/50'"
-                            class="flex items-center justify-between p-3 rounded-2xl border text-xs font-semibold transition-all">
-                            <span class="flex items-center gap-2">
-                              <span class="material-icons text-sm">{{ isToppingSelected(topping.id) ? 'check_circle' : 'add_circle_outline' }}</span>
-                              {{ topping.nombre }}
-                            </span>
-                            <span class="font-bold">+{{ '$' + topping.precio.toLocaleString('es-CO') }}</span>
-                          </button>
-                        }
-                      </div>
-                    </div>
-                  }
                 </div>
 
                 <!-- Frase personalizada -->
@@ -166,43 +120,35 @@ interface Topping {
 
                 <!-- Quantity Selector & Add to Cart -->
                 <div class="pt-6 border-t border-[#E8D8D0] space-y-4">
-                  <!-- Total with toppings -->
-                  @if (selectedToppings().length > 0) {
-                    <div class="flex items-center justify-between text-xs text-[#590E2A]/70">
-                      <span>{{ prod.nombre_espanol }} × {{ quantity() }}</span>
-                      <span class="font-bold">{{ '$' + prod.precio.toLocaleString('es-CO') }}</span>
-                    </div>
-                    @for (t of selectedToppings(); track t.id) {
-                      <div class="flex items-center justify-between text-xs text-[#590E2A]/70">
-                        <span>+ {{ t.nombre }} × {{ quantity() }}</span>
-                        <span class="font-bold">{{ '$' + (t.precio * quantity()).toLocaleString('es-CO') }}</span>
+                  @if (prod.stock > 0) {
+                    <div class="flex items-center gap-4">
+                      <span class="text-xs font-bold uppercase tracking-wider text-[#590E2A]">Cantidad:</span>
+                      <div class="flex items-center rounded-full bg-[#FDF8F4] border border-[#E8D8D0] p-1">
+                        <button (click)="quantity.set(Math.max(1, quantity() - 1))" class="w-8 h-8 rounded-full bg-white text-[#590E2A] font-bold hover:bg-[#D95578] hover:text-white transition-colors flex items-center justify-center shadow-2xs">
+                          -
+                        </button>
+                        <span class="w-12 text-center text-sm font-bold text-[#590E2A]">{{ quantity() }}</span>
+                        <button (click)="quantity.set(Math.min(prod.stock, quantity() + 1))" class="w-8 h-8 rounded-full bg-white text-[#590E2A] font-bold hover:bg-[#D95578] hover:text-white transition-colors flex items-center justify-center shadow-2xs">
+                          +
+                        </button>
                       </div>
-                    }
-                    <div class="flex items-center justify-between text-sm font-bold text-[#590E2A] pt-2 border-t border-[#E8D8D0]">
-                      <span>Total</span>
-                      <span class="text-lg font-serif italic text-[#D95578]">{{ '$' + totalWithToppings().toLocaleString('es-CO') }}</span>
+                    </div>
+                  } @else {
+                    <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-center">
+                      <span class="material-icons text-red-400 text-3xl mb-2">remove_shopping_cart</span>
+                      <p class="text-sm font-bold text-red-600">Producto Agotado</p>
+                      <p class="text-xs text-red-400 mt-1">Lo sentimos, este postre no está disponible por el momento.</p>
                     </div>
                   }
-
-                  <div class="flex items-center gap-4">
-                    <span class="text-xs font-bold uppercase tracking-wider text-[#590E2A]">Cantidad:</span>
-                    <div class="flex items-center rounded-full bg-[#FDF8F4] border border-[#E8D8D0] p-1">
-                      <button (click)="quantity.set(Math.max(1, quantity() - 1))" class="w-8 h-8 rounded-full bg-white text-[#590E2A] font-bold hover:bg-[#D95578] hover:text-white transition-colors flex items-center justify-center shadow-2xs">
-                        -
-                      </button>
-                      <span class="w-12 text-center text-sm font-bold text-[#590E2A]">{{ quantity() }}</span>
-                      <button (click)="quantity.set(Math.min(prod.stock, quantity() + 1))" class="w-8 h-8 rounded-full bg-white text-[#590E2A] font-bold hover:bg-[#D95578] hover:text-white transition-colors flex items-center justify-center shadow-2xs">
-                        +
-                      </button>
-                    </div>
-                  </div>
 
                   <div class="flex flex-col sm:flex-row gap-3">
                     <button 
                       (click)="addToCart(prod)" 
-                      class="flex-1 py-4 px-6 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-sm">
+                      [disabled]="prod.stock <= 0"
+                      class="flex-1 py-4 px-6 rounded-full font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm"
+                      [class]="prod.stock > 0 ? 'bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] hover:scale-105 active:scale-95' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
                       <span class="material-icons text-lg">shopping_cart</span>
-                      <span>Añadir {{ quantity() }} al Carrito</span>
+                      <span>{{ prod.stock > 0 ? 'Añadir ' + quantity() + ' al Carrito' : 'Agotado' }}</span>
                     </button>
 
                     <a 
@@ -313,7 +259,7 @@ interface Topping {
     }
   `
 })
-export class ProductDetailPageComponent implements OnInit {
+export class ProductDetailPageComponent {
   dataService = inject(MochiDataService);
   cartService = inject(CartService);
   supabaseService = inject(SupabaseService);
@@ -322,58 +268,20 @@ export class ProductDetailPageComponent implements OnInit {
   Math = Math;
   quantity = signal(1);
   selectedImage = signal<string | null>(null);
-  toppings = signal<Topping[]>([]);
-  selectedToppings = signal<Topping[]>([]);
-  productIngredients = signal<{nombre: string; tipo: string}[]>([]);
   selectedStars = signal<number>(0);
   frasePersonalizada = signal<string>('');
 
   productId = signal<number | null>(null);
 
   constructor() {
-    this.route.params.subscribe(async params => {
+    this.route.params.subscribe(params => {
       if (params['id']) {
         const id = Number(params['id']);
         this.productId.set(id);
-        this.selectedToppings.set([]);
         this.quantity.set(1);
         this.frasePersonalizada.set('');
-        await this.loadProductIngredients(id);
       }
     });
-  }
-
-  async loadProductIngredients(productId: number) {
-    const { data } = await supabase
-      .from('producto_ingrediente')
-      .select('ingredientes(nombre, tipo)')
-      .eq('id_producto', productId)
-      .order('orden');
-
-    if (data) {
-      this.productIngredients.set(
-        data.map((row: any) => ({
-          nombre: row.ingredientes?.nombre || '',
-          tipo: row.ingredientes?.tipo || ''
-        }))
-      );
-    } else {
-      this.productIngredients.set([]);
-    }
-  }
-
-  async ngOnInit() {
-    const { data } = await supabase
-      .from('ingredientes')
-      .select('id, nombre, precio')
-      .eq('tipo', 'topping')
-      .eq('activo', true)
-      .gt('precio', 0)
-      .order('nombre');
-
-    if (data) {
-      this.toppings.set(data.map(t => ({ id: String(t.id), nombre: t.nombre, precio: Number(t.precio) })));
-    }
   }
 
   product = computed(() => {
@@ -396,31 +304,9 @@ export class ProductDetailPageComponent implements OnInit {
       .slice(0, 4);
   });
 
-  totalWithToppings = computed(() => {
-    const prod = this.product();
-    if (!prod) return 0;
-    const base = prod.precio;
-    const toppingsTotal = this.selectedToppings().reduce((sum, t) => sum + t.precio, 0);
-    return (base + toppingsTotal) * this.quantity();
-  });
-
-  isToppingSelected(toppingId: string): boolean {
-    return this.selectedToppings().some(t => t.id === toppingId);
-  }
-
-  toggleTopping(topping: Topping) {
-    const current = this.selectedToppings();
-    if (current.some(t => t.id === topping.id)) {
-      this.selectedToppings.set(current.filter(t => t.id !== topping.id));
-    } else if (current.length < 2) {
-      this.selectedToppings.set([...current, topping]);
-    }
-  }
-
   addToCart(prod: import('../../../models/mochi.models').Product) {
-    const toppings = this.selectedToppings();
     const frase = this.frasePersonalizada().trim();
-    this.cartService.addToCart(prod, this.quantity(), '', undefined, undefined, toppings.length > 0 ? toppings : undefined, frase || undefined);
+    this.cartService.addToCart(prod, this.quantity(), undefined, undefined, undefined, frase || undefined);
     this.frasePersonalizada.set('');
   }
 

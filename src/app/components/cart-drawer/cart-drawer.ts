@@ -56,17 +56,10 @@ import { CartItem } from '../../models/mochi.models';
                   <h3 class="text-sm font-serif italic truncate leading-tight font-bold" [style.color]="headingColor()">
                     {{ item.product.nombre_espanol }}
                   </h3>
-                  @if (item.toppings_seleccionados && item.toppings_seleccionados.length > 0) {
-                    <div class="flex flex-wrap gap-1">
-                      @for (t of item.toppings_seleccionados; track t.id) {
-                        <span class="text-[8px] px-1.5 py-0.5 rounded-full bg-[#D95578]/10 text-[#D95578] font-bold">+{{ t.nombre }}</span>
-                      }
-                    </div>
-                  }
                   @if (item.frase_personalizada) {
-                    <p class="text-[9px] text-[#590E2A]/60 italic truncate" title="{{ item.frase_personalizada }}">📝 {{ item.frase_personalizada }}</p>
+                    <p class="text-[9px] text-[#D95578] italic truncate flex items-center gap-1" title="{{ item.frase_personalizada }}"><span class="material-icons text-[11px]">edit_note</span> {{ item.frase_personalizada }}</p>
                   } @else if (item.product.frase) {
-                    <p class="text-[9px] text-[#590E2A]/40 italic truncate">✨ {{ item.product.frase }}</p>
+                    <p class="text-[9px] text-[#590E2A]/40 italic truncate flex items-center gap-1"><span class="material-icons text-[11px]">auto_awesome</span> {{ item.product.frase }}</p>
                   }
                   <div class="flex items-center justify-between pt-1">
                     <span class="text-xs font-bold">
@@ -88,13 +81,6 @@ import { CartItem } from '../../models/mochi.models';
                   style="color: #C62828" title="Eliminar producto">
                   <span class="material-icons text-base">delete_outline</span>
                 </button>
-                @if (item.configuracion_capas) {
-                  <button (click)="editCustomCup(item)"
-                    class="hover:opacity-70 p-1.5 rounded-full transition-colors"
-                    style="color: #D95578" title="Editar personalización">
-                    <span class="material-icons text-base">edit</span>
-                  </button>
-                }
               </div>
             }
           } @else {
@@ -186,14 +172,6 @@ export class CartDrawerComponent {
 
   itemTotal(item: CartItem): number {
     const base = item.customPrice || item.product.precio;
-    const toppings = item.toppings_seleccionados?.reduce((s, t) => s + t.precio, 0) || 0;
-    return (base + toppings) * item.cantidad;
-  }
-
-  editCustomCup(item: CartItem) {
-    const idx = this.cartService.items().indexOf(item);
-    this.cartService.removeFromCart(item.product.id, item.configuracion_capas);
-    this.cartService.closeDrawer();
-    this.router.navigate(['/personalizar-vaso'], { queryParams: { capas: JSON.stringify(item.configuracion_capas), precio: item.customPrice } });
+    return base * item.cantidad;
   }
 }

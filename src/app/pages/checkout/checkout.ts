@@ -333,17 +333,25 @@ import { PaymentMethodType, Order, Direccion, StockValidation } from '../../mode
                 <!-- Items Mini List -->
                 <div class="space-y-3 max-h-56 overflow-y-auto pr-1 text-xs">
                   @for (item of cartService.items(); track item.product.id) {
-                    <div class="flex items-center justify-between p-2.5 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]/50">
-                      <div class="flex items-center gap-2">
-                        <img [src]="item.product.imagen_principal" alt="" class="w-10 h-10 rounded-xl object-cover">
-                        <div>
-                          <span class="font-serif italic text-[#590E2A] font-bold block">{{ item.product.nombre_espanol }}</span>
-                          <span class="text-[10px] text-[#590E2A]/60 font-mono font-bold">x{{ item.cantidad }}</span>
+                    <div class="p-2.5 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]/50">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <img [src]="item.product.imagen_principal" alt="" class="w-10 h-10 rounded-xl object-cover">
+                          <div>
+                            <span class="font-serif italic text-[#590E2A] font-bold block">{{ item.product.nombre_espanol }}</span>
+                            <span class="text-[10px] text-[#590E2A]/60 font-mono font-bold">x{{ item.cantidad }}</span>
+                          </div>
                         </div>
+                        <span class="font-serif italic text-[#590E2A] font-bold">
+                          {{ '$' + (item.cantidad * (item.product.precio)).toLocaleString('es-CO') }}
+                        </span>
                       </div>
-                      <span class="font-serif italic text-[#590E2A] font-bold">
-                        {{ '$' + (item.cantidad * (item.product.precio)).toLocaleString('es-CO') }}
-                      </span>
+                      @if (item.frase_personalizada) {
+                        <div class="mt-1.5 ml-12 px-2.5 py-1 rounded-xl bg-[#D95578]/10 border border-[#D95578]/20 text-[10px] text-[#D95578] italic flex items-center gap-1">
+                          <span class="material-icons text-[11px]">format_quote</span>
+                          {{ item.frase_personalizada }}
+                        </div>
+                      }
                     </div>
                   }
                 </div>
@@ -517,8 +525,7 @@ export class CheckoutPageComponent implements OnInit {
 
     const allItems = this.cartService.items();
     const customItems = allItems.filter(i => i.configuracion_capas);
-    const toppingItems = allItems.filter(i => !i.configuracion_capas && i.toppings_seleccionados && i.toppings_seleccionados.length > 0);
-    const normalItems = allItems.filter(i => !i.configuracion_capas && (!i.toppings_seleccionados || i.toppings_seleccionados.length === 0));
+    const normalItems = allItems.filter(i => !i.configuracion_capas);
 
     // 1. Validate stock for all items
     const stockItems = allItems.map(i => ({
@@ -555,7 +562,8 @@ export class CheckoutPageComponent implements OnInit {
       if (normalItems.length > 0) {
         const stockItems = normalItems.map(i => ({
           id_producto: i.product.id,
-          cantidad: i.cantidad
+          cantidad: i.cantidad,
+          frase_personalizada: i.frase_personalizada || ''
         }));
         sbOrderRes = await this.supabaseService.crearPedidoConStock({
           p_id_usuario: currentUser.id,
@@ -581,21 +589,6 @@ export class CheckoutPageComponent implements OnInit {
         });
       }
 
-      if (toppingItems.length > 0) {
-        const toppingProducts = toppingItems.map(i => ({
-          id_producto: i.product.id,
-          cantidad: i.cantidad,
-          toppings: i.toppings_seleccionados!
-        }));
-        await this.supabaseService.crearPedidoConToppings({
-          p_id_usuario: currentUser.id,
-          p_id_direccion: this.selectedAddressId() ?? undefined,
-          p_productos: toppingProducts,
-          p_metodo_pago: this.selectedMethod(),
-          p_notas: this.notasEspeciales()
-        });
-      }
-
       // 4. Create local order for UI
       const order = await this.dataService.createOrder({
         id_usuario: currentUser.id,
@@ -614,7 +607,8 @@ export class CheckoutPageComponent implements OnInit {
           nombreEspanol: i.product.nombre_espanol,
           precio: i.customPrice || i.product.precio,
           cantidad: i.cantidad,
-          imagen: i.product.imagen_principal
+          imagen: i.product.imagen_principal,
+          frase_personalizada: i.frase_personalizada
         })),
         subtotal: this.cartService.subtotal(),
         costoEnvio: this.cartService.shippingCost(),
@@ -629,6 +623,9 @@ export class CheckoutPageComponent implements OnInit {
 
       this.createdOrder.set(order);
       this.cartService.clearCart();
+
+      // Recargar productos para actualizar stock en UI
+      await this.dataService.loadAllFromSupabase();
     }
 
     this.isProcessing.set(false);

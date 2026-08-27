@@ -11,39 +11,38 @@ import { supabase } from '../../supabase';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-[#FDF8F4] min-h-screen">
-      <!-- Hero -->
-      <div class="relative overflow-hidden py-16 sm:py-20" style="background: linear-gradient(135deg, #590E2A 0%, #3A0A1C 100%)">
-        <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <span class="inline-block px-4 py-1.5 rounded-full bg-[#D95578]/20 text-[#D95578] text-[10px] font-bold uppercase tracking-widest mb-4 border border-[#D95578]/30">
-            ✨ Personalización
-          </span>
-          <h1 class="text-3xl sm:text-4xl font-serif italic text-[#FDF8F4] font-bold">
-            Crea tu Vaso Perfecto
-          </h1>
-          <p class="text-sm text-[#FDF8F4]/60 mt-3 max-w-lg mx-auto">
-            7 capas de sabor. Elige cada una a tu gusto y arma el vaso relleno más delicioso.
-          </p>
+      <!-- Compact Header -->
+      <div class="bg-white border-b border-[#E8D8D0] px-4 py-4 sm:py-5">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-[#D95578] text-white flex items-center justify-center">
+              <span class="material-icons text-xl">local_cafe</span>
+            </div>
+            <div>
+              <h1 class="text-lg font-serif italic text-[#590E2A] font-bold">Arma tu Vaso</h1>
+              <span class="text-[10px] text-[#590E2A]/40 uppercase tracking-wider font-bold">Paso {{ currentStep() + 1 }} de {{ layers().length }}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-[#590E2A]/40 uppercase tracking-wider font-bold block">Total</span>
+            <span class="text-lg font-serif italic text-[#D95578] font-bold">{{ '$' + cupTotalDisplay().toLocaleString('es-CO') }}</span>
+          </div>
         </div>
       </div>
 
-      <div class="max-w-5xl mx-auto px-4 -mt-8 relative z-10 pb-16">
-        <!-- Progress Steps -->
-        <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-sm p-4 sm:p-6 mb-6">
-          <div class="flex items-center justify-between relative">
-            <!-- Progress Line -->
-            <div class="absolute top-4 left-0 right-0 h-0.5 bg-[#E8D8D0] mx-8"></div>
-            <div class="absolute top-4 left-0 h-0.5 bg-[#D95578] mx-8 transition-all duration-500"
-              [style.width.%]="progressWidth()"></div>
+      <div class="max-w-5xl mx-auto px-4 py-3 h-[calc(100vh-100px)] flex flex-col">
 
-            @for (step of layers(); track step.id; let i = $index) {
-              <button (click)="goToStep(i)"
-                class="relative z-10 flex flex-col items-center gap-2 cursor-pointer group">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+        <!-- Progress Steps -->
+        <div class="flex items-center gap-1 mb-3 shrink-0">
+          @for (step of layers(); track step.id; let i = $index) {
+            <button (click)="goToStep(i)" class="flex-1 group">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-300"
                   [class]="currentStep() === i
                     ? 'bg-[#D95578] text-white shadow-lg shadow-[#D95578]/30'
                     : currentStep() > i
                       ? 'bg-[#065F46] text-white'
-                      : 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0]'">
+                      : 'bg-[#E8D8D0] text-[#590E2A]/40'">
                   @if (currentStep() > i) {
                     <span class="material-icons text-sm">check</span>
                   } @else {
@@ -51,70 +50,75 @@ import { supabase } from '../../supabase';
                   }
                 </div>
                 <span class="text-[10px] font-bold uppercase tracking-wider hidden sm:block"
-                  [class]="currentStep() === i ? 'text-[#D95578]' : 'text-[#590E2A]/40'">
+                  [class]="currentStep() === i ? 'text-[#D95578]' : currentStep() > i ? 'text-[#065F46]' : 'text-[#590E2A]/30'">
                   {{ step.label }}
                 </span>
-              </button>
-            }
-          </div>
+              </div>
+              @if (i < layers().length - 1) {
+                <div class="h-0.5 mt-4 rounded-full transition-all duration-300"
+                  [class]="currentStep() > i ? 'bg-[#065F46]' : 'bg-[#E8D8D0]'"></div>
+              }
+            </button>
+          }
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 flex-1 min-h-0">
           <!-- Layer Selection -->
-          <div class="lg:col-span-2">
+          <div class="lg:col-span-2 flex flex-col min-h-0">
             @if (currentLayerData(); as layer) {
-            <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-sm overflow-hidden">
-              <!-- Step Header -->
-              <div class="p-5 sm:p-6 border-b border-[#E8D8D0]/50">
+            <div class="bg-white rounded-[28px] border border-[#E8D8D0] shadow-sm overflow-hidden flex flex-col h-full min-h-0">
+              <!-- Step Title -->
+              <div class="px-5 py-3 border-b border-[#E8D8D0]/50 shrink-0">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-full flex items-center justify-center bg-[#D95578]/10 text-[#D95578]">
-                    <span class="material-icons text-xl">{{ layer.icon }}</span>
+                  <div class="w-9 h-9 rounded-full bg-[#D95578]/10 text-[#D95578] flex items-center justify-center shrink-0">
+                    <span class="material-icons text-lg">{{ layer.icon }}</span>
                   </div>
                   <div>
-                    <h2 class="text-lg font-serif italic text-[#590E2A] font-bold">{{ layer.label }}</h2>
-                    <p class="text-xs text-[#590E2A]/50">{{ layer.description }}</p>
+                    <h2 class="text-base font-serif italic text-[#590E2A] font-bold">
+                      Seleccione {{ layer.label === 'Topping' ? 'un' : 'una' }} {{ layer.label }}
+                    </h2>
+                    <p class="text-[10px] text-[#590E2A]/50 leading-tight">{{ layer.description }}</p>
                   </div>
                 </div>
               </div>
 
-              <!-- Options Grid -->
-              <div class="p-5 sm:p-6">
+              <!-- Options Grid (scrollable) -->
+              <div class="p-4 flex-1 overflow-y-auto min-h-0">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   @for (option of layer.options; track option.id) {
                     <button (click)="selectOption(option)"
                       class="p-4 rounded-2xl border-2 text-left transition-all duration-200"
                       [class]="selectedOptionId() === option.id
                         ? 'border-[#D95578] bg-[#D95578]/5 shadow-sm'
-                        : 'border-[#E8D8D0] hover:border-[#D95578]/50 bg-white'">
+                        : 'border-[#E8D8D0] hover:border-[#D95578]/40 bg-white'">
                       <div class="flex items-center justify-between">
                         <span class="text-sm font-bold text-[#590E2A]">{{ option.name }}</span>
-                        <span class="text-xs font-bold text-[#D95578]">{{ '$' + option.price.toLocaleString('es-CO') }}</span>
-                      </div>
-                      @if (selectedOptionId() === option.id) {
-                        <div class="mt-2 flex items-center gap-1.5">
-                          <span class="material-icons text-[#D95578] text-sm">check_circle</span>
-                          <span class="text-[10px] font-bold text-[#D95578] uppercase tracking-wider">Seleccionado</span>
+                        <div class="flex items-center gap-1.5">
+                          @if (selectedOptionId() === option.id) {
+                            <span class="material-icons text-[#D95578] text-sm">check_circle</span>
+                          }
+                          <span class="text-xs font-bold text-[#D95578]">{{ '$' + option.price.toLocaleString('es-CO') }}</span>
                         </div>
-                      }
+                      </div>
                     </button>
                   }
                 </div>
               </div>
 
               <!-- Navigation Buttons -->
-              <div class="p-5 sm:p-6 border-t border-[#E8D8D0]/50 flex items-center justify-between">
+              <div class="px-5 py-3 border-t border-[#E8D8D0]/50 flex items-center justify-between shrink-0">
                 <button (click)="prevStep()"
                   [disabled]="currentStep() === 0"
                   class="px-5 py-2.5 rounded-full text-xs font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed
                     bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0] hover:bg-[#E8D8D0]">
-                  ← Anterior
+                  <span class="material-icons text-sm align-middle mr-1">arrow_back</span> Anterior
                 </button>
                 @if (currentStep() < layers().length - 1) {
                   <button (click)="nextStep()"
                     [disabled]="!selectedOptionId()"
                     class="px-5 py-2.5 rounded-full text-xs font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed
                       bg-[#D95578] text-white hover:bg-[#FF6080] shadow-sm">
-                    Siguiente →
+                    Siguiente <span class="material-icons text-sm align-middle ml-1">arrow_forward</span>
                   </button>
                 } @else {
                   <button (click)="addToCart()"
@@ -122,16 +126,16 @@ import { supabase } from '../../supabase';
                     class="px-6 py-2.5 rounded-full text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed
                       bg-[#590E2A] text-[#FDF8F4] hover:bg-[#3A0A1C] shadow-sm">
                     @if (addedToCart()) {
-                      ✓ Agregado
+                      <span class="material-icons text-sm align-middle mr-1">check</span> Agregado
                     } @else {
-                      🛒 Agregar al Carrito
+                      <span class="material-icons text-sm align-middle mr-1">add_shopping_cart</span> Agregar al Carrito
                     }
                   </button>
                 }
               </div>
             </div>
             } @else {
-              <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-sm p-8 text-center">
+              <div class="bg-white rounded-[28px] border border-[#E8D8D0] shadow-sm p-8 text-center">
                 <div class="w-10 h-10 border-3 border-[#D95578] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                 <p class="text-sm text-[#590E2A]/50">Cargando opciones...</p>
               </div>
@@ -139,44 +143,39 @@ import { supabase } from '../../supabase';
           </div>
 
           <!-- Cup Preview Sidebar -->
-          <div class="lg:col-span-1">
-            <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-sm p-5 sm:p-6 sticky top-24">
-              <h3 class="text-sm font-serif italic text-[#590E2A] font-bold mb-4">Tu Vaso</h3>
+          <div class="lg:col-span-1 flex flex-col min-h-0">
+            <div class="bg-white rounded-[28px] border border-[#E8D8D0] shadow-sm p-5 h-full min-h-0">
+              <h3 class="text-sm font-serif italic text-[#590E2A] font-bold mb-4 flex items-center gap-2 shrink-0">
+                <span class="material-icons text-[#D95578] text-base">visibility</span> Tu Vaso
+              </h3>
 
               <!-- Visual Cup -->
-              <div class="flex flex-col items-center gap-0 mb-6">
-                <!-- Topping (Capa 7) -->
+              <div class="flex flex-col items-center gap-0 mb-4 shrink-0">
                 <div class="w-32 h-6 rounded-t-full flex items-center justify-center text-[10px] font-bold transition-all duration-300"
                   [class]="config().topping ? 'bg-[#8B4513] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'"
                   style="border-radius: 4px 4px 0 0">
                   {{ config().topping?.name || '?' }}
                 </div>
-                <!-- Relleno (Capa 6) -->
                 <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
                   [class]="config().relleno ? 'bg-[#FF6B6B] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
                   {{ config().relleno?.name || '?' }}
                 </div>
-                <!-- Crema (Capa 5) -->
                 <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
                   [class]="config().crema ? 'bg-[#FFEAA7] text-[#590E2A]' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
                   {{ config().crema?.name || '?' }}
                 </div>
-                <!-- Base (Capa 4) -->
                 <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
                   [class]="config().base ? 'bg-[#D4A574] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
                   {{ config().base?.name || '?' }}
                 </div>
-                <!-- Relleno (Capa 3) -->
                 <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
                   [class]="config().relleno ? 'bg-[#FF6B6B] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
                   {{ config().relleno?.name || '?' }}
                 </div>
-                <!-- Crema (Capa 2) -->
                 <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
                   [class]="config().crema ? 'bg-[#FFEAA7] text-[#590E2A]' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
                   {{ config().crema?.name || '?' }}
                 </div>
-                <!-- Base (Capa 1) -->
                 <div class="w-32 h-5 rounded-b-lg flex items-center justify-center text-[9px] font-bold transition-all duration-300"
                   [class]="config().base ? 'bg-[#D4A574] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
                   {{ config().base?.name || '?' }}
@@ -184,65 +183,71 @@ import { supabase } from '../../supabase';
               </div>
 
               <!-- Layer Summary -->
-              <div class="space-y-2 mb-6">
+              <div class="space-y-2 mb-4 shrink-0">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-[#590E2A]/50">🔸 Base (Capas 1 y 4)</span>
+                  <span class="text-[#590E2A]/50 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-[#D4A574]"></span> Base
+                  </span>
                   <span class="font-bold text-[#590E2A]">{{ config().base ? '$' + config().base!.price.toLocaleString('es-CO') : '—' }}</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-[#590E2A]/50">🔸 Crema (Capas 2 y 5)</span>
+                  <span class="text-[#590E2A]/50 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-[#FFEAA7]"></span> Crema
+                  </span>
                   <span class="font-bold text-[#590E2A]">{{ config().crema ? '$' + config().crema!.price.toLocaleString('es-CO') : '—' }}</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-[#590E2A]/50">🔸 Relleno (Capas 3 y 6)</span>
+                  <span class="text-[#590E2A]/50 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-[#FF6B6B]"></span> Relleno
+                  </span>
                   <span class="font-bold text-[#590E2A]">{{ config().relleno ? '$' + config().relleno!.price.toLocaleString('es-CO') : '—' }}</span>
                 </div>
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-[#590E2A]/50">🔸 Topping (Capa 7)</span>
+                  <span class="text-[#590E2A]/50 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-[#8B4513]"></span> Topping
+                  </span>
                   <span class="font-bold text-[#590E2A]">{{ config().topping ? '$' + config().topping!.price.toLocaleString('es-CO') : '—' }}</span>
                 </div>
               </div>
 
+              <!-- Quantity (always visible) -->
+              <div class="flex items-center justify-between mb-3 shrink-0">
+                <span class="text-[11px] font-bold text-[#590E2A]">Cantidad:</span>
+                <div class="flex items-center gap-1.5 bg-[#FDF8F4] rounded-full border border-[#E8D8D0] px-1">
+                  <button (click)="decrementQty()" class="w-7 h-7 rounded-full flex items-center justify-center text-[#590E2A] hover:bg-[#E8D8D0] transition-colors">
+                    <span class="material-icons text-sm">remove</span>
+                  </button>
+                  <span class="text-sm font-bold text-[#590E2A] w-5 text-center">{{ quantity() }}</span>
+                  <button (click)="incrementQty()" class="w-7 h-7 rounded-full flex items-center justify-center text-[#590E2A] hover:bg-[#E8D8D0] transition-colors">
+                    <span class="material-icons text-sm">add</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- Total -->
-              <div class="border-t border-[#E8D8D0] pt-4">
+              <div class="border-t border-[#E8D8D0] pt-2 shrink-0">
                 <div class="flex items-center justify-between">
-                  <span class="text-sm font-bold text-[#590E2A]">Total</span>
+                  <span class="text-[11px] font-bold text-[#590E2A] uppercase tracking-wider">Total</span>
                   <div class="text-right">
                     @if (quantity() > 1) {
-                      <span class="text-xs text-[#590E2A]/50 block">{{ quantity() }} × {{ '$' + cupTotal().toLocaleString('es-CO') }}</span>
+                      <span class="text-[9px] text-[#590E2A]/50 block">{{ quantity() }} × {{ '$' + cupTotal().toLocaleString('es-CO') }}</span>
                     }
-                    <span class="text-xl font-serif italic text-[#D95578] font-bold">{{ '$' + cupTotalDisplay().toLocaleString('es-CO') }}</span>
+                    <span class="text-lg font-serif italic text-[#D95578] font-bold">{{ '$' + cupTotalDisplay().toLocaleString('es-CO') }}</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Quantity (only at step 3) -->
-              @if (currentStep() === 3) {
-                <div class="mt-4 flex items-center gap-3">
-                  <span class="text-xs font-bold text-[#590E2A]">Cantidad:</span>
-                  <div class="flex items-center gap-2 bg-[#FDF8F4] rounded-full border border-[#E8D8D0] px-1">
-                    <button (click)="decrementQty()" class="w-8 h-8 rounded-full flex items-center justify-center text-[#590E2A] hover:bg-[#E8D8D0] transition-colors">
-                      <span class="material-icons text-sm">remove</span>
-                    </button>
-                    <span class="text-sm font-bold text-[#590E2A] w-6 text-center">{{ quantity() }}</span>
-                    <button (click)="incrementQty()" class="w-8 h-8 rounded-full flex items-center justify-center text-[#590E2A] hover:bg-[#E8D8D0] transition-colors">
-                      <span class="material-icons text-sm">add</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Add to Cart Button (mobile) -->
-                <button (click)="addToCart()"
-                  [disabled]="!canAddToCart() || addedToCart()"
-                  class="mt-4 w-full py-3 rounded-full text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed
-                    bg-[#590E2A] text-[#FDF8F4] hover:bg-[#3A0A1C] shadow-sm lg:hidden">
-                  @if (addedToCart()) {
-                    ✓ Agregado
-                  } @else {
-                    🛒 Agregar al Carrito
-                  }
-                </button>
-              }
+              <!-- Add to Cart Button (mobile) -->
+              <button (click)="addToCart()"
+                [disabled]="!canAddToCart() || addedToCart()"
+                class="mt-3 w-full py-3 rounded-full text-xs font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed
+                  bg-[#590E2A] text-[#FDF8F4] hover:bg-[#3A0A1C] shadow-sm shrink-0 lg:hidden">
+                @if (addedToCart()) {
+                  <span class="material-icons text-sm align-middle mr-1">check</span> Agregado
+                } @else {
+                  <span class="material-icons text-sm align-middle mr-1">add_shopping_cart</span> Agregar al Carrito
+                }
+              </button>
             </div>
           </div>
         </div>
@@ -260,6 +265,7 @@ export class CustomCupComponent implements OnInit {
   addedToCart = signal(false);
   layers = signal<CupLayer[]>([]);
   editMode = signal(false);
+  isDashboard = signal(false);
 
   config = signal<CustomCupConfig>({
     base: null,
@@ -269,6 +275,9 @@ export class CustomCupComponent implements OnInit {
   });
 
   async ngOnInit() {
+    const url = this.router.url;
+    this.isDashboard.set(url.startsWith('/admin') || url.startsWith('/empleado'));
+
     const { data } = await supabase
       .from('ingredientes')
       .select('id, nombre, tipo, precio')
@@ -280,10 +289,10 @@ export class CustomCupComponent implements OnInit {
     if (!data) return;
 
     const tipoMap: Record<string, { label: string; description: string; icon: string }> = {
-      base: { label: 'Base', description: 'Capas 1 y 4 — La base crujiente de tu vaso', icon: 'cookie' },
-      crema: { label: 'Crema', description: 'Capas 2 y 5 — Crema de leche tipo ganache', icon: 'water_drop' },
-      relleno: { label: 'Relleno', description: 'Capas 3 y 6 — El corazón de sabor', icon: 'jam' },
-      topping: { label: 'Topping (Opcional)', description: 'Capa 7 — La corona de tu creación', icon: 'star' }
+      base: { label: 'Base', description: 'Elige la base crujiente que sostendrá todas las capas de tu vaso — capas 1 y 4', icon: 'cookie' },
+      crema: { label: 'Crema', description: 'Selecciona la crema ganache que dará textura y dulzura — capas 2 y 5', icon: 'water_drop' },
+      relleno: { label: 'Relleno', description: 'Elige el corazón de sabor que lleva tu vaso — capas 3 y 6', icon: 'egg' },
+      topping: { label: 'Topping', description: 'Corona tu creación con el toque final — capa 7', icon: 'star' }
     };
 
     const tipoOrder = ['base', 'crema', 'relleno', 'topping'];
@@ -367,7 +376,7 @@ export class CustomCupComponent implements OnInit {
 
   canAddToCart = computed(() => {
     const cfg = this.config();
-    return !!(cfg.base && cfg.crema && cfg.relleno);
+    return !!(cfg.base && cfg.crema && cfg.relleno && cfg.topping);
   });
 
   selectOption(option: CupLayerOption) {
@@ -461,7 +470,15 @@ export class CustomCupComponent implements OnInit {
 
     this.cartService.addToCart(customProduct, this.quantity(), undefined, layerConfig, this.cupTotal());
 
-    if (this.editMode()) {
+    if (this.isDashboard()) {
+      this.cartService.pendingCustomCup.set({
+        product: customProduct,
+        cantidad: this.quantity(),
+        configuracion_capas: layerConfig,
+        customPrice: this.cupTotal()
+      });
+      this.router.navigate(['/empleado']);
+    } else if (this.editMode()) {
       this.router.navigate(['/carrito']);
     } else {
       this.addedToCart.set(true);

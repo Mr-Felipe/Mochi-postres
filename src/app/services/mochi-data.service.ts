@@ -31,7 +31,7 @@ export class MochiDataService {
   readonly activeProducts = computed(() => this.products().filter(p => p.disponible));
   readonly featuredProducts = computed(() => {
     return [...this.products()]
-      .filter(p => p.disponible && p.num_resenas > 0)
+      .filter(p => p.disponible && p.num_resenas > 0 && p.id !== 25)
       .sort((a, b) => b.calificacion - a.calificacion || b.num_resenas - a.num_resenas)
       .slice(0, 8);
   });
@@ -232,7 +232,6 @@ export class MochiDataService {
           } : undefined,
           empleado_nombre: empleadoByPedidoId.get(pedidoId) || undefined,
           configuracion_capas: d['configuracion_capas'] as DetallePedido['configuracion_capas'] || null,
-          toppings_seleccionados: (d['toppings_seleccionados'] as { id: string; nombre: string; precio: number }[]) || [],
           frase_personalizada: (d['frase_personalizada'] as string) || ''
         };
       });
@@ -276,7 +275,8 @@ export class MochiDataService {
             nombreEspanol: (prod?.['nombre_espanol'] as string) || '',
             precio: Number(d['precio_unitario']),
             cantidad: d['cantidad'] as number,
-            imagen: (prod?.['imagen_principal'] as string) || ''
+            imagen: (prod?.['imagen_principal'] as string) || '',
+            frase_personalizada: (d['frase_personalizada'] as string) || ''
           };
         }),
         subtotal: Number(p['subtotal']),
@@ -382,9 +382,18 @@ export class MochiDataService {
         origen: 'local' as const
       }));
       await supabase.from('detalle_pedido').insert(detalles);
+
+      // Descontar stock para cada item
+      for (const item of saleData.items) {
+        await supabase.rpc('descontar_stock', {
+          p_id_producto: item.productoId,
+          p_cantidad: item.cantidad
+        });
+      }
     }
 
     await this.loadOrders();
+    await this.loadAllFromSupabase();
 
     const newSale: POSSale = {
       ...saleData,

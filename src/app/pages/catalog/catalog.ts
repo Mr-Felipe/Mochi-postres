@@ -66,25 +66,32 @@ import { CartService } from '../../services/cart.service';
                 <!-- Image Container -->
                 <div class="relative h-72 bg-[#FDF8F4] overflow-hidden">
                   <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                  <span class="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#D95578]/90 backdrop-blur-md text-[#FDF8F4] text-[10px] font-bold uppercase tracking-wider">
+                  <span class="absolute top-3 left-3 px-3 py-1 rounded-tl-[32px] rounded-br-2xl bg-[#D95578]/90 backdrop-blur-md text-[#FDF8F4] text-xs font-bold uppercase tracking-wider">
                     {{ (prod.nombre_japones || '').split(' ')[0] }}
                   </span>
+                  @if (prod.stock <= 0) {
+                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span class="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-full uppercase">Agotado</span>
+                    </div>
+                  } @else if (prod.stock <= prod.stock_minimo) {
+                    <span class="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-amber-500/90 text-white text-[9px] font-bold uppercase">
+                      Últimas {{ prod.stock }}
+                    </span>
+                  }
                 </div>
 
                 <!-- Product Content -->
                 <div class="p-4 flex-1 flex flex-col justify-between space-y-2">
                   <div>
                     <div class="flex items-center justify-between mb-1">
-                      <span class="font-serif italic font-bold text-[#D95578] text-sm">{{ prod.nombre_japones }}</span>
+                      <h3 class="text-lg font-serif italic text-[#590E2A] font-bold">
+                        {{ prod.nombre_espanol }}
+                      </h3>
                       <span class="text-[#590E2A] font-bold flex items-center gap-0.5 text-xs">
                         <span class="material-icons text-xs text-amber-500">star</span>
                         {{ prod.calificacion }}
                       </span>
                     </div>
-
-                    <h3 class="text-lg font-serif italic text-[#590E2A] font-bold">
-                      {{ prod.nombre_espanol }}
-                    </h3>
                   </div>
 
                   <div class="pt-2 border-t border-[#E8D8D0]/60 flex items-center justify-between">
@@ -93,9 +100,15 @@ import { CartService } from '../../services/cart.service';
                     </span>
 
                     <div class="flex items-center gap-1.5" (click)="$event.stopPropagation()">
-                      <button (click)="cartService.addToCart(prod, 1)" class="w-9 h-9 rounded-xl bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Añadir al Carrito">
-                        <span class="material-icons text-base">add_shopping_cart</span>
-                      </button>
+                      @if (prod.stock > 0) {
+                        <button (click)="cartService.addToCart(prod, 1)" class="w-9 h-9 rounded-xl bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Añadir al Carrito">
+                          <span class="material-icons text-base">add_shopping_cart</span>
+                        </button>
+                      } @else {
+                        <span class="px-3 h-9 rounded-xl bg-gray-200 text-gray-400 text-[10px] font-bold uppercase flex items-center justify-center cursor-not-allowed">
+                          Agotado
+                        </span>
+                      }
                       <a [routerLink]="['/productos', prod.id]" class="px-3 h-9 rounded-xl bg-[#590E2A] hover:bg-[#7A1540] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center transition-all hover:scale-105 active:scale-95">
                         Ver
                       </a>
@@ -104,13 +117,12 @@ import { CartService } from '../../services/cart.service';
                 </div>
               </div>
             }
-
             <!-- Personalizado Card -->
             <a routerLink="/personalizar-vaso" class="bg-gradient-to-br from-[#D95578] to-[#A33D5E] rounded-[32px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col group cursor-pointer">
               <div class="relative h-72 flex items-center justify-center overflow-hidden">
                 <span class="material-icons text-white/20 text-[120px] group-hover:scale-110 transition-transform duration-500">local_cafe</span>
                 <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                <span class="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider border border-white/30">
+                <span class="absolute top-3 left-3 px-3 py-1 rounded-tl-[32px] rounded-br-2xl bg-white/20 backdrop-blur-md text-white text-xs font-bold uppercase tracking-wider border border-white/30">
                   Tú lo armas
                 </span>
               </div>
@@ -149,7 +161,7 @@ export class CatalogPageComponent {
   sortBy = signal<string>('destacados');
 
   filteredProducts = computed(() => {
-    let list = [...this.dataService.activeProducts()];
+    let list = [...this.dataService.activeProducts().filter(p => p.id !== 25)];
 
     // Search query filter
     const query = this.searchQuery().trim().toLowerCase();

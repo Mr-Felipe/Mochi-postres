@@ -661,16 +661,6 @@ import { supabase } from '../../supabase';
                   </div>
                 }
 
-                @if (det.toppings_seleccionados && det.toppings_seleccionados.length > 0) {
-                  <div class="p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] space-y-1">
-                    <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider">🧀 Toppings</span>
-                    <div class="flex flex-wrap gap-1">
-                      @for (t of det.toppings_seleccionados; track t.id) {
-                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#D95578]/10 text-[#D95578] font-bold">+{{ t.nombre }} (+{{ '$' + t.precio.toLocaleString('es-CO') }})</span>
-                      }
-                    </div>
-                  </div>
-                }
 
                 @if (det.frase_personalizada) {
                   <div class="p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] space-y-1">

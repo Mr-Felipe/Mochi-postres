@@ -108,28 +108,42 @@ import { Order, OrderStatus } from '../../models/mochi.models';
                     Verificar items antes de enviar:
                   </div>
                 }
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-col gap-2">
                   @for (item of ord.items; track item.productoId; let idx = $index) {
-                    @if (ord.estado === 'pendiente') {
-                      <button (click)="toggleItem(ord.id, idx); $event.stopPropagation()"
-                        class="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] border transition-all"
-                        [class]="isItemSelected(ord.id, idx)
-                          ? 'bg-[#065F46] text-white border-[#065F46] shadow-xs'
-                          : 'bg-[#FDF8F4] text-[#590E2A] border-[#E8D8D0]/50 hover:border-[#065F46]/40'">
-                        <span class="material-icons text-sm">
-                          {{ isItemSelected(ord.id, idx) ? 'check_box' : 'check_box_outline_blank' }}
-                        </span>
-                        <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
-                        <span class="font-medium">{{ item.nombreEspanol }}</span>
-                        <span [class]="isItemSelected(ord.id, idx) ? 'text-white/70' : 'text-[#590E2A]/50'">x{{ item.cantidad }}</span>
-                      </button>
-                    } @else {
-                      <div class="flex items-center gap-2 bg-[#FDF8F4] px-3 py-1.5 rounded-full text-[11px] border border-[#E8D8D0]/50">
-                        <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
-                        <span class="font-medium text-[#590E2A]">{{ item.nombreEspanol }}</span>
-                        <span class="text-[#590E2A]/50">x{{ item.cantidad }}</span>
-                      </div>
-                    }
+                    <div class="flex flex-col gap-1">
+                      @if (ord.estado === 'pendiente') {
+                        <button (click)="toggleItem(ord.id, idx); $event.stopPropagation()"
+                          class="flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] border transition-all"
+                          [class]="isItemSelected(ord.id, idx)
+                            ? 'bg-[#065F46] text-white border-[#065F46] shadow-xs'
+                            : 'bg-[#FDF8F4] text-[#590E2A] border-[#E8D8D0]/50 hover:border-[#065F46]/40'">
+                          <span class="material-icons text-sm">
+                            {{ isItemSelected(ord.id, idx) ? 'check_box' : 'check_box_outline_blank' }}
+                          </span>
+                          <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
+                          <span class="font-medium">{{ item.nombreEspanol }}</span>
+                          <span [class]="isItemSelected(ord.id, idx) ? 'text-white/70' : 'text-[#590E2A]/50'">x{{ item.cantidad }}</span>
+                          @if (item.frase_personalizada) {
+                            <span class="material-icons text-sm" [class]="isItemSelected(ord.id, idx) ? 'text-white/80' : 'text-[#D95578]'">edit_note</span>
+                          }
+                        </button>
+                      } @else {
+                        <div class="flex items-center gap-2 bg-[#FDF8F4] px-3 py-1.5 rounded-full text-[11px] border border-[#E8D8D0]/50">
+                          <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
+                          <span class="font-medium text-[#590E2A]">{{ item.nombreEspanol }}</span>
+                          <span class="text-[#590E2A]/50">x{{ item.cantidad }}</span>
+                          @if (item.frase_personalizada) {
+                            <span class="material-icons text-sm text-[#D95578]">edit_note</span>
+                          }
+                        </div>
+                      }
+                      @if (item.frase_personalizada) {
+                        <div class="ml-8 px-3 py-1 rounded-xl bg-[#D95578]/10 border border-[#D95578]/20 text-[10px] text-[#D95578] italic flex items-center gap-1">
+                          <span class="material-icons text-xs">format_quote</span>
+                          "{{ item.frase_personalizada }}"
+                        </div>
+                      }
+                    </div>
                   }
                 </div>
                 @if (ord.estado === 'pendiente') {
@@ -245,12 +259,23 @@ import { Order, OrderStatus } from '../../models/mochi.models';
                       </div>
                     </div>
                     <div class="py-3 border-t border-[#E8D8D0]/50">
-                      <div class="flex flex-wrap gap-2">
+                      <div class="flex flex-col gap-2">
                         @for (item of ord.items; track item.productoId) {
-                          <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full text-[11px] border border-[#E8D8D0]/50">
-                            <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
-                            <span class="font-medium text-[#590E2A]">{{ item.nombreEspanol }}</span>
-                            <span class="text-[#590E2A]/50">x{{ item.cantidad }}</span>
+                          <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full text-[11px] border border-[#E8D8D0]/50">
+                              <img [src]="item.imagen" class="w-5 h-5 rounded-full object-cover">
+                              <span class="font-medium text-[#590E2A]">{{ item.nombreEspanol }}</span>
+                              <span class="text-[#590E2A]/50">x{{ item.cantidad }}</span>
+                              @if (item.frase_personalizada) {
+                                <span class="material-icons text-sm text-[#D95578]">edit_note</span>
+                              }
+                            </div>
+                            @if (item.frase_personalizada) {
+                              <div class="ml-8 px-3 py-1 rounded-xl bg-[#D95578]/10 border border-[#D95578]/20 text-[10px] text-[#D95578] italic flex items-center gap-1">
+                                <span class="material-icons text-xs">format_quote</span>
+                                "{{ item.frase_personalizada }}"
+                              </div>
+                            }
                           </div>
                         }
                       </div>

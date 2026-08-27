@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { CartItem } from '../../models/mochi.models';
 
@@ -40,13 +40,6 @@ import { CartItem } from '../../models/mochi.models';
                       <h3 class="font-serif italic text-[#590E2A] text-base">
                         {{ item.product.nombre_espanol }}
                       </h3>
-                      @if (item.toppings_seleccionados && item.toppings_seleccionados.length > 0) {
-                        <div class="flex flex-wrap gap-1 mt-1">
-                          @for (t of item.toppings_seleccionados; track t.id) {
-                            <span class="text-[9px] px-2 py-0.5 rounded-full bg-[#D95578]/10 text-[#D95578] font-bold">+{{ t.nombre }}</span>
-                          }
-                        </div>
-                      }
                       <span class="text-xs text-[#590E2A]/70 block mt-0.5">
                         Precio Unitario: {{ '$' + (item.customPrice || item.product.precio).toLocaleString('es-CO') }}
                       </span>
@@ -74,11 +67,6 @@ import { CartItem } from '../../models/mochi.models';
                       <button (click)="cartService.removeFromCart(item.product.id, item.configuracion_capas)" class="text-[11px] text-[#590E2A]/60 hover:text-[#590E2A] font-bold uppercase tracking-wider">
                         Eliminar
                       </button>
-                      @if (item.configuracion_capas) {
-                        <button (click)="editCustomCup(item)" class="text-[11px] text-[#D95578] hover:text-[#FF6078] font-bold uppercase tracking-wider flex items-center gap-0.5">
-                          <span class="material-icons text-xs">edit</span> Editar
-                        </button>
-                      }
                     </div>
                   </div>
                 </div>
@@ -141,17 +129,9 @@ import { CartItem } from '../../models/mochi.models';
 })
 export class CartPageComponent {
   cartService = inject(CartService);
-  private router = inject(Router);
 
   itemTotal(item: CartItem): number {
     const base = item.customPrice || item.product.precio;
-    const toppings = item.toppings_seleccionados?.reduce((s, t) => s + t.precio, 0) || 0;
-    return (base + toppings) * item.cantidad;
-  }
-
-  editCustomCup(item: CartItem) {
-    const idx = this.cartService.items().indexOf(item);
-    this.cartService.removeFromCart(item.product.id, item.configuracion_capas);
-    this.router.navigate(['/personalizar-vaso'], { queryParams: { edit: idx, capas: JSON.stringify(item.configuracion_capas), precio: item.customPrice } });
+    return base * item.cantidad;
   }
 }
