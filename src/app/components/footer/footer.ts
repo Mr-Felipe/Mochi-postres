@@ -26,49 +26,11 @@ import { MochiDataService } from '../../services/mochi-data.service';
                 <span>{{ config().direccionLocal }}</span>
               </li>
               <li class="flex items-center justify-center md:justify-start gap-2.5">
-                <span class="material-icons text-base opacity-70">schedule</span>
-                <span>{{ config().horarioAtencion }}</span>
-              </li>
-              <li class="flex items-center justify-center md:justify-start gap-2.5">
                 <span class="material-icons text-base opacity-70">phone</span>
                 <span>+57 300 123 4567</span>
               </li>
             </ul>
-            <div class="flex items-center justify-center md:justify-start gap-3 text-[11px] font-bold opacity-70">
-              <span class="w-2 h-2 rounded-full animate-pulse" [style.background]="'var(--success)'"></span>
-              <span>Atencion 11:00 AM - 9:00 PM</span>
-            </div>
-          </div>
-
-          <!-- Column 2: Menu -->
-          <div class="text-center md:text-left">
-            <h3 class="italic text-lg mb-4" [style.color]="'var(--footer-heading)'">Explora Mochi.</h3>
-            <ul class="space-y-2.5 text-xs uppercase tracking-widest font-semibold opacity-80">
-              <li><a routerLink="/productos" class="hover:opacity-100 transition-opacity">Catalogo de Postres</a></li>
-
-              <li><a routerLink="/sobre-nosotros" class="hover:opacity-100 transition-opacity">Nuestra Historia</a></li>
-              <li><a routerLink="/blog" class="hover:opacity-100 transition-opacity">Blog de Cultura Japonesa</a></li>
-              <li><a routerLink="/pedidos" class="hover:opacity-100 transition-opacity">Seguimiento de Pedidos</a></li>
-            </ul>
-          </div>
-
-          <!-- Column 3: Menu -->
-          <div class="text-center md:text-left">
-            <h3 class="italic text-lg mb-4" [style.color]="'var(--footer-heading)'">Pagos y Redes</h3>
-            <p class="text-xs mb-4 leading-relaxed opacity-80">
-              Aceptamos PSE, Nequi, Daviplata, Tarjetas de Credito y Pago contra entrega en La Dorada.
-            </p>
-
-            <!-- Logos de pago + Redes sociales en la misma linea -->
-            <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-6">
-              <img src="https://http2.mlstatic.com/storage/logos-api-admin/254f9960-57b9-11e8-a82b-59483d0f8e12-m.svg" alt="PSE" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
-              <img src="https://ayuda.nequi.com.co/hc/theming_assets/01K33KNDSV01JCWCVQN8EPN9D7" alt="Nequi" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
-              <img src="https://http2.mlstatic.com/storage/logos-api-admin/72df52b0-f3c4-11eb-a186-1134488bf456-m.svg" alt="Daviplata" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
-              <img src="https://http2.mlstatic.com/storage/logos-api-admin/5c2bfa10-7d35-11f0-b528-71999009c8ad-m.svg" alt="Bancolombia" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
-              <img src="https://http2.mlstatic.com/storage/logos-api-admin/a5f047d0-9be0-11ec-aad4-c3381f368aaf-m.svg" alt="Visa" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
-              <img src="https://http2.mlstatic.com/storage/logos-api-admin/9cf818e0-723a-11f0-a459-cf21d0937aeb-m.svg" alt="Mastercard" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
-              <img src="https://d1b4gd4m8561gs.cloudfront.net/sites/default/files/images/bre-b-identifica.png" alt="BRE-B" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
-              <span class="w-px h-5 opacity-30 mx-1 hidden sm:block" [style.background]="'var(--footer-text)'"></span>
+            <div class="flex items-center justify-center md:justify-start gap-3">
               <!-- Instagram -->
               <a href="#" class="w-9 h-9 rounded-full flex items-center justify-center border transition-colors hover:opacity-80" [style.border-color]="footerBorderColor">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" [style.color]="'var(--footer-text)'">
@@ -87,6 +49,35 @@ import { MochiDataService } from '../../services/mochi-data.service';
                   <path fill="currentColor" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
                 </svg>
               </a>
+            </div>
+          </div>
+
+          <!-- Column 2: Menu -->
+          <div class="text-center md:text-left">
+            <h3 class="italic text-lg mb-4" [style.color]="'var(--footer-heading)'">Explora Mochi.</h3>
+            <ul class="space-y-2.5 text-xs uppercase tracking-widest font-semibold opacity-80">
+              <li><a routerLink="/productos" class="hover:opacity-100 transition-opacity">Catalogo de Postres</a></li>
+              <li><a routerLink="/sobre-nosotros" class="hover:opacity-100 transition-opacity">Nuestra Historia</a></li>
+              <li><a routerLink="/blog" class="hover:opacity-100 transition-opacity">Blog de Cultura Japonesa</a></li>
+              <li><a routerLink="/pedidos" class="hover:opacity-100 transition-opacity">Seguimiento de Pedidos</a></li>
+            </ul>
+          </div>
+
+          <!-- Column 3: Pagos -->
+          <div class="text-center md:text-left">
+            <h3 class="italic text-lg mb-4" [style.color]="'var(--footer-heading)'">Métodos de Pago</h3>
+            <p class="text-xs mb-4 leading-relaxed opacity-80">
+              Aceptamos PSE, Nequi, Daviplata, Tarjetas de Credito y Pago contra entrega en La Dorada.
+            </p>
+
+            <div class="flex flex-wrap items-center justify-center md:justify-start gap-3">
+              <img src="https://http2.mlstatic.com/storage/logos-api-admin/254f9960-57b9-11e8-a82b-59483d0f8e12-m.svg" alt="PSE" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
+              <img src="https://ayuda.nequi.com.co/hc/theming_assets/01K33KNDSV01JCWCVQN8EPN9D7" alt="Nequi" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
+              <img src="https://http2.mlstatic.com/storage/logos-api-admin/72df52b0-f3c4-11eb-a186-1134488bf456-m.svg" alt="Daviplata" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
+              <img src="https://http2.mlstatic.com/storage/logos-api-admin/5c2bfa10-7d35-11f0-b528-71999009c8ad-m.svg" alt="Bancolombia" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
+              <img src="https://http2.mlstatic.com/storage/logos-api-admin/a5f047d0-9be0-11ec-aad4-c3381f368aaf-m.svg" alt="Visa" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
+              <img src="https://http2.mlstatic.com/storage/logos-api-admin/9cf818e0-723a-11f0-a459-cf21d0937aeb-m.svg" alt="Mastercard" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
+              <img src="https://d1b4gd4m8561gs.cloudfront.net/sites/default/files/images/bre-b-identifica.png" alt="BRE-B" class="h-6 w-16 object-contain opacity-50 grayscale-[15%] hover:opacity-75 hover:grayscale-0 transition-all" loading="lazy">
             </div>
 
           </div>

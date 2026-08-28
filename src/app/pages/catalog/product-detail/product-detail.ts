@@ -38,7 +38,23 @@ import { supabase } from '../../../supabase';
               <!-- Left Column: Gallery Images -->
               <div class="lg:col-span-6 space-y-4">
                 <div class="relative h-96 sm:h-[450px] rounded-[32px] bg-[#FDF8F4] overflow-hidden border border-[#E8D8D0]">
-                  <img [src]="selectedImage() || prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover">
+                  @if (prod.id === 25) {
+                    <!-- Custom Cup 7-Layer Visual -->
+                    <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#590E2A]/5 to-[#D95578]/10">
+                      <div class="flex flex-col items-center">
+                        <div class="w-40 h-10 rounded-t-[1.4rem] bg-[#8B4513] flex items-center justify-center text-[10px] font-bold text-white shadow-md">TOPPING</div>
+                        <div class="w-40 h-8 bg-[#FF6B6B] flex items-center justify-center text-[9px] font-bold text-white">RELLENO</div>
+                        <div class="w-40 h-8 bg-[#FFEAA7] flex items-center justify-center text-[9px] font-bold text-[#590E2A]">CREMA GANACHE</div>
+                        <div class="w-40 h-8 bg-[#D4A574] flex items-center justify-center text-[9px] font-bold text-white">BASE</div>
+                        <div class="w-40 h-8 bg-[#FF6B6B] flex items-center justify-center text-[9px] font-bold text-white">RELLENO</div>
+                        <div class="w-40 h-8 bg-[#FFEAA7] flex items-center justify-center text-[9px] font-bold text-[#590E2A]">CREMA GANACHE</div>
+                        <div class="w-40 h-10 rounded-b-[1.4rem] bg-[#D4A574] flex items-center justify-center text-[9px] font-bold text-white shadow-md">BASE</div>
+                      </div>
+                      <span class="mt-4 text-[11px] font-bold text-[#590E2A]/60 uppercase tracking-widest">7 Capas de Sabor</span>
+                    </div>
+                  } @else {
+                    <img [src]="selectedImage() || prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover">
+                  }
                 </div>
 
                 <!-- Gallery Thumbnails -->

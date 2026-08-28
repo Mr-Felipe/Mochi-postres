@@ -47,7 +47,22 @@ interface POSCartItem {
                 (click)="addToPOSCart(prod)"
                 class="p-2.5 rounded-[20px] bg-[#FDF8F4] border border-[#E8D8D0] hover:border-[#D95578] hover:shadow-md text-left transition-all active:scale-95 group">
                 <div class="w-full aspect-square rounded-[14px] overflow-hidden mb-2 bg-[#E8D8D0]/30">
-                  <img [src]="prod.imagen_principal" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  @if (prod.id === 25) {
+                    <!-- Custom Cup 7-Layer Visual -->
+                    <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#590E2A]/5 to-[#D95578]/10 p-1">
+                      <div class="flex flex-col items-center">
+                        <div class="w-16 h-3.5 rounded-t-[0.6rem] bg-[#8B4513] flex items-center justify-center text-[5px] font-bold text-white">TOP</div>
+                        <div class="w-16 h-2.5 bg-[#FF6B6B] flex items-center justify-center text-[4px] font-bold text-white">REL</div>
+                        <div class="w-16 h-2.5 bg-[#FFEAA7] flex items-center justify-center text-[4px] font-bold text-[#590E2A]">GANACHE</div>
+                        <div class="w-16 h-2.5 bg-[#D4A574] flex items-center justify-center text-[4px] font-bold text-white">BASE</div>
+                        <div class="w-16 h-2.5 bg-[#FF6B6B] flex items-center justify-center text-[4px] font-bold text-white">REL</div>
+                        <div class="w-16 h-2.5 bg-[#FFEAA7] flex items-center justify-center text-[4px] font-bold text-[#590E2A]">GANACHE</div>
+                        <div class="w-16 h-3.5 rounded-b-[0.6rem] bg-[#D4A574] flex items-center justify-center text-[4px] font-bold text-white">BASE</div>
+                      </div>
+                    </div>
+                  } @else {
+                    <img [src]="prod.imagen_principal" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  }
                 </div>
                 <h3 class="text-[10px] font-serif italic text-[#590E2A] group-hover:text-[#D95578] transition-colors line-clamp-1 leading-tight">
                   {{ prod.nombre_espanol }}

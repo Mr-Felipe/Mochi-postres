@@ -34,8 +34,20 @@ import { CartItem } from '../../models/mochi.models';
                 <div class="bg-white rounded-[24px] border border-[#E8D8D0] p-4 sm:p-5 shadow-xs hover:shadow-sm transition-shadow">
                   <div class="flex items-start gap-4">
                     <!-- Image -->
-                    <img [src]="item.product.imagen_principal" [alt]="item.product.nombre_espanol"
-                      class="w-20 h-20 rounded-2xl object-cover flex-shrink-0 bg-[#FDF8F4] border border-[#E8D8D0]/50">
+                    @if (item.product.id === 25) {
+                      <div class="w-20 h-20 rounded-2xl flex-shrink-0 bg-gradient-to-b from-[#590E2A]/5 to-[#D95578]/10 border border-[#E8D8D0]/50 flex flex-col items-center justify-center p-1">
+                        <div class="w-12 h-2.5 rounded-t-[0.5rem] bg-[#8B4513] flex items-center justify-center text-[4px] font-bold text-white">TOP</div>
+                        <div class="w-12 h-2 bg-[#FF6B6B] flex items-center justify-center text-[3px] font-bold text-white">REL</div>
+                        <div class="w-12 h-2 bg-[#FFEAA7] flex items-center justify-center text-[3px] font-bold text-[#590E2A]">GANACHE</div>
+                        <div class="w-12 h-2 bg-[#D4A574] flex items-center justify-center text-[3px] font-bold text-white">BASE</div>
+                        <div class="w-12 h-2 bg-[#FF6B6B] flex items-center justify-center text-[3px] font-bold text-white">REL</div>
+                        <div class="w-12 h-2 bg-[#FFEAA7] flex items-center justify-center text-[3px] font-bold text-[#590E2A]">GANACHE</div>
+                        <div class="w-12 h-2.5 rounded-b-[0.5rem] bg-[#D4A574] flex items-center justify-center text-[3px] font-bold text-white">BASE</div>
+                      </div>
+                    } @else {
+                      <img [src]="item.product.imagen_principal" [alt]="item.product.nombre_espanol"
+                        class="w-20 h-20 rounded-2xl object-cover flex-shrink-0 bg-[#FDF8F4] border border-[#E8D8D0]/50">
+                    }
 
                     <!-- Info -->
                     <div class="flex-1 min-w-0">

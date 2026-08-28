@@ -65,7 +65,23 @@ import { CartService } from '../../services/cart.service';
               <div class="bg-white rounded-[32px] border border-[#E8D8D0] overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col group cursor-pointer" [routerLink]="['/productos', prod.id]">
                 <!-- Image Container -->
                 <div class="relative h-72 bg-[#FDF8F4] overflow-hidden">
-                  <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                  @if (prod.id === 25) {
+                    <!-- Custom Cup 7-Layer Visual -->
+                    <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#590E2A]/5 to-[#D95578]/10 px-4 py-6">
+                      <div class="flex flex-col items-center">
+                        <div class="w-28 h-6 rounded-t-[1rem] bg-[#8B4513] flex items-center justify-center text-[7px] font-bold text-white shadow-sm">TOPPING</div>
+                        <div class="w-28 h-5 bg-[#FF6B6B] flex items-center justify-center text-[6px] font-bold text-white">RELLENO</div>
+                        <div class="w-28 h-5 bg-[#FFEAA7] flex items-center justify-center text-[6px] font-bold text-[#590E2A]">CREMA GANACHE</div>
+                        <div class="w-28 h-5 bg-[#D4A574] flex items-center justify-center text-[6px] font-bold text-white">BASE</div>
+                        <div class="w-28 h-5 bg-[#FF6B6B] flex items-center justify-center text-[6px] font-bold text-white">RELLENO</div>
+                        <div class="w-28 h-5 bg-[#FFEAA7] flex items-center justify-center text-[6px] font-bold text-[#590E2A]">CREMA GANACHE</div>
+                        <div class="w-28 h-6 rounded-b-[1rem] bg-[#D4A574] flex items-center justify-center text-[6px] font-bold text-white shadow-sm">BASE</div>
+                      </div>
+                      <span class="mt-3 text-[9px] font-bold text-[#590E2A]/60 uppercase tracking-wider">7 Capas</span>
+                    </div>
+                  } @else {
+                    <img [src]="prod.imagen_principal" [alt]="prod.nombre_espanol" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                  }
                   <span class="absolute top-3 left-3 px-3 py-1 rounded-tl-[32px] rounded-br-2xl bg-[#D95578]/90 backdrop-blur-md text-[#FDF8F4] text-xs font-bold uppercase tracking-wider">
                     {{ (prod.nombre_japones || '').split(' ')[0] }}
                   </span>

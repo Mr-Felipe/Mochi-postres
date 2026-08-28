@@ -1,6 +1,8 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, PLATFORM_ID } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { BlogPost } from '../../models/mochi.models';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-blog',
@@ -65,8 +67,8 @@ import { BlogPost } from '../../models/mochi.models';
         <!-- Single Post Reader Modal -->
         @if (selectedPost()) {
           @let p = selectedPost()!;
-          <div class="fixed inset-0 z-50 bg-[#590E2A]/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white rounded-[40px] max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl my-8 relative border border-[#E8D8D0]">
+          <div class="fixed inset-0 z-50 bg-[#590E2A]/80 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto">
+            <div class="bg-white rounded-[40px] max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl mt-8 sm:mt-16 relative border border-[#E8D8D0]">
               <button (click)="selectedPost.set(null)" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#FDF8F4] text-[#590E2A] font-bold flex items-center justify-center hover:bg-[#D95578] transition-colors">
                 ✕
               </button>
@@ -95,9 +97,24 @@ import { BlogPost } from '../../models/mochi.models';
     </div>
   `
 })
-export class BlogPageComponent {
+export class BlogPageComponent implements OnInit {
   dataService = inject(MochiDataService);
+  private route = inject(ActivatedRoute);
+  private platformId = inject(PLATFORM_ID);
   blogPosts = this.dataService.blogPosts;
 
   selectedPost = signal<BlogPost | null>(null);
+
+  ngOnInit() {
+    if (isPlatformBrowser(this.platformId)) {
+      const slug = this.route.snapshot.queryParamMap.get('post');
+      if (slug) {
+        const posts = this.blogPosts();
+        const post = posts.find(p => p.slug === slug);
+        if (post) {
+          setTimeout(() => this.selectedPost.set(post), 300);
+        }
+      }
+    }
+  }
 }

@@ -176,15 +176,39 @@ export class MochiDataService {
   // --- Orders ---
 
   async loadOrders(): Promise<void> {
-    const { data: pedidos, error } = await supabase
-      .from('pedidos')
-      .select('*, usuarios:id_usuario(nombre_completo, email, telefono), direcciones:id_direccion(direccion_completa, barrio, ciudad)')
-      .order('created_at', { ascending: false });
+    const BATCH = 3000;
 
-    if (error) { console.error('Error loading orders:', error); return; }
-    if (!pedidos) return;
+    // Paginated fetch for pedidos
+    const allPedidos: Record<string, unknown>[] = [];
+    let offset = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('*, usuarios:id_usuario(nombre_completo, email, telefono), direcciones:id_direccion(direccion_completa, barrio, ciudad)')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + BATCH - 1);
+      if (error) { console.error('Error loading orders:', error); break; }
+      if (!data || data.length === 0) break;
+      allPedidos.push(...data);
+      if (data.length < 1000) break;
+      offset += data.length;
+    }
 
-    const { data: detalles } = await supabase.from('detalle_pedido').select('*');
+    if (allPedidos.length === 0) return;
+    const pedidos = allPedidos;
+
+    // Paginated fetch for detalles
+    const allDetalles: Record<string, unknown>[] = [];
+    offset = 0;
+    while (true) {
+      const { data, error } = await supabase.from('detalle_pedido').select('*').range(offset, offset + BATCH - 1);
+      if (error) break;
+      if (!data || data.length === 0) break;
+      allDetalles.push(...data);
+      if (data.length < 1000) break;
+      offset += data.length;
+    }
+    const detalles = allDetalles;
     const { data: productos } = await supabase.from('productos').select('id_producto, nombre_japones, nombre_espanol, imagen_principal, frase');
 
     // Build employee name map from pedidos with id_empleado_registro
@@ -257,7 +281,7 @@ export class MochiDataService {
         id_pedido: p['id_pedido'] as number,
         id_usuario: p['id_usuario'] as string,
         id_direccion: p['id_direccion'] as number | undefined,
-        fecha: p['created_at'] as string,
+        fecha: (p['fecha_entrega_estimada'] as string) || (p['created_at'] as string),
         cliente: {
           nombre: (usuario?.['nombre_completo'] as string) || (p['cliente_nombre'] as string) || 'Cliente',
           email: (usuario?.['email'] as string) || '',
