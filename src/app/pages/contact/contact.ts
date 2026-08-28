@@ -1,11 +1,12 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MochiDataService } from '../../services/mochi-data.service';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-[#FDF8F4] min-h-screen py-10">
@@ -47,7 +48,17 @@ import { MochiDataService } from '../../services/mochi-data.service';
               </div>
               <div class="sm:col-span-2">
                 <label for="c-asunto" class="font-bold text-[#590E2A] block mb-1">Asunto *</label>
-                <input id="c-asunto" #aInput type="text" placeholder="Ej. Cotización para Cumpleaños / Evento" class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#590E2A]">
+                <select id="c-asunto" #aInput
+                  [value]="selectedSubject()"
+                  (change)="selectedSubject.set($any($event.target).value)"
+                  class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#590E2A]">
+                  <option value="general">Consulta General</option>
+                  <option value="pedido">Pedido Especial / Cumpleaños</option>
+                  <option value="evento">Evento / Catering</option>
+                  <option value="envio_nacional">Envio Nacional</option>
+                  <option value="franquicia">Franquicia</option>
+                  <option value="otro">Otro</option>
+                </select>
               </div>
               <div class="sm:col-span-2">
                 <label for="c-mensaje" class="font-bold text-[#590E2A] block mb-1">Mensaje *</label>
@@ -120,11 +131,13 @@ import { MochiDataService } from '../../services/mochi-data.service';
     </div>
   `
 })
-export class ContactPageComponent {
+export class ContactPageComponent implements OnInit {
   dataService = inject(MochiDataService);
   private sanitizer = inject(DomSanitizer);
+  private route = inject(ActivatedRoute);
   config = this.dataService.visualConfig;
 
+  selectedSubject = signal('general');
   messageSent = signal(false);
 
   mapUrl = computed<SafeResourceUrl>(() => {
@@ -133,6 +146,14 @@ export class ContactPageComponent {
       `https://www.google.com/maps?q=${addr}&output=embed`
     );
   });
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      if (params['asunto']) {
+        this.selectedSubject.set(params['asunto']);
+      }
+    });
+  }
 
   sendMessage(n: string, e: string, a: string, m: string) {
     if (!n || !e || !m) return;

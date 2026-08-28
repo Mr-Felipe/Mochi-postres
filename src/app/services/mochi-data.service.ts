@@ -259,10 +259,10 @@ export class MochiDataService {
         id_direccion: p['id_direccion'] as number | undefined,
         fecha: p['created_at'] as string,
         cliente: {
-          nombre: (usuario?.['nombre_completo'] as string) || 'Cliente',
+          nombre: (usuario?.['nombre_completo'] as string) || (p['cliente_nombre'] as string) || 'Cliente',
           email: (usuario?.['email'] as string) || '',
-          telefono: (usuario?.['telefono'] as string) || '',
-          direccion: (direccion?.['direccion_completa'] as string) || '',
+          telefono: (usuario?.['telefono'] as string) || (p['cliente_telefono'] as string) || '',
+          direccion: (direccion?.['direccion_completa'] as string) || (p['notas_especiales'] as string) || '',
           barrio: (direccion?.['barrio'] as string) || '',
           ciudad: (direccion?.['ciudad'] as string) || 'La Dorada'
         },
@@ -359,15 +359,27 @@ export class MochiDataService {
 
   async recordPOSSale(saleData: Omit<POSSale, 'id' | 'fecha'>): Promise<POSSale> {
     const randNum = Math.floor(1000 + Math.random() * 9000);
-    const { data: pedidoData, error: pedidoErr } = await supabase.from('pedidos').insert({
+    const isDelivery = saleData.tipoPedido === 'domicilio';
+
+    const pedidoInsert: Record<string, unknown> = {
       id_empleado_registro: saleData.id_empleado || '',
       numero_pedido: `POS-${randNum}`,
       subtotal: saleData.subtotal,
+      costo_envio: saleData.costoEnvio || 0,
       total: saleData.total,
       metodo_pago: saleData.metodoPago,
-      estado: 'entregado',
-      creado_por: 'local'
-    }).select().single();
+      estado: isDelivery ? 'pendiente' : 'entregado',
+      notas_especiales: saleData.clienteDireccion || null,
+      creado_por: 'local',
+      cliente_nombre: saleData.clienteNombre || null,
+      cliente_telefono: saleData.clienteTelefono || null
+    };
+
+    if (isDelivery && saleData.clienteTelefono) {
+      pedidoInsert['id_usuario'] = null;
+    }
+
+    const { data: pedidoData, error: pedidoErr } = await supabase.from('pedidos').insert(pedidoInsert).select().single();
     if (pedidoErr) console.error('Error recording POS sale:', pedidoErr);
 
     const idPedido = pedidoData?.['id_pedido'] || randNum;
@@ -379,11 +391,11 @@ export class MochiDataService {
         cantidad: item.cantidad,
         precio_unitario: item.precio,
         subtotal: item.precio * item.cantidad,
-        origen: 'local' as const
+        origen: 'local' as const,
+        frase_personalizada: item.frase_personalizada || ''
       }));
       await supabase.from('detalle_pedido').insert(detalles);
 
-      // Descontar stock para cada item
       for (const item of saleData.items) {
         await supabase.rpc('descontar_stock', {
           p_id_producto: item.productoId,

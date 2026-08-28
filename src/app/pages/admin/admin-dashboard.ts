@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy, AfterViewInit, ChangeDetectionStrategy, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router, NavigationEnd } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { OrdersPanelComponent } from '../../components/orders-panel/orders-panel';
@@ -11,7 +12,7 @@ import { supabase } from '../../supabase';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [OrdersPanelComponent],
+  imports: [OrdersPanelComponent, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-[#FDF8F4] text-[#590E2A] min-h-screen p-4 sm:p-8 font-sans">
@@ -37,13 +38,18 @@ import { supabase } from '../../supabase';
             <!-- Header with Add Button -->
             <div class="bg-white rounded-[32px] border border-[#E8D8D0] p-6 shadow-xs">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h2 class="text-lg font-serif italic text-[#590E2A]">Catálogo de Productos</h2>
-                  <p class="text-xs text-[#590E2A]/60">{{ products().length }} productos registrados</p>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-[#FFF3E0] flex items-center justify-center">
+                    <span class="material-icons text-[#E65100]" style="font-size: 20px">inventory_2</span>
+                  </div>
+                  <div>
+                    <h2 class="text-lg font-serif italic text-[#590E2A]">Catalogo de Productos</h2>
+                    <p class="text-xs text-[#590E2A]/60">{{ products().length }} productos registrados</p>
+                  </div>
                 </div>
                 <button 
                   (click)="openProductModal()"
-                  class="px-6 py-3 rounded-full bg-[#590E2A] hover:bg-[#3A0A1C] text-[#FDF8F4] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors flex items-center gap-2">
+                  class="flex items-center gap-1.5 px-6 py-3 rounded-full bg-[#590E2A] hover:bg-[#3A0A1C] text-[#FDF8F4] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors">
                   <span class="material-icons text-sm">add</span>
                   Nuevo Producto
                 </button>
@@ -56,21 +62,27 @@ import { supabase } from '../../supabase';
                 <table class="w-full text-xs">
                   <thead>
                     <tr class="border-b border-[#E8D8D0] bg-[#FDF8F4]">
-                      <th class="text-left p-4 font-bold text-[#590E2A]">Producto</th>
-                      <th class="text-right p-4 font-bold text-[#590E2A]">Precio</th>
-                      <th class="text-center p-4 font-bold text-[#590E2A]">Stock</th>
-                      <th class="text-center p-4 font-bold text-[#590E2A]">Mín</th>
-                      <th class="text-center p-4 font-bold text-[#590E2A]">Máx</th>
-                      <th class="text-center p-4 font-bold text-[#590E2A]">Estado</th>
-                      <th class="text-right p-4 font-bold text-[#590E2A]">Acciones</th>
+                      <th class="text-left p-4 font-bold text-[#590E2A] uppercase tracking-wider text-[10px]">Producto</th>
+                      <th class="text-right p-4 font-bold text-[#590E2A] uppercase tracking-wider text-[10px]">Precio</th>
+                      <th class="text-center p-4 font-bold text-[#590E2A] uppercase tracking-wider text-[10px]">Stock</th>
+                      <th class="text-center p-4 font-bold text-[#590E2A] uppercase tracking-wider text-[10px]">Rango</th>
+                      <th class="text-center p-4 font-bold text-[#590E2A] uppercase tracking-wider text-[10px]">Estado</th>
+                      <th class="text-right p-4 font-bold text-[#590E2A] uppercase tracking-wider text-[10px]">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody class="divide-y divide-[#E8D8D0]/50">
                     @for (prod of products(); track prod.id) {
-                      <tr class="border-b border-[#E8D8D0] last:border-0 hover:bg-[#FDF8F4] transition-colors">
+                      <tr class="hover:bg-[#FDF8F4]/50 transition-colors">
                         <td class="p-4">
                           <div class="flex items-center gap-3">
-                            <img [src]="prod.imagen_principal" alt="" class="w-12 h-12 rounded-xl object-cover border border-[#E8D8D0]">
+                            <div class="relative">
+                              <img [src]="prod.imagen_principal" alt="" class="w-12 h-12 rounded-xl object-cover border border-[#E8D8D0]">
+                              @if (!prod.disponible) {
+                                <div class="absolute inset-0 bg-[#590E2A]/50 rounded-xl flex items-center justify-center">
+                                  <span class="material-icons text-white" style="font-size: 16px">block</span>
+                                </div>
+                              }
+                            </div>
                             <div>
                               <span class="font-serif italic text-[#590E2A] block text-sm font-medium">{{ prod.nombre_espanol }}</span>
                               <span class="text-[#590E2A]/50 block text-[10px]">{{ prod.nombre_japones }}</span>
@@ -83,34 +95,45 @@ import { supabase } from '../../supabase';
                           </span>
                         </td>
                         <td class="p-4 text-center">
-                          <span class="font-mono font-bold" [class]="prod.stock <= prod.stock_minimo ? 'text-[#8C3A3A]' : prod.stock >= prod.stock_maximo ? 'text-[#2C5350]' : 'text-[#590E2A]'">
-                            {{ prod.stock }}
-                          </span>
+                          <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full"
+                            [class]="prod.stock <= prod.stock_minimo ? 'bg-[#8C3A3A]/10 text-[#8C3A3A]' : prod.stock >= prod.stock_maximo ? 'bg-[#2C5350]/10 text-[#2C5350]' : 'bg-[#590E2A]/10 text-[#590E2A]'">
+                            <span class="material-icons" style="font-size: 12px">{{ prod.stock <= prod.stock_minimo ? 'warning' : 'inventory' }}</span>
+                            <span class="font-mono font-bold">{{ prod.stock }}</span>
+                          </div>
                         </td>
                         <td class="p-4 text-center">
-                          <span class="text-[#590E2A]/60 font-mono">{{ prod.stock_minimo }}</span>
-                        </td>
-                        <td class="p-4 text-center">
-                          <span class="text-[#590E2A]/60 font-mono">{{ prod.stock_maximo }}</span>
+                          <span class="text-[#590E2A]/60 font-mono text-[10px]">{{ prod.stock_minimo }} — {{ prod.stock_maximo }}</span>
                         </td>
                         <td class="p-4 text-center">
                           @if (prod.stock <= prod.stock_minimo) {
-                            <span class="bg-[#8C3A3A]/10 text-[#8C3A3A] px-2.5 py-1 rounded-full text-[10px] font-bold">Stock Bajo</span>
+                            <span class="inline-flex items-center gap-1 bg-[#8C3A3A]/10 text-[#8C3A3A] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                              <span class="material-icons" style="font-size: 12px">warning</span>
+                              Stock Bajo
+                            </span>
                           } @else if (prod.stock >= prod.stock_maximo) {
-                            <span class="bg-[#2C5350]/10 text-[#2C5350] px-2.5 py-1 rounded-full text-[10px] font-bold">Completo</span>
+                            <span class="inline-flex items-center gap-1 bg-[#2C5350]/10 text-[#2C5350] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                              <span class="material-icons" style="font-size: 12px">check_circle</span>
+                              Completo
+                            </span>
                           } @else if (!prod.disponible) {
-                            <span class="bg-[#590E2A]/10 text-[#590E2A] px-2.5 py-1 rounded-full text-[10px] font-bold">Inactivo</span>
+                            <span class="inline-flex items-center gap-1 bg-[#590E2A]/10 text-[#590E2A] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                              <span class="material-icons" style="font-size: 12px">block</span>
+                              Inactivo
+                            </span>
                           } @else {
-                            <span class="bg-[#D95578]/10 text-[#D95578] px-2.5 py-1 rounded-full text-[10px] font-bold">Activo</span>
+                            <span class="inline-flex items-center gap-1 bg-[#D95578]/10 text-[#D95578] px-2.5 py-1 rounded-full text-[10px] font-bold">
+                              <span class="material-icons" style="font-size: 12px">check_circle</span>
+                              Activo
+                            </span>
                           }
                         </td>
                         <td class="p-4 text-right">
-                          <div class="flex items-center justify-end gap-2">
-                            <button (click)="openProductModal(prod)" class="p-2 rounded-xl hover:bg-[#E0F2F1] text-[#2C5350] transition-colors" title="Editar">
-                              <span class="material-icons text-sm">edit</span>
+                          <div class="flex items-center justify-end gap-1">
+                            <button (click)="openProductModal(prod)" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#E0F2F1] text-[#2C5350] transition-colors" title="Editar">
+                              <span class="material-icons" style="font-size: 16px">edit</span>
                             </button>
-                            <button (click)="productToDelete.set(prod); showDeleteModal.set(true)" class="p-2 rounded-xl hover:bg-[#8C3A3A]/10 text-[#8C3A3A] transition-colors" title="Eliminar">
-                              <span class="material-icons text-sm">delete</span>
+                            <button (click)="productToDelete.set(prod); showDeleteModal.set(true)" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#8C3A3A]/10 text-[#8C3A3A] transition-colors" title="Eliminar">
+                              <span class="material-icons" style="font-size: 16px">delete</span>
                             </button>
                           </div>
                         </td>
@@ -207,35 +230,6 @@ import { supabase } from '../../supabase';
                     class="w-full p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-sm focus:outline-none focus:border-[#D95578]"></textarea>
                 </div>
 
-                <!-- Ingredient Selector -->
-                <div class="bg-[#FDF8F4] rounded-2xl p-4 space-y-3">
-                  <h3 class="text-xs font-bold text-[#590E2A] uppercase tracking-wider">Ingredientes del Producto</h3>
-                  @for (tipo of ['base', 'crema', 'relleno', 'topping']; track tipo) {
-                    @if (ingredientsByTipo(tipo).length > 0) {
-                      <div>
-                        <span class="text-[10px] font-bold text-[#590E2A]/60 uppercase tracking-wider block mb-1.5">{{ tipo }}</span>
-                        <div class="flex flex-wrap gap-1.5">
-                          @for (ing of ingredientsByTipo(tipo); track ing.id) {
-                            <button
-                              (click)="toggleIngredient(ing)"
-                              [class]="isIngredientSelected(ing.id)
-                                ? 'bg-[#D95578] text-white border-[#D95578]'
-                                : 'bg-white text-[#590E2A] border-[#E8D8D0] hover:border-[#D95578]/50'"
-                              class="px-2.5 py-1 rounded-full border text-[10px] font-bold transition-all">
-                              {{ ing.nombre }}
-                            </button>
-                          }
-                        </div>
-                      </div>
-                    }
-                  }
-                  @if (selectedIngredientes().length > 0) {
-                    <div class="pt-2 border-t border-[#E8D8D0]/50">
-                      <span class="text-[10px] text-[#590E2A]/50">{{ selectedIngredientes().length }} ingredientes seleccionados</span>
-                    </div>
-                  }
-                </div>
-
                 <!-- Toggles -->
                 <div class="flex gap-6">
                   <label class="flex items-center gap-2 cursor-pointer">
@@ -274,111 +268,238 @@ import { supabase } from '../../supabase';
           <div class="space-y-6">
 
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h2 class="text-2xl font-serif italic text-[#590E2A] font-bold">Ventas</h2>
-                <p class="text-xs text-[#590E2A]/60 mt-1">Historial completo de ventas online y presenciales</p>
+            <div class="bg-white rounded-[32px] border border-[#E8D8D0] p-6 shadow-xs">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-[#E0F2F1] flex items-center justify-center">
+                  <span class="material-icons text-[#2C5350]" style="font-size: 20px">point_of_sale</span>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-serif italic text-[#590E2A] font-bold">Ventas</h2>
+                  <p class="text-xs text-[#590E2A]/60">Historial completo de ventas online y presenciales</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters Bar (Global - Top) -->
+            <div class="bg-white rounded-[24px] border border-[#E8D8D0] px-4 py-3 shadow-xs space-y-3">
+              <!-- Row 1: Date & Municipality -->
+              <div class="flex flex-wrap gap-2 items-center">
+                <div class="flex items-center gap-1.5">
+                  <span class="material-icons text-[#590E2A]/40" style="font-size: 14px">filter_list</span>
+                  <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest">Filtros</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-[#FDF8F4] border border-[#E8D8D0] rounded-lg px-2.5 py-1">
+                  <span class="material-icons text-[#590E2A]/30" style="font-size: 12px">calendar_today</span>
+                  <input type="date" [value]="dateFrom()" (input)="dateFrom.set($any($event.target).value)"
+                    class="bg-transparent text-[10px] text-[#590E2A] focus:outline-none w-24">
+                </div>
+                <span class="text-[#590E2A]/30 text-[10px]">a</span>
+                <div class="flex items-center gap-1.5 bg-[#FDF8F4] border border-[#E8D8D0] rounded-lg px-2.5 py-1">
+                  <input type="date" [value]="dateTo()" (input)="dateTo.set($any($event.target).value)"
+                    class="bg-transparent text-[10px] text-[#590E2A] focus:outline-none w-24">
+                </div>
+                <div class="flex items-center gap-1.5 bg-[#FDF8F4] border border-[#E8D8D0] rounded-lg px-2.5 py-1">
+                  <span class="material-icons text-[#590E2A]/30" style="font-size: 12px">location_on</span>
+                  <select [value]="municipioFilter()" (input)="municipioFilter.set($any($event.target).value)"
+                    class="bg-transparent text-[10px] text-[#590E2A] focus:outline-none">
+                    <option value="">Todos municipios</option>
+                    @for (m of uniqueMunicipios(); track m) {
+                      <option [value]="m">{{ m }}</option>
+                    }
+                  </select>
+                </div>
+                @if (dateFrom() || dateTo() || municipioFilter()) {
+                  <button (click)="dateFrom.set(''); dateTo.set(''); municipioFilter.set('')"
+                    class="flex items-center gap-1 px-2 py-1 rounded-full bg-[#FFEBEE] text-[#C62828] text-[9px] font-bold hover:bg-[#C62828] hover:text-white transition-colors">
+                    <span class="material-icons" style="font-size: 10px">close</span>
+                    Limpiar
+                  </button>
+                }
+              </div>
+
+              <!-- Row 2: Origin Tabs with postres counts -->
+              <div class="flex gap-2">
+                <button (click)="detalleOrigenFilter.set('todos')"
+                  class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold transition-all"
+                  [class]="detalleOrigenFilter() === 'todos' ? 'bg-[#590E2A] text-white shadow-sm' : 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0] hover:border-[#590E2A]'">
+                  <span class="material-icons" style="font-size: 14px">select_all</span>
+                  Todos ({{ filteredTotalItems() }} postres)
+                </button>
+                <button (click)="detalleOrigenFilter.set('online')"
+                  class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold transition-all"
+                  [class]="detalleOrigenFilter() === 'online' ? 'bg-[#2C5350] text-white shadow-sm' : 'bg-[#FDF8F4] text-[#2C5350] border border-[#E8D8D0] hover:border-[#2C5350]'">
+                  <span class="material-icons" style="font-size: 14px">language</span>
+                  Online ({{ filteredOnlineCount() }} postres)
+                </button>
+                <button (click)="detalleOrigenFilter.set('local')"
+                  class="flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold transition-all"
+                  [class]="detalleOrigenFilter() === 'local' ? 'bg-[#E65100] text-white shadow-sm' : 'bg-[#FDF8F4] text-[#E65100] border border-[#E8D8D0] hover:border-[#E65100]'">
+                  <span class="material-icons" style="font-size: 14px">store</span>
+                  POS ({{ filteredLocalCount() }} postres)
+                </button>
               </div>
             </div>
 
             <!-- Revenue Stats Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <div class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 shadow-xs">
-                <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest block">Ingresos Totales</span>
-                <span class="text-2xl font-serif italic text-[#590E2A] mt-1 block">{{ '$' + totalSalesRevenue().toLocaleString('es-CO') }}</span>
-                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">{{ dataService.detallePedidos().length }} transacciones</span>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-icons text-[#590E2A]/40" style="font-size: 16px">paid</span>
+                  <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest">Ingresos Totales</span>
+                </div>
+                <span class="text-2xl font-serif italic text-[#590E2A] block">{{ '$' + filteredTotalRevenue().toLocaleString('es-CO') }}</span>
+                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">{{ filteredDetalles().length }} transacciones</span>
               </div>
               <div class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 shadow-xs">
-                <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest block">🌐 Ventas Online</span>
-                <span class="text-2xl font-serif italic text-[#2C5350] mt-1 block">{{ '$' + onlineSalesRevenue().toLocaleString('es-CO') }}</span>
-                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">{{ dataService.detallePedidosOnline().length }} pedidos</span>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-icons text-[#2C5350]" style="font-size: 16px">language</span>
+                  <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest">Online</span>
+                </div>
+                <span class="text-2xl font-serif italic text-[#2C5350] block">{{ '$' + filteredOnlineRevenue().toLocaleString('es-CO') }}</span>
+                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">{{ filteredOnlineCount() }} pedidos</span>
               </div>
               <div class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 shadow-xs">
-                <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest block">🏪 Ventas POS</span>
-                <span class="text-2xl font-serif italic text-[#E65100] mt-1 block">{{ '$' + localSalesRevenue().toLocaleString('es-CO') }}</span>
-                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">{{ dataService.detallePedidosLocal().length }} ventas</span>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-icons text-[#E65100]" style="font-size: 16px">store</span>
+                  <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest">POS</span>
+                </div>
+                <span class="text-2xl font-serif italic text-[#E65100] block">{{ '$' + filteredLocalRevenue().toLocaleString('es-CO') }}</span>
+                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">{{ filteredLocalCount() }} ventas</span>
               </div>
               <div class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 shadow-xs">
-                <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest block">Unidades Vendidas</span>
-                <span class="text-2xl font-serif italic text-[#D95578] mt-1 block">{{ totalItemsSold() }}</span>
-                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">productos totales</span>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-icons text-[#00897B]" style="font-size: 16px">local_shipping</span>
+                  <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest">Envios</span>
+                </div>
+                <span class="text-2xl font-serif italic text-[#00897B] block">{{ '$' + filteredShippingRevenue().toLocaleString('es-CO') }}</span>
+                <span class="text-[10px] text-[#590E2A]/40 mt-1 block">ingreso por domicilio</span>
               </div>
+              <button (click)="showProductBreakdown.set(true)"
+                class="bg-white rounded-[24px] border border-[#E8D8D0] p-5 shadow-xs hover:border-[#D95578] hover:shadow-md transition-all cursor-pointer group">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="material-icons text-[#D95578]" style="font-size: 16px">inventory_2</span>
+                  <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-widest">Productos</span>
+                </div>
+                <span class="text-2xl font-serif italic text-[#D95578] block">{{ filteredTotalItems() }}</span>
+                <span class="text-[10px] text-[#590E2A]/40 mt-1 block group-hover:text-[#D95578] transition-colors">Ver desglose</span>
+              </button>
             </div>
 
             <!-- Sales Table -->
-            <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-xs overflow-hidden">
+            <div class="bg-white rounded-[32px] border border-[#E8D8D0] shadow-xs overflow-hidden">
 
-                <!-- Filter Tabs -->
-                <div class="flex gap-2 p-4 border-b border-[#E8D8D0]/50">
-                  <button (click)="detalleOrigenFilter.set('todos')"
-                    [class]="detalleOrigenFilter() === 'todos' ? 'bg-[#590E2A] text-white' : 'bg-[#FDF8F4] text-[#590E2A] border border-[#E8D8D0]'"
-                    class="px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors">
-                    Todos ({{ dataService.detallePedidos().length }})
-                  </button>
-                  <button (click)="detalleOrigenFilter.set('online')"
-                    [class]="detalleOrigenFilter() === 'online' ? 'bg-[#2C5350] text-white' : 'bg-[#FDF8F4] text-[#2C5350] border border-[#E8D8D0]'"
-                    class="px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors">
-                    🌐 Online ({{ dataService.detallePedidosOnline().length }})
-                  </button>
-                  <button (click)="detalleOrigenFilter.set('local')"
-                    [class]="detalleOrigenFilter() === 'local' ? 'bg-[#E65100] text-white' : 'bg-[#FDF8F4] text-[#E65100] border border-[#E8D8D0]'"
-                    class="px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors">
-                    🏪 POS ({{ dataService.detallePedidosLocal().length }})
-                  </button>
+                <!-- Order count header -->
+                <div class="px-4 py-2.5 border-b border-[#E8D8D0]/50 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="material-icons text-[#590E2A]/40" style="font-size: 14px">receipt_long</span>
+                    <span class="text-[11px] font-bold text-[#590E2A]">{{ filteredOrderCount() }} pedidos</span>
+                    <span class="text-[10px] text-[#590E2A]/40">· {{ filteredTotalItems() }} postres</span>
+                  </div>
                 </div>
 
-                <!-- Table -->
+                <!-- Grouped Orders Table -->
                 <div class="overflow-x-auto">
                   <table class="w-full text-left text-xs">
-                    <thead class="bg-[#FDF8F4] text-[#590E2A]/60 font-bold uppercase tracking-wider">
+                    <thead class="bg-[#FDF8F4] text-[#590E2A]/60 font-bold uppercase tracking-wider text-[10px]">
                       <tr>
-                        <th class="p-3 rounded-l-2xl">Producto</th>
-                        <th class="p-3">Origen</th>
+                        <th class="p-3 w-8"></th>
                         <th class="p-3">Pedido</th>
-                        <th class="p-3">Empleado</th>
-                        <th class="p-3 text-center">Cant.</th>
-                        <th class="p-3 text-right">P. Unit.</th>
-                        <th class="p-3 text-right rounded-r-2xl">Subtotal</th>
+                        <th class="p-3">Cliente</th>
+                        <th class="p-3">Direccion</th>
+                        <th class="p-3">Origen</th>
+                        <th class="p-3">Fecha</th>
+                        <th class="p-3 text-center">Items</th>
+                        <th class="p-3 text-right">Total</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#E8D8D0]">
-                      @for (det of filteredDetalles(); track det.id_detalle) {
-                        <tr class="hover:bg-[#FDF8F4] transition-colors cursor-pointer" (click)="viewingDetalle.set(det)">
+                    <tbody class="divide-y divide-[#E8D8D0]/50">
+                      @for (group of groupedOrders(); track group.pedido?.id_pedido || $index) {
+                        <!-- Order Header Row -->
+                        <tr class="hover:bg-[#FDF8F4]/50 transition-colors cursor-pointer" (click)="togglePedido(group.pedido?.id_pedido || 0)">
+                          <td class="p-3 pl-4">
+                            <span class="material-icons text-[#590E2A]/30 transition-transform"
+                              [class.rotate-90]="isPedidoExpanded(group.pedido?.id_pedido || 0)"
+                              style="font-size: 18px">chevron_right</span>
+                          </td>
                           <td class="p-3">
-                            <div class="flex items-center gap-2">
-                               @if (det.producto?.imagen_principal) {
-                                <img [src]="det.producto?.imagen_principal" class="w-8 h-8 rounded-lg object-cover border border-[#E8D8D0]">
-                              }
-                              <span class="font-medium text-[#590E2A]">{{ det.producto?.nombre_espanol || ' #' + det.id_producto }}</span>
+                            <span class="font-mono font-bold text-[#590E2A]">#{{ group.pedido?.id || group.items[0]?.id_pedido }}</span>
+                          </td>
+                          <td class="p-3">
+                            <div class="flex items-center gap-1.5">
+                              <span class="material-icons text-[#590E2A]/30" style="font-size: 14px">person</span>
+                              <span class="font-medium text-[#590E2A]">{{ group.pedido?.cliente?.nombre || 'Cliente' }}</span>
                             </div>
                           </td>
                           <td class="p-3">
-                            <span
-                              [class]="det.origen === 'online' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FFF3E0] text-[#E65100]'"
-                              class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
-                              {{ det.origen === 'online' ? '🌐' : '🏪' }}
-                            </span>
+                            <span class="text-[#590E2A]/60 truncate max-w-[150px] block">{{ getOrderAddress(group.pedido?.id_pedido) || '—' }}</span>
                           </td>
-                          <td class="p-3 font-mono text-[#590E2A]/70">#{{ det.id_pedido }}</td>
-                          <td class="p-3 text-xs text-[#590E2A]/70">
-                            @if (det.empleado_nombre) {
-                              <span class="flex items-center gap-1">
-                                <span class="material-icons text-[12px] text-[#590E2A]/40">person</span>
-                                {{ det.empleado_nombre }}
+                          <td class="p-3">
+                            @if (group.items[0]?.origen === 'online') {
+                              <span class="inline-flex items-center gap-1 bg-[#E0F2F1] text-[#2C5350] px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                <span class="material-icons" style="font-size: 10px">language</span>
+                                Online
                               </span>
                             } @else {
-                              <span class="text-[#590E2A]/30">—</span>
+                              <span class="inline-flex items-center gap-1 bg-[#FFF3E0] text-[#E65100] px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                <span class="material-icons" style="font-size: 10px">store</span>
+                                POS
+                              </span>
                             }
                           </td>
-                          <td class="p-3 text-center font-bold text-[#590E2A]">{{ det.cantidad }}</td>
-                          <td class="p-3 text-right font-mono text-[#590E2A]/70">{{ '$' + det.precio_unitario.toLocaleString('es-CO') }}</td>
-                          <td class="p-3 text-right font-bold font-serif italic text-[#590E2A]">{{ '$' + det.subtotal.toLocaleString('es-CO') }}</td>
+                          <td class="p-3">
+                            <span class="text-[#590E2A]/50 text-[10px]">{{ group.items[0]?.created_at | date:'dd/MM/yy HH:mm' }}</span>
+                          </td>
+                          <td class="p-3 text-center">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#590E2A]/10 text-[#590E2A] text-[10px] font-bold">{{ group.items.length }}</span>
+                          </td>
+                          <td class="p-3 text-right">
+                            <div class="text-right">
+                              @if (group.pedido?.costoEnvio > 0) {
+                                <span class="text-[9px] text-[#00897B] block">+{{'$' + group.pedido.costoEnvio.toLocaleString('es-CO') }} envio</span>
+                              }
+                              <span class="font-serif italic font-bold text-[#590E2A]">{{ '$' + group.totalConEnvio.toLocaleString('es-CO') }}</span>
+                            </div>
+                          </td>
                         </tr>
+
+                        <!-- Expanded Items -->
+                        @if (isPedidoExpanded(group.pedido?.id_pedido || 0)) {
+                          @for (item of group.items; track item.id_detalle) {
+                            <tr class="bg-[#FDF8F4]/30">
+                              <td class="p-3"></td>
+                              <td class="p-3 pl-8" colspan="7">
+                                <div class="flex items-center gap-3 py-1">
+                                  @if (item.producto?.imagen_principal) {
+                                    <img [src]="item.producto!.imagen_principal" class="w-8 h-8 rounded-lg object-cover border border-[#E8D8D0]">
+                                  } @else {
+                                    <div class="w-8 h-8 rounded-lg bg-[#E8D8D0] flex items-center justify-center">
+                                      <span class="material-icons text-[#590E2A]/30" style="font-size: 14px">image</span>
+                                    </div>
+                                  }
+                                  <div class="flex-1 min-w-0">
+                                    <span class="font-medium text-[#590E2A] block">{{ item.producto?.nombre_espanol || 'Producto #' + item.id_producto }}</span>
+                                    @if (item.frase_personalizada) {
+                                      <span class="text-[10px] text-[#D95578] italic flex items-center gap-1">
+                                        <span class="material-icons" style="font-size: 10px">format_quote</span>
+                                        {{ item.frase_personalizada }}
+                                      </span>
+                                    }
+                                  </div>
+                                  <div class="text-right">
+                                    <span class="text-[#590E2A]/50 text-[10px]">x{{ item.cantidad }}</span>
+                                    <span class="font-bold text-[#590E2A] ml-2">{{ '$' + item.subtotal.toLocaleString('es-CO') }}</span>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          }
+                        }
                       } @empty {
                         <tr>
-                          <td colspan="7" class="p-8 text-center text-[#590E2A]/40">
-                            <span class="material-icons text-3xl block mb-2 text-[#E8D8D0]">receipt_long</span>
-                            No hay ventas registradas aún
+                          <td colspan="8" class="p-12 text-center text-[#590E2A]/40">
+                            <span class="material-icons text-4xl block mb-2 text-[#E8D8D0]">receipt_long</span>
+                            <p class="text-sm font-bold">No hay ventas registradas</p>
+                            <p class="text-[10px] mt-1">Ajusta los filtros para ver resultados</p>
                           </td>
                         </tr>
                       }
@@ -395,12 +516,18 @@ import { supabase } from '../../supabase';
             <!-- Users & Roles Management -->
             <div class="bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-8 shadow-xs space-y-4">
               <div class="flex items-center justify-between">
-                <div>
-                  <h2 class="text-2xl font-serif italic text-[#590E2A]">Gestión de Usuarios</h2>
-                  <p class="text-xs text-[#590E2A]/70">Admin, Empleado o Cliente. Edita datos y direcciones.</p>
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-[#F3E5F5] flex items-center justify-center">
+                    <span class="material-icons text-[#8E24AA]" style="font-size: 20px">group</span>
+                  </div>
+                  <div>
+                    <h2 class="text-2xl font-serif italic text-[#590E2A]">Gestion de Usuarios</h2>
+                    <p class="text-xs text-[#590E2A]/70">Admin, Empleado o Cliente. Edita datos y direcciones.</p>
+                  </div>
                 </div>
-                <button (click)="reloadUsers()" class="px-4 py-2 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[10px] font-bold text-[#590E2A] hover:bg-[#D95578] transition-colors uppercase tracking-wider">
-                  🔄 Recargar
+                <button (click)="reloadUsers()" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[10px] font-bold text-[#590E2A] hover:bg-[#D95578] hover:text-white transition-all uppercase tracking-wider">
+                  <span class="material-icons" style="font-size: 14px">refresh</span>
+                  Recargar
                 </button>
               </div>
 
@@ -410,7 +537,7 @@ import { supabase } from '../../supabase';
                     <tr>
                       <th class="p-3 rounded-l-2xl">Usuario</th>
                       <th class="p-3">Email</th>
-                      <th class="p-3">Teléfono</th>
+                      <th class="p-3">Telefono</th>
                       <th class="p-3">Rol</th>
                       <th class="p-3">Direcciones</th>
                       <th class="p-3 rounded-r-2xl">Acciones</th>
@@ -418,26 +545,44 @@ import { supabase } from '../../supabase';
                   </thead>
                   <tbody class="divide-y divide-[#E8D8D0]">
                     @for (usr of supabaseService.usuarios(); track usr.id) {
-                      <tr>
-                        <td class="p-3 font-medium flex items-center gap-2">
-                          <img [src]="usr.foto_perfil || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60'" alt="Foto" class="w-8 h-8 rounded-full object-cover">
+                      <tr class="hover:bg-[#FDF8F4]/50 transition-colors">
+                        <td class="p-3 font-medium flex items-center gap-3">
+                          @if (usr.foto_perfil) {
+                            <img [src]="usr.foto_perfil" alt="Foto" class="w-9 h-9 rounded-full object-cover border-2 border-[#E8D8D0]">
+                          } @else {
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#D95578] to-[#FF6078] flex items-center justify-center text-white font-bold text-sm shrink-0">
+                              {{ usr.nombre_completo?.charAt(0) || '?' }}
+                            </div>
+                          }
                           <div>
                             <span class="font-bold text-[#590E2A] block">{{ usr.nombre_completo }}</span>
-                            <span class="text-[9px] text-[#590E2A]/50 font-mono">{{ usr.id.substring(0, 8) }}...</span>
+                            <span class="text-[9px] text-[#590E2A]/40 font-mono">{{ usr.id.substring(0, 8) }}...</span>
                           </div>
                         </td>
-                        <td class="p-3 font-mono">{{ usr.email }}</td>
-                        <td class="p-3">{{ usr.telefono || '—' }}</td>
+                        <td class="p-3">
+                          <div class="flex items-center gap-1.5">
+                            <span class="material-icons text-[#590E2A]/30" style="font-size: 14px">email</span>
+                            <span class="font-mono">{{ usr.email }}</span>
+                          </div>
+                        </td>
+                        <td class="p-3">
+                          <div class="flex items-center gap-1.5">
+                            <span class="material-icons text-[#590E2A]/30" style="font-size: 14px">phone</span>
+                            <span>{{ usr.telefono || '—' }}</span>
+                          </div>
+                        </td>
                         <td class="p-3">
                           <span 
-                            [class]="usr.rol === 'admin' ? 'bg-[#D95578] text-[#590E2A]' : usr.rol === 'empleado' ? 'bg-[#E0F2F1] text-[#2C5350]' : 'bg-[#FDF8F4] text-[#590E2A]'"
-                            class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-[#E8D8D0]">
+                            [class]="usr.rol === 'admin' ? 'bg-[#D95578]/10 text-[#D95578] border-[#D95578]/20' : usr.rol === 'empleado' ? 'bg-[#E0F2F1] text-[#2C5350] border-[#B2DFDB]' : 'bg-[#FDF8F4] text-[#590E2A]/70 border-[#E8D8D0]'"
+                            class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-flex items-center gap-1">
+                            <span class="material-icons" style="font-size: 12px">{{ usr.rol === 'admin' ? 'shield' : usr.rol === 'empleado' ? 'badge' : 'person' }}</span>
                             {{ usr.rol }}
                           </span>
                         </td>
                         <td class="p-3">
-                          <button (click)="viewAddresses(usr)" class="px-3 py-1 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[10px] font-bold text-[#590E2A] hover:bg-[#D95578] transition-colors">
-                            📍 Ver
+                          <button (click)="viewAddresses(usr)" class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[10px] font-bold text-[#590E2A] hover:bg-[#D95578] hover:text-white hover:border-[#D95578] transition-all">
+                            <span class="material-icons" style="font-size: 12px">location_on</span>
+                            Ver
                           </button>
                         </td>
                         <td class="p-3">
@@ -445,13 +590,13 @@ import { supabase } from '../../supabase';
                             <select 
                               [value]="usr.rol"
                               (change)="onRoleChange(usr.id, $any($event.target).value)"
-                              class="px-3 py-1.5 rounded-full bg-white border border-[#E8D8D0] text-[11px] font-bold text-[#590E2A]">
+                              class="px-3 py-1.5 rounded-full bg-white border border-[#E8D8D0] text-[11px] font-bold text-[#590E2A] focus:outline-none focus:border-[#D95578]">
                               <option value="admin">Admin</option>
                               <option value="empleado">Empleado</option>
                               <option value="cliente">Cliente</option>
                             </select>
-                            <button (click)="editUser(usr)" class="w-7 h-7 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] flex items-center justify-center hover:bg-[#D95578] transition-colors" title="Editar">
-                              <span class="material-icons text-[#590E2A]" style="font-size: 14px">edit</span>
+                            <button (click)="editUser(usr)" class="w-8 h-8 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] flex items-center justify-center hover:bg-[#D95578] hover:text-white hover:border-[#D95578] transition-all" title="Editar">
+                              <span class="material-icons" style="font-size: 14px">edit</span>
                             </button>
                           </div>
                         </td>
@@ -694,6 +839,58 @@ import { supabase } from '../../supabase';
         }
 
       </div>
+
+      <!-- Product Breakdown Modal -->
+      @if (showProductBreakdown()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="showProductBreakdown.set(false)">
+          <div class="bg-white rounded-[28px] w-[90vw] max-w-md p-6 space-y-4 shadow-2xl" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-[#FCE4EC] flex items-center justify-center">
+                  <span class="material-icons text-[#D95578]" style="font-size: 20px">inventory_2</span>
+                </div>
+                <div>
+                  <h3 class="text-base font-serif italic text-[#590E2A] font-bold">Desglose de Productos</h3>
+                  <p class="text-[10px] text-[#590E2A]/50">{{ allProducts().length }} productos vendidos</p>
+                </div>
+              </div>
+              <button (click)="showProductBreakdown.set(false)" class="w-8 h-8 rounded-full bg-[#FDF8F4] flex items-center justify-center hover:bg-[#E8D8D0] transition-colors">
+                <span class="material-icons text-[#590E2A] text-sm">close</span>
+              </button>
+            </div>
+
+            <div class="space-y-2 max-h-[60vh] overflow-y-auto">
+              @for (prod of allProducts(); track prod.nombre) {
+                <div class="flex items-center gap-3 p-3 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]">
+                  @if (prod.imagen) {
+                    <img [src]="prod.imagen" class="w-10 h-10 rounded-xl object-cover border border-[#E8D8D0]">
+                  } @else {
+                    <div class="w-10 h-10 rounded-xl bg-[#E8D8D0] flex items-center justify-center">
+                      <span class="material-icons text-[#590E2A]/30" style="font-size: 18px">image</span>
+                    </div>
+                  }
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-[#590E2A] truncate">{{ prod.nombre }}</p>
+                    <p class="text-[10px] text-[#590E2A]/50">{{ prod.cantidad }} unidades vendidas</p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="text-sm font-serif italic font-bold text-[#590E2A]">{{ '$' + prod.subtotal.toLocaleString('es-CO') }}</p>
+                    <div class="w-16 h-1.5 rounded-full bg-[#E8D8D0] mt-1">
+                      <div class="h-full rounded-full bg-[#D95578] transition-all"
+                        [style.width.%]="(prod.cantidad / totalItemsSold()) * 100"></div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="p-3 rounded-2xl bg-[#590E2A] text-white flex items-center justify-between">
+              <span class="text-xs font-bold">Total vendido</span>
+              <span class="text-lg font-serif italic font-bold">{{ totalItemsSold() }} postres</span>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
@@ -720,6 +917,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   productToDelete = signal<Product | null>(null);
   showDeleteModal = signal<boolean>(false);
   viewingDetalle = signal<DetallePedido | null>(null);
+  expandedPedidos = signal<Set<number>>(new Set());
+  showProductBreakdown = signal(false);
+  dateFrom = signal('');
+  dateTo = signal('');
+  municipioFilter = signal('');
 
   private el = inject(ElementRef);
 
@@ -788,19 +990,197 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   filteredDetalles = computed(() => {
     const filter = this.detalleOrigenFilter();
-    if (filter === 'online') return this.dataService.detallePedidosOnline();
-    if (filter === 'local') return this.dataService.detallePedidosLocal();
-    return this.dataService.detallePedidos();
+    let detalles = filter === 'online' ? this.dataService.detallePedidosOnline()
+      : filter === 'local' ? this.dataService.detallePedidosLocal()
+      : this.dataService.detallePedidos();
+
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    if (from) {
+      const fromDate = new Date(from);
+      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) >= fromDate);
+    }
+    if (to) {
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59);
+      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) <= toDate);
+    }
+
+    const mun = this.municipioFilter().trim().toLowerCase();
+    if (mun) {
+      detalles = detalles.filter(d => {
+        const pid = d.id_pedido || 0;
+        const order = this.getOrderInfo(pid);
+        const ciudad = order?.cliente?.ciudad?.toLowerCase() || '';
+        const dir = this.getOrderAddress(pid).toLowerCase();
+        return ciudad.includes(mun) || dir.includes(mun);
+      });
+    }
+
+    return detalles;
+  });
+
+  groupedOrders = computed(() => {
+    const detalles = this.filteredDetalles();
+    const map = new Map<number, { pedido: any; items: DetallePedido[]; total: number }>();
+
+    for (const det of detalles) {
+      const pid = det.id_pedido || 0;
+      if (!map.has(pid)) {
+        const pedido = this.getOrderInfo(pid);
+        map.set(pid, { pedido, items: [], total: 0 });
+      }
+      const group = map.get(pid)!;
+      group.items.push(det);
+      group.total += det.subtotal;
+    }
+
+    return Array.from(map.values()).map(g => ({
+      ...g,
+      totalConEnvio: g.total + (g.pedido?.costoEnvio || 0)
+    })).sort((a, b) => {
+      const dateA = a.items[0]?.created_at || '';
+      const dateB = b.items[0]?.created_at || '';
+      return dateB.localeCompare(dateA);
+    });
+  });
+
+  uniqueMunicipios = computed(() => {
+    const munis = new Set<string>();
+    for (const det of this.dataService.detallePedidos()) {
+      const pid = det.id_pedido || 0;
+      const order = this.getOrderInfo(pid);
+      if (order?.cliente?.ciudad) {
+        munis.add(order.cliente.ciudad);
+      } else {
+        const dir = this.getOrderAddress(pid);
+        const parts = dir.split(',').map(s => s.trim());
+        if (parts.length >= 3) munis.add(parts[2]);
+        else if (parts.length === 2) munis.add(parts[1]);
+      }
+    }
+    return Array.from(munis).sort();
   });
 
   totalSalesRevenue = computed(() => {
-    return this.dataService.detallePedidos().reduce((sum, d) => sum + d.subtotal, 0);
+    const pedidos = this.dataService.orders();
+    const detalles = this.dataService.detallePedidos();
+    const subtotal = detalles.reduce((sum, d) => sum + d.subtotal, 0);
+    const envios = pedidos.reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+    return subtotal + envios;
   });
   onlineSalesRevenue = computed(() => {
-    return this.dataService.detallePedidosOnline().reduce((sum, d) => sum + d.subtotal, 0);
+    const pedidos = this.dataService.orders().filter(p => p.creado_por === 'web');
+    const detalles = this.dataService.detallePedidosOnline();
+    const subtotal = detalles.reduce((sum, d) => sum + d.subtotal, 0);
+    const envios = pedidos.reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+    return subtotal + envios;
   });
   localSalesRevenue = computed(() => {
-    return this.dataService.detallePedidosLocal().reduce((sum, d) => sum + d.subtotal, 0);
+    const pedidos = this.dataService.orders().filter(p => p.creado_por === 'pos');
+    const detalles = this.dataService.detallePedidosLocal();
+    const subtotal = detalles.reduce((sum, d) => sum + d.subtotal, 0);
+    const envios = pedidos.reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+    return subtotal + envios;
+  });
+  totalShippingRevenue = computed(() => {
+    return this.dataService.orders().reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+  });
+
+  // Filtered stats (used by the cards when filters are active)
+  filteredTotalRevenue = computed(() => {
+    const detalles = this.filteredDetalles();
+    const subtotal = detalles.reduce((sum, d) => sum + d.subtotal, 0);
+    const pedidoIds = new Set(detalles.map(d => d.id_pedido));
+    const envios = this.dataService.orders()
+      .filter(p => pedidoIds.has(p.id_pedido))
+      .reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+    return subtotal + envios;
+  });
+  filteredOnlineRevenue = computed(() => {
+    const detalles = this.filteredDetalles().filter(d => d.origen === 'online');
+    const subtotal = detalles.reduce((sum, d) => sum + d.subtotal, 0);
+    const pedidoIds = new Set(detalles.map(d => d.id_pedido));
+    const envios = this.dataService.orders()
+      .filter(p => pedidoIds.has(p.id_pedido))
+      .reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+    return subtotal + envios;
+  });
+  filteredLocalRevenue = computed(() => {
+    const detalles = this.filteredDetalles().filter(d => d.origen === 'local');
+    const subtotal = detalles.reduce((sum, d) => sum + d.subtotal, 0);
+    const pedidoIds = new Set(detalles.map(d => d.id_pedido));
+    const envios = this.dataService.orders()
+      .filter(p => pedidoIds.has(p.id_pedido))
+      .reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+    return subtotal + envios;
+  });
+  filteredShippingRevenue = computed(() => {
+    const detalles = this.filteredDetalles();
+    const pedidoIds = new Set(detalles.map(d => d.id_pedido));
+    return this.dataService.orders()
+      .filter(p => pedidoIds.has(p.id_pedido))
+      .reduce((sum, p) => sum + (p.costoEnvio || 0), 0);
+  });
+  filteredOnlineCount = computed(() => {
+    // Count postres from online orders, filtered by date/municipality only (not origin)
+    let detalles = this.dataService.detallePedidosOnline();
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    if (from) {
+      const fromDate = new Date(from);
+      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) >= fromDate);
+    }
+    if (to) {
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59);
+      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) <= toDate);
+    }
+    const mun = this.municipioFilter().trim().toLowerCase();
+    if (mun) {
+      detalles = detalles.filter(d => {
+        const pid = d.id_pedido || 0;
+        const order = this.getOrderInfo(pid);
+        const ciudad = order?.cliente?.ciudad?.toLowerCase() || '';
+        const dir = this.getOrderAddress(pid).toLowerCase();
+        return ciudad.includes(mun) || dir.includes(mun);
+      });
+    }
+    return detalles.reduce((sum, d) => sum + d.cantidad, 0);
+  });
+  filteredLocalCount = computed(() => {
+    // Count postres from POS orders, filtered by date/municipality only (not origin)
+    let detalles = this.dataService.detallePedidosLocal();
+    const from = this.dateFrom();
+    const to = this.dateTo();
+    if (from) {
+      const fromDate = new Date(from);
+      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) >= fromDate);
+    }
+    if (to) {
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59);
+      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) <= toDate);
+    }
+    const mun = this.municipioFilter().trim().toLowerCase();
+    if (mun) {
+      detalles = detalles.filter(d => {
+        const pid = d.id_pedido || 0;
+        const order = this.getOrderInfo(pid);
+        const ciudad = order?.cliente?.ciudad?.toLowerCase() || '';
+        const dir = this.getOrderAddress(pid).toLowerCase();
+        return ciudad.includes(mun) || dir.includes(mun);
+      });
+    }
+    return detalles.reduce((sum, d) => sum + d.cantidad, 0);
+  });
+  filteredTotalItems = computed(() => {
+    return this.filteredDetalles().reduce((sum, d) => sum + d.cantidad, 0);
+  });
+  filteredOrderCount = computed(() => {
+    const detalles = this.filteredDetalles();
+    const pedidoIds = new Set(detalles.map(d => d.id_pedido));
+    return pedidoIds.size;
   });
   totalItemsSold = computed(() => {
     return this.dataService.detallePedidos().reduce((sum, d) => sum + d.cantidad, 0);
@@ -816,6 +1196,40 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
     return Array.from(map.values()).sort((a, b) => b.cantidad - a.cantidad).slice(0, 5);
   });
+  allProducts = computed(() => {
+    const map = new Map<string, { nombre: string; cantidad: number; subtotal: number; imagen: string }>();
+    for (const d of this.dataService.detallePedidos()) {
+      const key = d.producto?.nombre_espanol || `Producto #${d.id_producto}`;
+      const existing = map.get(key) || { nombre: key, cantidad: 0, subtotal: 0, imagen: d.producto?.imagen_principal || '' };
+      existing.cantidad += d.cantidad;
+      existing.subtotal += d.subtotal;
+      map.set(key, existing);
+    }
+    return Array.from(map.values()).sort((a, b) => b.cantidad - a.cantidad);
+  });
+
+  togglePedido(pedidoId: number) {
+    const current = this.expandedPedidos();
+    const next = new Set(current);
+    if (next.has(pedidoId)) next.delete(pedidoId);
+    else next.add(pedidoId);
+    this.expandedPedidos.set(next);
+  }
+
+  isPedidoExpanded(pedidoId: number): boolean {
+    return this.expandedPedidos().has(pedidoId);
+  }
+
+  getOrderInfo(pedidoId: number) {
+    const orders = this.dataService.orders();
+    return orders.find(o => o.id_pedido === pedidoId) || null;
+  }
+
+  getOrderAddress(pedidoId: number | undefined): string {
+    if (!pedidoId) return '';
+    const order = this.getOrderInfo(pedidoId);
+    return order?.cliente?.direccion || order?.notasEspeciales || '';
+  }
 
   onRoleChange(userId: string, newRole: UserRole) {
     this.supabaseService.updateUsuarioRol(userId, newRole);

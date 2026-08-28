@@ -1,5 +1,6 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { UpperCasePipe } from '@angular/common';
 import { CartService } from '../../services/cart.service';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { SupabaseService } from '../../services/supabase.service';
@@ -9,461 +10,550 @@ import { PaymentMethodType, Order, Direccion, StockValidation } from '../../mode
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, UpperCasePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="bg-[#FDF8F4] min-h-screen py-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
+    <div class="bg-[#FDF8F4] min-h-screen py-8">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
         <!-- Header -->
-        <div class="flex items-center justify-between border-b border-[#E8D8D0] pb-4">
-          <div>
-            <span class="text-xs font-bold uppercase tracking-widest text-[#D95578] font-serif">Paso Final</span>
-            <h1 class="text-3xl font-serif italic text-[#590E2A] font-bold">Checkout & Pasarela de Pago Integrada</h1>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <a routerLink="/carrito" class="w-10 h-10 rounded-full bg-white border border-[#E8D8D0] flex items-center justify-center hover:bg-[#D95578]/10 transition-colors">
+              <span class="material-icons text-[#590E2A] text-xl">arrow_back</span>
+            </a>
+            <div>
+              <span class="text-[9px] font-bold uppercase tracking-widest text-[#D95578] block">Paso Final</span>
+              <h1 class="text-2xl font-serif italic text-[#590E2A] font-bold">Checkout</h1>
+            </div>
           </div>
-          <a routerLink="/carrito" class="text-xs font-bold uppercase tracking-wider text-[#590E2A] hover:text-[#D95578] transition-colors">← Volver al Carrito</a>
+          <div class="hidden sm:flex items-center gap-2 text-[10px] text-[#590E2A]/40 font-bold uppercase tracking-wider">
+            <span class="material-icons text-sm text-[#065F46]">lock</span>
+            Pago Seguro
+          </div>
         </div>
 
-        <!-- Stock Validation Warning if any -->
         @if (stockErrors().length > 0) {
-          <div class="p-4 rounded-2xl bg-[#FFE4E6] border border-[#FDA4AF] text-[#9F1239] text-xs space-y-1 font-medium">
-            <span class="font-bold flex items-center gap-1.5 uppercase tracking-wider">
-              ⚠️ Stock Insuficiente en algunos productos:
+          <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-1.5">
+            <span class="font-bold flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
+              <span class="material-icons text-sm">warning</span> Stock Insuficiente:
             </span>
-            <ul class="list-disc list-inside space-y-0.5 mt-1">
-              @for (err of stockErrors(); track err.id_producto) {
-                <li>
-                  Producto #{{ err.id_producto }}: Solicitado {{ err.stock_solicitado }} un. — Solo disponible: {{ err.stock_disponible }} un.
-                </li>
-              }
-            </ul>
+            @for (err of stockErrors(); track err.id_producto) {
+              <div class="flex items-center gap-2 ml-5">
+                <span class="material-icons text-xs">error_outline</span>
+                Producto #{{ err.id_producto }}: solicitar {{ err.stock_solicitado }} — disponible {{ err.stock_disponible }}
+              </div>
+            }
           </div>
         }
 
         @if (!createdOrder()) {
           @if (cartService.items().length > 0) {
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
-              <!-- Left Column: Delivery Form & Payment Gateway Options -->
-              <div class="lg:col-span-7 space-y-8">
-                
-                <!-- 1. Customer & Delivery Address (Supabase 'direcciones' FK) -->
-                <div class="bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-8 shadow-xs space-y-5">
-                  <div class="flex items-center justify-between pb-2 border-b border-[#E8D8D0]">
-                    <h2 class="text-lg font-serif italic text-[#590E2A] font-bold flex items-center gap-2">
-                      <span class="w-7 h-7 rounded-full bg-[#D95578] text-[#FDF8F4] text-xs font-bold flex items-center justify-center">1</span>
-                      <span>Datos del Cliente & Dirección de Entrega</span>
-                    </h2>
-                    <span class="text-[11px] font-mono text-[#065F46] font-bold bg-[#D1FAE5] px-2.5 py-1 rounded-full border border-[#A7F3D0]">
-                      📍 FK id_direccion
-                    </span>
-                  </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                  <!-- Address Picker: Saved in Supabase 'direcciones' table -->
-                  @if (userAddresses().length > 0) {
-                    <div class="space-y-2">
-                      <span class="font-bold text-[#590E2A] text-xs block">Mis Direcciones Guardadas:</span>
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        @for (dir of userAddresses(); track dir.id_direccion) {
-                          <button 
-                            type="button"
-                            (click)="selectAddress(dir)"
-                            [class]="selectedAddressId() === dir.id_direccion ? 'bg-[#FFA0B4]/25 border-[#D95578] ring-1 ring-[#D95578]' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/50'"
-                            class="p-3 rounded-2xl border text-xs text-left cursor-pointer transition-all space-y-1 w-full">
-                            <div class="flex items-center justify-between">
-                              <span class="font-bold text-[#590E2A] font-serif">{{ dir.alias || 'Dirección' }}</span>
-                              @if (dir.predeterminada) {
-                                <span class="text-[9px] px-2 py-0.5 rounded-full bg-[#D95578] text-white font-bold">Principal</span>
+              <!-- Left: Collapsible Sections -->
+              <div class="lg:col-span-7 space-y-3">
+
+                <!-- Section 1: Customer Info -->
+                <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-xs overflow-hidden">
+                  <button (click)="activeSection.set('info')"
+                    class="w-full p-5 flex items-center justify-between text-left transition-colors"
+                    [class.bg-[#FDF8F4]]="activeSection() === 'payment'"
+                    [class.rounded-t-[24px]]="activeSection() === 'payment'">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-6 h-6 rounded-full bg-[#D95578] text-white text-[10px] font-bold flex items-center justify-center">1</span>
+                      <span class="material-icons text-[#D95578] text-lg">person</span>
+                      <span class="text-sm font-serif italic text-[#590E2A] font-bold">Datos de Contacto</span>
+                      @if (activeSection() === 'payment' && clienteNombre() && clienteDireccion()) {
+                        <span class="material-icons text-[#065F46] text-sm">check_circle</span>
+                      }
+                    </div>
+                    <span class="material-icons text-[#590E2A]/40 text-lg transition-transform duration-200"
+                      [class.rotate-180]="activeSection() === 'info'">
+                      expand_more
+                    </span>
+                  </button>
+
+                  @if (activeSection() === 'info') {
+                    <div class="px-5 pb-5 space-y-4 border-t border-[#E8D8D0]/50">
+                      <!-- Saved Addresses -->
+                      <div class="pt-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                          <span class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider flex items-center gap-1">
+                            <span class="material-icons text-xs">bookmarks</span> Direcciones
+                          </span>
+                          <button type="button" (click)="openNewAddressModal()" class="text-[10px] font-bold text-[#D95578] flex items-center gap-0.5 hover:underline">
+                            <span class="material-icons text-xs">add_circle_outline</span> Nueva
+                          </button>
+                        </div>
+
+                        @if (userAddresses().length > 0) {
+                          <div class="space-y-1.5">
+                            @if (selectedAddressId()) {
+                              @for (dir of userAddresses(); track dir.id_direccion) {
+                                @if (selectedAddressId() === dir.id_direccion) {
+                                  <div class="p-3 rounded-xl border bg-[#D95578]/10 border-[#D95578] flex items-center gap-3">
+                                    <span class="material-icons text-lg text-[#D95578]">radio_button_checked</span>
+                                    <div class="flex-1 min-w-0">
+                                      <div class="flex items-center gap-1.5">
+                                        <span class="font-bold text-[#590E2A] text-xs">{{ dir.alias || 'Direccion' }}</span>
+                                        @if (dir.predeterminada) {
+                                          <span class="text-[7px] px-1.5 py-0.5 rounded-full bg-[#D95578] text-white font-bold">Principal</span>
+                                        }
+                                      </div>
+                                      <p class="text-[#590E2A]/60 text-[10px] truncate">{{ dir.direccion_completa }}</p>
+                                    </div>
+                                  </div>
+                                }
                               }
-                            </div>
-                            <p class="text-[#590E2A]/80 text-[11px] leading-tight font-medium">{{ dir.direccion_completa }}</p>
-                            <span class="text-[10px] text-[#590E2A]/60">{{ dir.barrio ? dir.barrio + ', ' : '' }}{{ dir.ciudad }}</span>
+                            } @else {
+                              <div class="p-3 rounded-xl border border-dashed border-[#E8D8D0] text-center text-[10px] text-[#590E2A]/40">
+                                Selecciona una direccion
+                              </div>
+                            }
+                            <button type="button" (click)="showAllAddresses.set(true)"
+                              class="w-full py-2 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[10px] font-bold text-[#590E2A]/50 hover:text-[#D95578] hover:border-[#D95578] transition-all flex items-center justify-center gap-1">
+                              <span class="material-icons" style="font-size: 14px">location_on</span>
+                              Cambiar direccion ({{ userAddresses().length }})
+                            </button>
+                          </div>
+                        } @else {
+                          <button type="button" (click)="openNewAddressModal()"
+                            class="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-[#E8D8D0] text-[10px] text-[#590E2A]/50 hover:border-[#D95578] hover:text-[#D95578] transition-colors">
+                            <span class="material-icons text-sm">add_location_alt</span>
+                            Agregar primera direccion
                           </button>
                         }
                       </div>
+
+                      <!-- Form Fields -->
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <span class="material-icons text-xs">person</span> Nombre *
+                          </label>
+                          <input type="text" [value]="clienteNombre()" (input)="clienteNombre.set($any($event.target).value)"
+                            placeholder="Tu nombre"
+                            class="w-full p-2.5 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium text-xs" />
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <span class="material-icons text-xs">phone</span> Telefono *
+                          </label>
+                          <input type="text" [value]="clienteTelefono()" (input)="clienteTelefono.set($any($event.target).value)"
+                            placeholder="300 123 4567"
+                            class="w-full p-2.5 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium text-xs" />
+                        </div>
+                        <div class="sm:col-span-2">
+                          <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <span class="material-icons text-xs">email</span> Email *
+                          </label>
+                          <input type="email" [value]="clienteEmail()" (input)="clienteEmail.set($any($event.target).value)"
+                            placeholder="correo@ejemplo.com"
+                            class="w-full p-2.5 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium text-xs" />
+                        </div>
+                        <div class="sm:col-span-2">
+                          <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <span class="material-icons text-xs">edit_note</span> Notas
+                          </label>
+                          <textarea rows="2" [value]="notasEspeciales()" (input)="notasEspeciales.set($any($event.target).value)"
+                            placeholder="Empaque regalo, alergias..."
+                            class="w-full p-2.5 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium text-xs resize-none"></textarea>
+                        </div>
+                      </div>
+
+                      <!-- Next button -->
+                      <button (click)="activeSection.set('payment')"
+                        class="w-full py-2.5 rounded-full bg-[#590E2A] hover:bg-[#3A0A1C] text-white font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5">
+                        Siguiente: Metodo de Pago
+                        <span class="material-icons text-sm">arrow_forward</span>
+                      </button>
                     </div>
                   }
-
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
-                    <div>
-                      <label for="input-nombre" class="font-bold text-[#590E2A] block mb-1">Nombre Completo *</label>
-                      <input 
-                        id="input-nombre"
-                        #nombreInput
-                        type="text" 
-                        [value]="clienteNombre()" 
-                        (input)="clienteNombre.set($any($event.target).value)" 
-                        placeholder="Ej. Juan Pérez" 
-                        class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium" 
-                      />
-                    </div>
-
-                    <div>
-                      <label for="input-tel" class="font-bold text-[#590E2A] block mb-1">Teléfono / WhatsApp *</label>
-                      <input 
-                        id="input-tel"
-                        #telInput
-                        type="text" 
-                        [value]="clienteTelefono()" 
-                        (input)="clienteTelefono.set($any($event.target).value)" 
-                        placeholder="Ej. 300 123 4567" 
-                        class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium" 
-                      />
-                    </div>
-
-                    <div class="sm:col-span-2">
-                      <label for="input-email" class="font-bold text-[#590E2A] block mb-1">Correo Electrónico *</label>
-                      <input 
-                        id="input-email"
-                        #emailInput
-                        type="email" 
-                        [value]="clienteEmail()" 
-                        (input)="clienteEmail.set($any($event.target).value)" 
-                        placeholder="cliente@ejemplo.com" 
-                        class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium" 
-                      />
-                    </div>
-
-                    <div class="sm:col-span-2">
-                      <label for="input-dir" class="font-bold text-[#590E2A] block mb-1">Dirección Exacta en La Dorada, Caldas *</label>
-                      <input 
-                        id="input-dir"
-                        #dirInput
-                        type="text" 
-                        [value]="clienteDireccion()" 
-                        (input)="clienteDireccion.set($any($event.target).value)" 
-                        placeholder="Ej. Calle 12 # 4-30, Barrio Centro" 
-                        class="w-full p-3 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium" 
-                      />
-                    </div>
-
-                    <div class="sm:col-span-2">
-                      <label for="input-notas" class="font-bold text-[#590E2A] block mb-1">Notas Especiales para la Cocina / Instrucciones de Entrega (Opcional)</label>
-                      <textarea 
-                        id="input-notas"
-                        #notasInput
-                        rows="2"
-                        [value]="notasEspeciales()" 
-                        (input)="notasEspeciales.set($any($event.target).value)" 
-                        placeholder="Ej. Empaque de regalo, alergias a nueces, dejar en portería..." 
-                        class="w-full p-3.5 rounded-[20px] bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578] font-medium">
-                      </textarea>
-                    </div>
-                  </div>
                 </div>
 
-                <!-- 2. Integrated Payment Gateway Methods -->
-                <div class="bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-8 shadow-xs space-y-6">
-                  <h2 class="text-lg font-serif italic text-[#590E2A] font-bold flex items-center gap-2 pb-2 border-b border-[#E8D8D0]">
-                    <span class="w-7 h-7 rounded-full bg-[#D95578] text-[#FDF8F4] text-xs font-bold flex items-center justify-center">2</span>
-                    <span>Selecciona tu Método de Pago</span>
-                  </h2>
+                <!-- Section 2: Payment -->
+                <div class="bg-white rounded-[24px] border border-[#E8D8D0] shadow-xs overflow-hidden">
+                  <button (click)="activeSection.set('payment')"
+                    class="w-full p-5 flex items-center justify-between text-left transition-colors"
+                    [class.bg-[#FDF8F4]]="activeSection() === 'info'"
+                    [class.rounded-t-[24px]]="activeSection() === 'info'">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-6 h-6 rounded-full bg-[#D95578] text-white text-[10px] font-bold flex items-center justify-center">2</span>
+                      <span class="material-icons text-[#D95578] text-lg">payment</span>
+                      <span class="text-sm font-serif italic text-[#590E2A] font-bold">Metodo de Pago</span>
+                      @if (activeSection() === 'info') {
+                        <span class="text-[10px] text-[#590E2A]/40 font-mono">{{ selectedMethod() | uppercase }}</span>
+                      }
+                    </div>
+                    <span class="material-icons text-[#590E2A]/40 text-lg transition-transform duration-200"
+                      [class.rotate-180]="activeSection() === 'payment'">
+                      expand_more
+                    </span>
+                  </button>
 
-                  <!-- Method Selection Tabs -->
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <button 
-                      (click)="selectedMethod.set('pse')"
-                      [class]="selectedMethod() === 'pse' ? 'bg-[#D95578] border-[#FF5277] text-white font-bold shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/50 text-[#590E2A] font-medium'"
-                      class="p-3.5 rounded-2xl border text-xs text-left transition-all flex flex-col justify-between h-20">
-                      <span class="text-base">💳</span>
-                      <div>
-                        <span class="font-bold block">PSE</span>
-                        <span class="text-[10px]" [class]="selectedMethod() === 'pse' ? 'text-white/80' : 'text-[#590E2A]/60'">Débito Bancario</span>
-                      </div>
-                    </button>
-
-                    <button 
-                      (click)="selectedMethod.set('nequi')"
-                      [class]="selectedMethod() === 'nequi' ? 'bg-[#D95578] border-[#FF5277] text-white font-bold shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/50 text-[#590E2A] font-medium'"
-                      class="p-3.5 rounded-2xl border text-xs text-left transition-all flex flex-col justify-between h-20">
-                      <span class="text-base">📱</span>
-                      <div>
-                        <span class="font-bold block">Nequi / Daviplata</span>
-                        <span class="text-[10px]" [class]="selectedMethod() === 'nequi' ? 'text-white/80' : 'text-[#590E2A]/60'">QR / Transferencia</span>
-                      </div>
-                    </button>
-
-                    <button 
-                      (click)="selectedMethod.set('tarjeta')"
-                      [class]="selectedMethod() === 'tarjeta' ? 'bg-[#D95578] border-[#FF5277] text-white font-bold shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/50 text-[#590E2A] font-medium'"
-                      class="p-3.5 rounded-2xl border text-xs text-left transition-all flex flex-col justify-between h-20">
-                      <span class="text-base">💳</span>
-                      <div>
-                        <span class="font-bold block">Tarjeta Crédito</span>
-                        <span class="text-[10px]" [class]="selectedMethod() === 'tarjeta' ? 'text-white/80' : 'text-[#590E2A]/60'">Visa / Mastercard</span>
-                      </div>
-                    </button>
-
-                    <button 
-                      (click)="selectedMethod.set('contraentrega')"
-                      [class]="selectedMethod() === 'contraentrega' ? 'bg-[#D95578] border-[#FF5277] text-white font-bold shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/50 text-[#590E2A] font-medium'"
-                      class="p-3.5 rounded-2xl border text-xs text-left transition-all flex flex-col justify-between h-20">
-                      <span class="text-base">💵</span>
-                      <div>
-                        <span class="font-bold block">Contraentrega</span>
-                        <span class="text-[10px]" [class]="selectedMethod() === 'contraentrega' ? 'text-white/80' : 'text-[#590E2A]/60'">Efectivo al recibir</span>
-                      </div>
-                    </button>
-
-                    <button 
-                      (click)="selectedMethod.set('transferencia')"
-                      [class]="selectedMethod() === 'transferencia' ? 'bg-[#D95578] border-[#FF5277] text-white font-bold shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/50 text-[#590E2A] font-medium'"
-                      class="p-3.5 rounded-2xl border text-xs text-left transition-all flex flex-col justify-between h-20 sm:col-span-2">
-                      <span class="text-base">🏦</span>
-                      <div>
-                        <span class="font-bold block">Transferencia Bancaria</span>
-                        <span class="text-[10px]" [class]="selectedMethod() === 'transferencia' ? 'text-white/80' : 'text-[#590E2A]/60'">Bancolombia / Davivienda</span>
-                      </div>
-                    </button>
-                  </div>
-
-                  <!-- Dynamic Payment Details Form according to selected Method -->
-                  <div class="p-5 rounded-[24px] bg-[#FDF8F4] border border-[#E8D8D0] text-xs space-y-4">
-                    
-                    <!-- PSE Option Details -->
-                    @if (selectedMethod() === 'pse') {
-                      <div class="space-y-3">
-                        <h3 class="font-serif italic text-[#590E2A] text-base font-bold">Pasarela PSE - Selección de Banco</h3>
-                        <div>
-                          <label for="select-banco" class="font-bold text-[#590E2A] block mb-1">Elige tu Banco en Colombia *</label>
-                          <select 
-                            id="select-banco"
-                            [value]="selectedBank()"
-                            (change)="selectedBank.set($any($event.target).value)"
-                            class="w-full p-3 rounded-full bg-white border border-[#E8D8D0] text-xs font-bold text-[#590E2A] focus:outline-none focus:border-[#D95578]">
-                            @for (b of banks; track b.id) {
-                              <option [value]="b.nombre">{{ b.nombre }}</option>
-                            }
-                          </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
+                  @if (activeSection() === 'payment') {
+                    <div class="px-5 pb-5 space-y-4 border-t border-[#E8D8D0]/50">
+                      <!-- Payment Tabs -->
+                      <div class="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <button (click)="selectedMethod.set('contraentrega')"
+                          [class]="selectedMethod() === 'contraentrega' ? 'bg-[#D95578] border-[#FF5277] text-white shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/40 text-[#590E2A]'"
+                          class="p-3 rounded-xl border text-[11px] text-left transition-all flex items-center gap-2.5">
+                          <span class="material-icons text-lg">payments</span>
                           <div>
-                            <label for="select-tipo-cliente" class="font-bold text-[#590E2A] block mb-1">Tipo de Cliente</label>
-                            <select id="select-tipo-cliente" class="w-full p-3 rounded-full bg-white border border-[#E8D8D0] text-[#590E2A] font-medium">
-                              <option>Persona Natural</option>
-                              <option>Persona Jurídica</option>
-                            </select>
+                            <span class="font-bold block">Contraentrega</span>
+                            <span [class]="selectedMethod() === 'contraentrega' ? 'text-white/70' : 'text-[#590E2A]/50'" class="text-[9px]">Efectivo</span>
                           </div>
+                        </button>
+                        <button (click)="selectedMethod.set('nequi')"
+                          [class]="selectedMethod() === 'nequi' ? 'bg-[#D95578] border-[#FF5277] text-white shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/40 text-[#590E2A]'"
+                          class="p-3 rounded-xl border text-[11px] text-left transition-all flex items-center gap-2.5">
+                          <span class="material-icons text-lg">qr_code_2</span>
                           <div>
-                            <label for="input-cedula" class="font-bold text-[#590E2A] block mb-1">Documento Identidad *</label>
-                            <input id="input-cedula" type="text" placeholder="Número Cédula" class="w-full p-3 rounded-full bg-white border border-[#E8D8D0] text-[#590E2A] font-medium focus:outline-none focus:border-[#D95578]">
+                            <span class="font-bold block">Nequi</span>
+                            <span [class]="selectedMethod() === 'nequi' ? 'text-white/70' : 'text-[#590E2A]/50'" class="text-[9px]">QR</span>
                           </div>
-                        </div>
+                        </button>
+                        <button (click)="selectedMethod.set('pse')"
+                          [class]="selectedMethod() === 'pse' ? 'bg-[#D95578] border-[#FF5277] text-white shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/40 text-[#590E2A]'"
+                          class="p-3 rounded-xl border text-[11px] text-left transition-all flex items-center gap-2.5">
+                          <span class="material-icons text-lg">account_balance</span>
+                          <div>
+                            <span class="font-bold block">PSE</span>
+                            <span [class]="selectedMethod() === 'pse' ? 'text-white/70' : 'text-[#590E2A]/50'" class="text-[9px]">Debito</span>
+                          </div>
+                        </button>
+                        <button (click)="selectedMethod.set('tarjeta')"
+                          [class]="selectedMethod() === 'tarjeta' ? 'bg-[#D95578] border-[#FF5277] text-white shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/40 text-[#590E2A]'"
+                          class="p-3 rounded-xl border text-[11px] text-left transition-all flex items-center gap-2.5">
+                          <span class="material-icons text-lg">credit_card</span>
+                          <div>
+                            <span class="font-bold block">Tarjeta</span>
+                            <span [class]="selectedMethod() === 'tarjeta' ? 'text-white/70' : 'text-[#590E2A]/50'" class="text-[9px]">Credito</span>
+                          </div>
+                        </button>
+                        <button (click)="selectedMethod.set('transferencia')"
+                          [class]="selectedMethod() === 'transferencia' ? 'bg-[#D95578] border-[#FF5277] text-white shadow-xs' : 'bg-[#FDF8F4] border-[#E8D8D0] hover:border-[#D95578]/40 text-[#590E2A]'"
+                          class="p-3 rounded-xl border text-[11px] text-left transition-all flex items-center gap-2.5 sm:col-span-2">
+                          <span class="material-icons text-lg">swap_horiz</span>
+                          <div>
+                            <span class="font-bold block">Transferencia</span>
+                            <span [class]="selectedMethod() === 'transferencia' ? 'text-white/70' : 'text-[#590E2A]/50'" class="text-[9px]">Bancolombia</span>
+                          </div>
+                        </button>
                       </div>
-                    }
 
-                    <!-- Nequi / Daviplata Details -->
-                    @if (selectedMethod() === 'nequi' || selectedMethod() === 'daviplata') {
-                      <div class="space-y-4 text-center">
-                        <h3 class="font-serif italic text-[#590E2A] text-base font-bold">
-                          Pago Instantáneo por {{ selectedMethod() === 'nequi' ? 'Nequi' : 'Daviplata' }}
-                        </h3>
-                        <p class="text-[#590E2A]/80 leading-relaxed font-medium">
-                          Escanea el siguiente Código QR dinámico con tu app o transfiere al número oficial de Mochi.
-                        </p>
-                        
-                        <!-- Simulated Interactive QR Code -->
-                        <div class="w-48 h-48 mx-auto bg-white p-3 rounded-3xl shadow-xs border border-[#E8D8D0] flex flex-col items-center justify-center space-y-2">
-                          <div class="w-36 h-36 bg-[#D95578] rounded-2xl flex items-center justify-center text-[#FDF8F4] text-4xl font-serif italic font-bold">
-                            Mochi.
-                          </div>
-                          <span class="text-[10px] font-mono text-[#590E2A]/60 font-bold">REF: MOCHI-{{ cartService.total() }}</span>
-                        </div>
-
-                        <div class="p-3 rounded-full bg-white border border-[#E8D8D0] text-center font-mono">
-                          <span class="text-[#590E2A]/60 block text-[10px]">Número Nequi / Daviplata MOCHI:</span>
-                          <span class="font-bold text-[#590E2A] text-base">300 123 4567</span>
-                        </div>
-                      </div>
-                    }
-
-                    <!-- Credit Card Details -->
-                    @if (selectedMethod() === 'tarjeta') {
-                      <div class="space-y-3">
-                        <h3 class="font-serif italic text-[#590E2A] text-base font-bold">Procesador de Tarjetas de Crédito / Débito</h3>
-                        <div>
-                          <label for="input-tarjeta" class="font-bold text-[#590E2A] block mb-1">Número de Tarjeta *</label>
-                          <input id="input-tarjeta" type="text" maxlength="19" placeholder="4532 •••• •••• 8910" class="w-full p-3 rounded-full bg-white border border-[#E8D8D0] font-mono text-[#590E2A] focus:outline-none focus:border-[#D95578]">
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                          <div>
-                            <label for="input-titular" class="font-bold text-[#590E2A] block mb-1">Titular *</label>
-                            <input id="input-titular" type="text" placeholder="Nombre en tarjeta" class="w-full p-3 rounded-full bg-white border border-[#E8D8D0] text-[#590E2A] focus:outline-none focus:border-[#D95578]">
-                          </div>
-                          <div>
-                            <label for="input-venc" class="font-bold text-[#590E2A] block mb-1">Vencimiento / CVV *</label>
-                            <div class="flex gap-2">
-                              <input id="input-venc" type="text" placeholder="MM/AA" class="w-1/2 p-3 rounded-full bg-white border border-[#E8D8D0] text-center text-[#590E2A] focus:outline-none focus:border-[#D95578]">
-                              <input type="text" maxlength="4" placeholder="CVC" class="w-1/2 p-3 rounded-full bg-white border border-[#E8D8D0] text-center font-mono text-[#590E2A] focus:outline-none focus:border-[#D95578]">
+                      <!-- Payment Details -->
+                      <div class="p-4 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] text-xs space-y-3">
+                        @if (selectedMethod() === 'contraentrega') {
+                          <div class="flex items-start gap-2.5">
+                            <span class="material-icons text-[#065F46] mt-0.5">check_circle</span>
+                            <div>
+                              <span class="font-bold text-[#590E2A] block">Pago en efectivo al recibir</span>
+                              <span class="text-[#590E2A]/60">Nuestro repartidor lleva cambio exacto.</span>
                             </div>
                           </div>
-                        </div>
+                        }
+                        @if (selectedMethod() === 'nequi') {
+                          <div class="space-y-3 text-center">
+                            <div class="w-28 h-28 mx-auto bg-white p-2 rounded-2xl border border-[#E8D8D0] flex items-center justify-center">
+                              <div class="w-full h-full bg-[#D95578] rounded-xl flex items-center justify-center text-white text-sm font-serif italic font-bold">Mochi.</div>
+                            </div>
+                            <div class="p-2.5 rounded-xl bg-white border border-[#E8D8D0] font-mono">
+                              <span class="text-[9px] text-[#590E2A]/50 block">Numero Nequi</span>
+                              <span class="font-bold text-[#590E2A]">300 123 4567</span>
+                            </div>
+                          </div>
+                        }
+                        @if (selectedMethod() === 'pse') {
+                          <div class="space-y-2">
+                            <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider flex items-center gap-1">
+                              <span class="material-icons text-xs">account_balance</span> Selecciona tu banco
+                            </label>
+                            <select [value]="selectedBank()" (change)="selectedBank.set($any($event.target).value)"
+                              class="w-full p-2.5 rounded-xl bg-white border border-[#E8D8D0] text-xs font-bold text-[#590E2A] focus:outline-none focus:border-[#D95578]">
+                              @for (b of banks; track b.id) { <option [value]="b.nombre">{{ b.nombre }}</option> }
+                            </select>
+                          </div>
+                        }
+                        @if (selectedMethod() === 'tarjeta') {
+                          <div class="space-y-2">
+                            <input type="text" placeholder="Numero de tarjeta"
+                              class="w-full p-2.5 rounded-xl bg-white border border-[#E8D8D0] font-mono text-[#590E2A] focus:outline-none focus:border-[#D95578] text-xs" />
+                            <div class="grid grid-cols-2 gap-2">
+                              <input type="text" placeholder="MM/AA"
+                                class="p-2.5 rounded-xl bg-white border border-[#E8D8D0] text-center text-[#590E2A] focus:outline-none focus:border-[#D95578] text-xs" />
+                              <input type="text" maxlength="4" placeholder="CVC"
+                                class="p-2.5 rounded-xl bg-white border border-[#E8D8D0] text-center font-mono text-[#590E2A] focus:outline-none focus:border-[#D95578] text-xs" />
+                            </div>
+                          </div>
+                        }
+                        @if (selectedMethod() === 'transferencia') {
+                          <div class="space-y-1.5">
+                            <div class="flex items-center gap-2 text-[#590E2A]/80">
+                              <span class="material-icons text-xs text-[#D95578]">account_balance</span>
+                              Davivienda: <span class="font-bold">0098-4521-8901</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-[#590E2A]/80">
+                              <span class="material-icons text-xs text-[#D95578]">account_balance</span>
+                              Bancolombia: <span class="font-bold">310-890123-01</span>
+                            </div>
+                          </div>
+                        }
                       </div>
-                    }
 
-                    <!-- Contraentrega Details -->
-                    @if (selectedMethod() === 'contraentrega') {
-                      <div class="space-y-2">
-                        <h3 class="font-serif italic text-[#590E2A] text-base font-bold">Pago Contraentrega en La Dorada</h3>
-                        <p class="text-[#590E2A]/80 font-medium">
-                          Pagarás en efectivo al momento de recibir tus postres. Nuestro repartidor lleva cambio exacto.
-                        </p>
-                      </div>
-                    }
-
-                    <!-- Transferencia Details -->
-                    @if (selectedMethod() === 'transferencia') {
-                      <div class="space-y-2">
-                        <h3 class="font-serif italic text-[#590E2A] text-base font-bold">Transferencia Bancaria Directa</h3>
-                        <p class="text-[#590E2A]/80 font-medium">
-                          Davivienda Ahorros: <strong>0098-4521-8901</strong> | Bancolombia: <strong>310-890123-01</strong>
-                        </p>
-                      </div>
-                    }
-
-                  </div>
+                      <!-- Back button -->
+                      <button (click)="activeSection.set('info')"
+                        class="w-full py-2.5 rounded-full bg-white border border-[#E8D8D0] text-[#590E2A] font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 hover:bg-[#FDF8F4]">
+                        <span class="material-icons text-sm">arrow_back</span>
+                        Volver a Datos
+                      </button>
+                    </div>
+                  }
                 </div>
 
               </div>
 
-              <!-- Right Column: Order Summary & Confirm Button -->
-              <div class="lg:col-span-5 bg-white rounded-[32px] border border-[#E8D8D0] p-6 sm:p-8 shadow-xs space-y-6 sticky top-28">
-                <h2 class="text-lg font-serif italic text-[#590E2A] font-bold pb-3 border-b border-[#E8D8D0]">Resumen de Tu Compra</h2>
+              <!-- Right: Summary (sticky) -->
+              <div class="lg:col-span-5 bg-white rounded-[24px] border border-[#E8D8D0] p-5 shadow-xs space-y-4 sticky top-28">
+                <h2 class="text-sm font-serif italic text-[#590E2A] font-bold flex items-center gap-2 pb-3 border-b border-[#E8D8D0]">
+                  <span class="material-icons text-[#D95578] text-lg">receipt_long</span>
+                  Tu Pedido
+                </h2>
 
-                <!-- Items Mini List -->
-                <div class="space-y-3 max-h-56 overflow-y-auto pr-1 text-xs">
-                  @for (item of cartService.items(); track item.product.id) {
-                    <div class="p-2.5 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0]/50">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                          <img [src]="item.product.imagen_principal" alt="" class="w-10 h-10 rounded-xl object-cover">
-                          <div>
-                            <span class="font-serif italic text-[#590E2A] font-bold block">{{ item.product.nombre_espanol }}</span>
-                            <span class="text-[10px] text-[#590E2A]/60 font-mono font-bold">x{{ item.cantidad }}</span>
-                          </div>
+                <div class="space-y-2 max-h-44 overflow-y-auto pr-1">
+                  @for (item of cartService.items(); track item.product.id + (item.frase_personalizada || '')) {
+                    <div class="flex items-center gap-2.5 p-2 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0]/50">
+                      <img [src]="item.product.imagen_principal" class="w-9 h-9 rounded-lg object-cover">
+                      <div class="flex-1 min-w-0">
+                        <span class="text-[11px] font-bold text-[#590E2A] block truncate">{{ item.product.nombre_espanol }}</span>
+                        <div class="flex items-center gap-1">
+                          <span class="text-[9px] text-[#590E2A]/50">x{{ item.cantidad }}</span>
+                          @if (item.frase_personalizada) {
+                            <span class="material-icons text-[9px] text-[#D95578]">format_quote</span>
+                          }
                         </div>
-                        <span class="font-serif italic text-[#590E2A] font-bold">
-                          {{ '$' + (item.cantidad * (item.product.precio)).toLocaleString('es-CO') }}
-                        </span>
                       </div>
-                      @if (item.frase_personalizada) {
-                        <div class="mt-1.5 ml-12 px-2.5 py-1 rounded-xl bg-[#D95578]/10 border border-[#D95578]/20 text-[10px] text-[#D95578] italic flex items-center gap-1">
-                          <span class="material-icons text-[11px]">format_quote</span>
-                          {{ item.frase_personalizada }}
-                        </div>
-                      }
+                      <span class="text-[11px] font-bold text-[#590E2A] whitespace-nowrap">{{ '$' + (item.cantidad * item.product.precio).toLocaleString('es-CO') }}</span>
                     </div>
                   }
                 </div>
 
-                <!-- Price Totals -->
-                <div class="space-y-2 text-xs text-[#590E2A]/80 pt-3 border-t border-[#E8D8D0]">
-                  <div class="flex justify-between font-medium">
-                    <span>Subtotal:</span>
+                <div class="space-y-2 text-xs pt-2 border-t border-[#E8D8D0]">
+                  <div class="flex justify-between text-[#590E2A]/60">
+                    <span class="flex items-center gap-1"><span class="material-icons text-xs">shopping_bag</span> Subtotal</span>
                     <span class="font-bold text-[#590E2A]">{{ '$' + cartService.subtotal().toLocaleString('es-CO') }}</span>
                   </div>
-
-                  <div class="flex justify-between font-medium">
-                    <span>Costo de Envío:</span>
-                    <span class="font-bold text-[#590E2A]">
-                      {{ cartService.shippingCost() === 0 ? '¡GRATIS!' : '$' + cartService.shippingCost().toLocaleString('es-CO') }}
-                    </span>
+                  <div class="flex justify-between text-[#590E2A]/60">
+                    <span class="flex items-center gap-1"><span class="material-icons text-xs">local_shipping</span> Envio</span>
+                    <span class="font-bold text-[#590E2A]">{{ cartService.shippingCost() === 0 ? 'Gratis' : '$' + cartService.shippingCost().toLocaleString('es-CO') }}</span>
                   </div>
-
-                  <div class="flex justify-between text-base font-bold text-[#590E2A] pt-3 border-t border-[#E8D8D0]">
-                    <span>TOTAL COMPRA:</span>
-                    <span class="text-2xl font-serif italic text-[#D95578] font-bold">{{ '$' + cartService.total().toLocaleString('es-CO') }}</span>
+                  <div class="flex justify-between items-end pt-2 border-t border-[#E8D8D0]">
+                    <span class="text-xs font-bold text-[#590E2A] uppercase">Total</span>
+                    <span class="text-xl font-serif italic text-[#D95578] font-bold">{{ '$' + cartService.total().toLocaleString('es-CO') }}</span>
                   </div>
                 </div>
 
-                <!-- Payment Submit Button -->
-                <button 
-                  [disabled]="isProcessing() || !clienteNombre() || !clienteTelefono() || stockErrors().length > 0"
+                <button [disabled]="isProcessing() || !clienteNombre() || !clienteTelefono() || stockErrors().length > 0"
                   (click)="submitPayment()"
-                  class="w-full py-4 rounded-full bg-[#D95578] hover:bg-[#FF5277] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-widest shadow-xs transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+                  class="w-full py-3.5 rounded-full bg-[#D95578] hover:bg-[#FF5277] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-widest shadow-xs transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
                   @if (isProcessing()) {
-                    <span class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    <span>Validando Stock & Procesando...</span>
+                    <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Procesando...</span>
                   } @else {
-                    <span>🔒 Pagar {{ '$' + cartService.total().toLocaleString('es-CO') }} Ahora</span>
+                    <span class="material-icons text-base">lock</span>
+                    Pagar {{ '$' + cartService.total().toLocaleString('es-CO') }}
                   }
                 </button>
 
-                <p class="text-[10px] text-[#590E2A]/50 text-center leading-tight">
-                  Transacción protegida mediante RPC <strong>crear_pedido_con_stock</strong> y RLS en Supabase.
-                </p>
+                <p class="text-[9px] text-[#590E2A]/40 text-center">Pago seguro verificado por Supabase</p>
               </div>
 
             </div>
           } @else {
-            <div class="text-center py-20 bg-white rounded-[40px] border border-[#E8D8D0] p-8 space-y-4 max-w-lg mx-auto">
-              <h2 class="text-2xl font-serif italic text-[#590E2A] font-bold">No tienes productos en tu carrito</h2>
-              <a routerLink="/productos" class="inline-block px-8 py-3.5 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] font-bold text-xs uppercase tracking-widest transition-colors shadow-xs">
-                Ir al Catálogo
+            <div class="text-center py-16 bg-white rounded-[32px] border border-[#E8D8D0] p-8 space-y-4 max-w-md mx-auto">
+              <span class="material-icons text-3xl text-[#590E2A]/20">remove_shopping_cart</span>
+              <h2 class="text-lg font-serif italic text-[#590E2A] font-bold">Sin productos</h2>
+              <a routerLink="/productos" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#D95578] text-white font-bold text-xs uppercase tracking-widest">
+                <span class="material-icons text-sm">storefront</span> Ir al Catalogo
               </a>
             </div>
           }
         } @else {
-          <!-- Order Confirmation Screen -->
+          <!-- Order Confirmation -->
           @let order = createdOrder()!;
-
-          <div class="bg-white rounded-[40px] border border-[#E8D8D0] p-8 sm:p-12 shadow-xs max-w-2xl mx-auto text-center space-y-6">
-            <div class="w-20 h-20 rounded-full bg-[#D1FAE5] text-[#065F46] flex items-center justify-center text-3xl mx-auto border border-[#A7F3D0]">
-              ✓
+          <div class="bg-white rounded-[32px] border border-[#E8D8D0] p-8 sm:p-12 shadow-xs max-w-xl mx-auto text-center space-y-5">
+            <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto">
+              <span class="material-icons text-3xl text-emerald-600">check_circle</span>
             </div>
-
-            <span class="px-4 py-1.5 rounded-full bg-[#D1FAE5] text-[#065F46] text-xs font-bold uppercase tracking-widest border border-[#A7F3D0]">
-              ¡PAGO APROBADO CON ÉXITO!
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest border border-emerald-200">
+              <span class="material-icons text-xs">verified</span> Pago Aprobado
             </span>
-
-            <h1 class="text-3xl font-serif italic text-[#590E2A] font-bold">
-              ¡Gracias por tu pedido, {{ order.cliente.nombre }}!
-            </h1>
-
-            <p class="text-[#590E2A]/80 text-sm leading-relaxed font-medium">
-              Hemos recibido tu orden correctamente. Nuestro taller artesanal en La Dorada ya comenzó a preparar tus deliciosos postres japoneses.
-            </p>
-
-            <div class="p-5 rounded-[24px] bg-[#FDF8F4] border border-[#E8D8D0] text-xs text-left space-y-2 font-mono">
-              <div class="flex justify-between">
-                <span class="text-[#590E2A]/60">Número de Orden:</span>
-                <span class="font-bold text-[#590E2A]">{{ order.id }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-[#590E2A]/60">Dirección ID (FK):</span>
-                <span class="font-bold text-[#590E2A]">#{{ order.id_direccion || selectedAddressId() || 101 }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-[#590E2A]/60">Método de Pago:</span>
-                <span class="font-bold text-[#D95578] uppercase">{{ order.metodoPago }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-[#590E2A]/60">Total Pagado:</span>
-                <span class="font-bold text-[#590E2A]">{{ '$' + order.total.toLocaleString('es-CO') }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-[#590E2A]/60">Tiempo Estimado de Entrega:</span>
-                <span class="font-bold text-[#065F46]">45 - 60 minutos</span>
-              </div>
+            <h1 class="text-xl font-serif italic text-[#590E2A] font-bold">Gracias, {{ order.cliente.nombre }}!</h1>
+            <p class="text-[#590E2A]/60 text-xs leading-relaxed max-w-sm mx-auto">Tu pedido esta siendo preparado en nuestro taller artesanal.</p>
+            <div class="p-4 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] text-xs space-y-2 font-mono text-left max-w-xs mx-auto">
+              <div class="flex justify-between"><span class="text-[#590E2A]/50 flex items-center gap-1"><span class="material-icons text-xs">tag</span> Orden</span><span class="font-bold text-[#590E2A]">{{ order.id }}</span></div>
+              <div class="flex justify-between"><span class="text-[#590E2A]/50 flex items-center gap-1"><span class="material-icons text-xs">payment</span> Metodo</span><span class="font-bold text-[#D95578] uppercase">{{ order.metodoPago }}</span></div>
+              <div class="flex justify-between"><span class="text-[#590E2A]/50 flex items-center gap-1"><span class="material-icons text-xs">attach_money</span> Total</span><span class="font-bold text-[#590E2A]">{{ '$' + order.total.toLocaleString('es-CO') }}</span></div>
+              <div class="flex justify-between"><span class="text-[#590E2A]/50 flex items-center gap-1"><span class="material-icons text-xs">schedule</span> Entrega</span><span class="font-bold text-[#065F46]">45-60 min</span></div>
             </div>
-
-            <div class="flex flex-col sm:flex-row gap-3 pt-4">
-              <a routerLink="/perfil" class="flex-1 py-4 px-6 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-[#FDF8F4] font-bold text-xs uppercase tracking-widest shadow-xs transition-colors text-center">
-                📍 Ver Seguimiento del Pedido
+            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+              <a routerLink="/perfil" [queryParams]="{tab: 'pedidos'}" class="flex-1 py-3 px-4 rounded-full bg-[#D95578] hover:bg-[#FF5277] text-white font-bold text-xs uppercase tracking-widest text-center flex items-center justify-center gap-1.5">
+                <span class="material-icons text-sm">local_shipping</span> Seguir Pedido
               </a>
-
-              <a routerLink="/productos" class="py-4 px-6 rounded-full bg-[#D95578] hover:bg-[#FF5277] text-white font-bold text-xs uppercase tracking-widest transition-colors text-center shadow-xs">
-                Volver a la Tienda
+              <a routerLink="/productos" class="py-3 px-4 rounded-full bg-white border border-[#E8D8D0] text-[#590E2A] font-bold text-xs uppercase tracking-widest text-center hover:bg-[#FDF8F4] transition-colors">
+                Seguir Comprando
               </a>
             </div>
           </div>
         }
 
       </div>
+
+      <!-- New Address Modal -->
+      @if (showNewAddressModal()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeNewAddressModal()">
+          <div class="bg-white rounded-[28px] w-[90vw] max-w-lg p-5 space-y-4 shadow-2xl" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-serif italic text-[#590E2A] font-bold flex items-center gap-2">
+                <span class="material-icons text-[#D95578]">add_location_alt</span>
+                Nueva Direccion
+              </h3>
+              <button (click)="closeNewAddressModal()" class="w-7 h-7 rounded-full bg-[#FDF8F4] flex items-center justify-center hover:bg-[#E8D8D0] transition-colors">
+                <span class="material-icons text-[#590E2A] text-sm">close</span>
+              </button>
+            </div>
+
+            <div class="relative rounded-xl overflow-hidden border border-[#E8D8D0]">
+              <div class="absolute top-2 left-2 right-2 z-[1000]">
+                <div class="relative">
+                  <span class="material-icons absolute left-2.5 top-1/2 -translate-y-1/2 text-[#590E2A]/40" style="font-size: 16px">search</span>
+                  <input #mapSearchInput type="text" placeholder="Buscar direccion..."
+                    (keydown.enter)="searchAddress(mapSearchInput.value)"
+                    class="w-full pl-9 pr-10 py-2.5 rounded-xl bg-white/95 backdrop-blur border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578] shadow-sm"/>
+                  <button (click)="searchAddress(mapSearchInput.value)" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-[#D95578] flex items-center justify-center hover:bg-[#FF6078] transition-colors">
+                    <span class="material-icons text-white" style="font-size: 14px">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="checkout-address-map" class="w-full h-56"></div>
+              @if (mapLoading()) {
+                <div class="absolute inset-0 bg-white/70 flex items-center justify-center z-[999]">
+                  <span class="material-icons animate-spin text-[#D95578]">refresh</span>
+                </div>
+              }
+            </div>
+
+            <p class="text-[10px] text-[#590E2A]/40 flex items-center gap-1">
+              <span class="material-icons" style="font-size: 12px">info</span>
+              Busca o haz clic en el mapa para colocar tu ubicacion
+            </p>
+
+            @if (mapAddress()) {
+              <div class="p-3 rounded-xl bg-[#E0F2F1] border border-[#B2DFDB] flex items-center gap-2">
+                <span class="material-icons text-[#2C5350]" style="font-size: 14px">check_circle</span>
+                <p class="text-[11px] font-medium text-[#2C5350]">{{ mapAddress() }}</p>
+              </div>
+            }
+
+            <div class="grid grid-cols-2 gap-3">
+              <input #newAliasInput type="text" placeholder="Alias (Casa, Trabajo)" class="p-3 rounded-xl bg-white border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578]"/>
+              <input #newBarrioInput type="text" placeholder="Barrio" class="p-3 rounded-xl bg-white border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578]"/>
+            </div>
+
+            <div class="flex gap-2">
+              <button (click)="closeNewAddressModal()"
+                class="flex-1 py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] font-bold text-[10px] uppercase tracking-wider hover:bg-[#E8D8D0] transition-colors">
+                Cancelar
+              </button>
+              <button (click)="saveNewAddress(newAliasInput, newBarrioInput)" [disabled]="!mapAddress()"
+                class="flex-1 py-2.5 rounded-full bg-[#D95578] text-white font-bold text-[10px] uppercase tracking-wider hover:bg-[#FF5277] disabled:opacity-30 transition-colors">
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- All Addresses Modal -->
+      @if (showAllAddresses()) {
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="showAllAddresses.set(false)">
+          <div class="bg-white rounded-[28px] w-[90vw] max-w-lg p-5 space-y-4 shadow-2xl" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-serif italic text-[#590E2A] font-bold flex items-center gap-2">
+                <span class="material-icons text-[#D95578]">location_on</span>
+                Seleccionar Direccion
+              </h3>
+              <button (click)="showAllAddresses.set(false)" class="w-7 h-7 rounded-full bg-[#FDF8F4] flex items-center justify-center hover:bg-[#E8D8D0] transition-colors">
+                <span class="material-icons text-[#590E2A] text-sm">close</span>
+              </button>
+            </div>
+
+            <div class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+              @for (dir of userAddresses(); track dir.id_direccion) {
+                <button type="button" (click)="selectAddress(dir); showAllAddresses.set(false)"
+                  class="w-full p-3 rounded-xl border text-left transition-all flex items-center gap-3"
+                  [class]="selectedAddressId() === dir.id_direccion
+                    ? 'bg-[#D95578]/10 border-[#D95578]'
+                    : 'bg-[#FDF8F4] border-[#E8D8D0]/60 hover:border-[#D95578]/40'">
+                  <span class="material-icons text-lg"
+                    [class]="selectedAddressId() === dir.id_direccion ? 'text-[#D95578]' : 'text-[#590E2A]/20'">
+                    {{ selectedAddressId() === dir.id_direccion ? 'radio_button_checked' : 'radio_button_unchecked' }}
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold text-[#590E2A] text-xs">{{ dir.alias || 'Direccion' }}</span>
+                      @if (dir.predeterminada) {
+                        <span class="text-[7px] px-1.5 py-0.5 rounded-full bg-[#D95578] text-white font-bold">Principal</span>
+                      }
+                    </div>
+                    <p class="text-[#590E2A]/60 text-[10px] truncate">{{ dir.direccion_completa }}</p>
+                  </div>
+                </button>
+              }
+            </div>
+
+            <button type="button" (click)="showAllAddresses.set(false); openNewAddressModal()"
+              class="w-full py-2.5 rounded-full border border-dashed border-[#E8D8D0] text-[10px] font-bold text-[#590E2A]/50 hover:border-[#D95578] hover:text-[#D95578] transition-all flex items-center justify-center gap-1">
+              <span class="material-icons" style="font-size: 14px">add_circle_outline</span>
+              Agregar nueva direccion
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- No Coverage Modal -->
+      @if (showNoCoverageModal()) {
+        <div class="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="closeNoCoverage()">
+          <div class="bg-white rounded-[28px] w-[90vw] max-w-sm p-6 space-y-4 shadow-2xl" (click)="$event.stopPropagation()">
+            <div class="w-14 h-14 rounded-full bg-[#FFF3E0] flex items-center justify-center mx-auto">
+              <span class="material-icons text-[#E65100]" style="font-size: 28px">warning</span>
+            </div>
+            <div class="text-center space-y-2">
+              <h3 class="text-base font-serif italic text-[#590E2A] font-bold">Sin Cobertura en esta Zona</h3>
+              <p class="text-[11px] text-[#590E2A]/60 leading-relaxed">
+                La direccion seleccionada no esta dentro de nuestras zonas de envio. Para pedidos a nivel nacional, contactanos directamente.
+              </p>
+            </div>
+            <div class="space-y-2">
+              <a routerLink="/contacto" [queryParams]="{asunto: 'envio_nacional'}" (click)="closeNoCoverage()"
+                class="w-full py-3 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-white font-bold text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <span class="material-icons text-sm">mail</span>
+                Contactar para Envio Nacional
+              </a>
+              <button (click)="closeNoCoverage()"
+                class="w-full py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] font-bold text-[10px] uppercase tracking-wider hover:bg-[#E8D8D0] transition-colors">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
-export class CheckoutPageComponent implements OnInit {
+export class CheckoutPageComponent implements OnInit, OnDestroy {
   cartService = inject(CartService);
   dataService = inject(MochiDataService);
   supabaseService = inject(SupabaseService);
@@ -484,9 +574,31 @@ export class CheckoutPageComponent implements OnInit {
 
   selectedMethod = signal<PaymentMethodType>('pse');
   selectedBank = signal<string>('Bancolombia');
+  activeSection = signal<'info' | 'payment'>('info');
 
   isProcessing = signal(false);
   createdOrder = signal<Order | null>(null);
+
+  showNewAddressModal = signal(false);
+  showAllAddresses = signal(false);
+  showNoCoverageModal = signal(false);
+  mapLoading = signal(false);
+  mapAddress = signal('');
+  private L: typeof import('leaflet') | null = null;
+  private map: any = null;
+  private marker: any = null;
+  private LADORADA = { lat: 5.4530, lng: -74.6630 };
+
+  private coverageEffect = effect(() => {
+    const dir = this.clienteDireccion();
+    if (!dir) return;
+    const lower = dir.toLowerCase();
+    const zones = ['la dorada', 'puerto salgar', 'purnio', 'guarinocito', 'honda', 'victoria'];
+    const hasCoverage = zones.some(z => lower.includes(z));
+    if (!hasCoverage) {
+      this.showNoCoverageModal.set(true);
+    }
+  });
 
   async ngOnInit() {
     const activeUser = this.supabaseService.activeUser();
@@ -629,6 +741,150 @@ export class CheckoutPageComponent implements OnInit {
     }
 
     this.isProcessing.set(false);
+  }
+
+  ngOnDestroy() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+  }
+
+  async openNewAddressModal() {
+    this.showNewAddressModal.set(true);
+    await this.initMap();
+    setTimeout(() => this.openMap(), 100);
+  }
+
+  closeNewAddressModal() {
+    this.showNewAddressModal.set(false);
+    this.mapAddress.set('');
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+  }
+
+  closeNoCoverage() {
+    this.showNoCoverageModal.set(false);
+    this.selectedAddressId.set(null);
+    this.clienteDireccion.set('');
+  }
+
+  private async initMap() {
+    if (this.L) return;
+    this.L = await import('leaflet');
+  }
+
+  private async openMap() {
+    await this.initMap();
+    if (!this.L) return;
+
+    setTimeout(() => {
+      const container = document.getElementById('checkout-address-map');
+      if (!container) return;
+
+      if (this.map) {
+        this.map.remove();
+        this.map = null;
+      }
+
+      this.map = this.L!.map('checkout-address-map').setView(
+        [this.LADORADA.lat, this.LADORADA.lng], 15
+      );
+
+      this.L!.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(this.map);
+
+      const icon = this.L!.icon({
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41]
+      });
+
+      this.marker = this.L!.marker([this.LADORADA.lat, this.LADORADA.lng], { icon }).addTo(this.map);
+
+      this.map.on('click', (e: any) => {
+        const { lat, lng } = e.latlng;
+        this.marker!.setLatLng([lat, lng]);
+        this.reverseGeocode(lat, lng);
+      });
+
+      setTimeout(() => this.map?.invalidateSize(), 100);
+    }, 100);
+  }
+
+  async reverseGeocode(lat: number, lng: number) {
+    this.mapLoading.set(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`);
+      const data = await res.json();
+      if (data?.display_name) {
+        this.mapAddress.set(data.display_name);
+      }
+    } catch {
+      this.mapAddress.set(`${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    }
+    this.mapLoading.set(false);
+  }
+
+  async searchAddress(query: string) {
+    if (!query || query.length < 3) return;
+    this.mapLoading.set(true);
+    try {
+      let searchQuery = `${query}, Caldas, Colombia`;
+      let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1&accept-language=es`);
+      let data = await res.json();
+
+      if (!data || data.length === 0) {
+        searchQuery = `${query}, Colombia`;
+        res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1&accept-language=es`);
+        data = await res.json();
+      }
+
+      if (data && data.length > 0) {
+        const { lat, lon, display_name } = data[0];
+        this.mapAddress.set(display_name);
+        if (this.map && this.marker && this.L) {
+          this.marker.setLatLng([lat, lon]);
+          this.map.setView([lat, lon], 16);
+        }
+      }
+    } catch {}
+    this.mapLoading.set(false);
+  }
+
+  async saveNewAddress(aliasInput: HTMLInputElement, barrioInput: HTMLInputElement) {
+    const u = this.supabaseService.activeUser();
+    if (!u || !this.mapAddress()) return;
+
+    const alias = aliasInput.value || 'Mi Dirección';
+    const barrio = barrioInput.value || 'Centro';
+    const isPrincipal = this.userAddresses().length === 0;
+
+    await this.supabaseService.addDireccion({
+      id_usuario: u.id,
+      alias,
+      direccion_completa: this.mapAddress(),
+      barrio,
+      ciudad: 'La Dorada',
+      departamento: 'Caldas',
+      codigo_postal: '175031',
+      predeterminada: isPrincipal
+    });
+
+    const addresses = await this.supabaseService.obtenerDireccionesUsuario(u.id);
+    this.userAddresses.set(addresses);
+
+    const newDir = addresses[addresses.length - 1];
+    if (newDir) {
+      this.selectAddress(newDir);
+    }
+
+    this.closeNewAddressModal();
   }
 }
 

@@ -1,9 +1,10 @@
-import { Component, inject, signal, computed, effect, ChangeDetectionStrategy, OnDestroy, NgZone, PLATFORM_ID } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Component, inject, signal, computed, effect, ChangeDetectionStrategy, OnDestroy, NgZone, PLATFORM_ID, OnInit } from '@angular/core';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { CartService } from '../../services/cart.service';
+import { Direccion, detectZoneFromAddress, DeliveryZone } from '../../models/mochi.models';
 import { DatePipe, isPlatformBrowser } from '@angular/common';
 import type * as L from 'leaflet';
 
@@ -241,9 +242,9 @@ import type * as L from 'leaflet';
                         <input #barrioInput type="text" placeholder="Barrio" class="p-3 rounded-xl bg-white border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578]"/>
                       </div>
                       <input #dirInput type="text" [value]="mapAddress() || ''" placeholder="Dirección completa (Calle 14 # 5-20)" class="w-full p-3 rounded-xl bg-white border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578]"/>
-                      <button (click)="saveAddress(aliasInput.value, dirInput.value || mapAddress() || '', barrioInput.value); showNewAddress.set(false); destroyMap()"
+                      <button (click)="saveAddress(aliasInput.value, dirInput.value || mapAddress() || '', barrioInput.value); destroyMap()"
                         class="w-full py-2.5 rounded-xl bg-[#590E2A] text-white font-bold text-[10px] uppercase tracking-wider hover:bg-[#3A0A1C] transition-colors">
-                        Guardar Dirección
+                        Guardar Direccion
                       </button>
                     </div>
                   }
@@ -251,13 +252,13 @@ import type * as L from 'leaflet';
                   <div class="space-y-3">
                     @for (dir of userAddresses(); track dir.id_direccion) {
                       <div class="p-4 rounded-2xl bg-[#FDF8F4] border border-[#E8D8D0] flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
                           <div class="w-10 h-10 rounded-xl bg-[#D95578]/10 flex items-center justify-center shrink-0">
                             <span class="material-icons text-[#D95578]" style="font-size: 18px">{{ dir.predeterminada ? 'home' : 'location_on' }}</span>
                           </div>
                           <div class="min-w-0">
                             <div class="flex items-center gap-2">
-                              <p class="text-sm font-bold text-[#590E2A] truncate">{{ dir.alias || 'Dirección' }}</p>
+                              <p class="text-sm font-bold text-[#590E2A] truncate">{{ dir.alias || 'Direccion' }}</p>
                               @if (dir.predeterminada) {
                                 <span class="text-[9px] px-2 py-0.5 rounded-full bg-[#D95578]/10 text-[#D95578] font-bold shrink-0">Principal</span>
                               }
@@ -266,18 +267,34 @@ import type * as L from 'leaflet';
                             <p class="text-[10px] text-[#590E2A]/40">{{ dir.barrio ? dir.barrio + ', ' : '' }}{{ dir.ciudad }}</p>
                           </div>
                         </div>
-                        @if (!dir.predeterminada) {
-                          <button (click)="supabaseService.setDireccionPredeterminada(dir.id_direccion, u.id)"
-                            class="text-[10px] font-bold text-[#590E2A]/50 hover:text-[#D95578] transition-colors shrink-0 uppercase tracking-wider">
-                            Principal
+                        <div class="flex items-center gap-2 shrink-0">
+                          @if (!dir.predeterminada) {
+                            <button (click)="supabaseService.setDireccionPredeterminada(dir.id_direccion, u.id)"
+                              class="group relative h-8 w-8 rounded-full bg-[#D95578]/10 text-[#D95578] hover:bg-[#065F46] hover:text-white hover:w-auto hover:px-3 hover:gap-1.5 transition-all duration-300 flex items-center justify-center overflow-hidden" title="Hacer principal">
+                              <span class="material-icons text-sm shrink-0">star</span>
+                              <span class="hidden group-hover:inline whitespace-nowrap text-[11px] font-bold ml-1">Hacer principal</span>
+                            </button>
+                          } @else {
+                            <div class="flex items-center gap-1.5 px-3 h-8 rounded-full bg-[#065F46]/10 text-[#065F46] shrink-0">
+                              <span class="material-icons text-sm">star</span>
+                              <span class="text-[11px] font-bold">Principal</span>
+                            </div>
+                          }
+                          <button (click)="editingDireccion.set(dir)"
+                            class="w-8 h-8 rounded-full flex items-center justify-center bg-[#2C5350]/10 text-[#2C5350] hover:bg-[#2C5350] hover:text-white transition-all" title="Editar">
+                            <span class="material-icons" style="font-size: 14px">edit</span>
                           </button>
-                        }
+                          <button (click)="deletingDireccion.set(dir)"
+                            class="w-8 h-8 rounded-full flex items-center justify-center bg-[#8C3A3A]/10 text-[#8C3A3A] hover:bg-[#8C3A3A] hover:text-white transition-all" title="Eliminar">
+                            <span class="material-icons" style="font-size: 14px">delete</span>
+                          </button>
+                        </div>
                       </div>
                     } @empty {
                       <div class="py-10 text-center">
                         <span class="material-icons text-[#E8D8D0] mb-2" style="font-size: 40px">location_off</span>
                         <p class="text-xs text-[#590E2A]/50">No tienes direcciones guardadas</p>
-                        <p class="text-[10px] text-[#590E2A]/30 mt-1">Añade una para agilizar tus compras</p>
+                        <p class="text-[10px] text-[#590E2A]/30 mt-1">Anade una para agilizar tus compras</p>
                       </div>
                     }
                   </div>
@@ -447,14 +464,116 @@ import type * as L from 'leaflet';
           }
         }
       </div>
+
+      <!-- Edit Address Modal -->
+      @if (editingDireccion()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="editingDireccion.set(null)">
+          <div class="bg-white rounded-3xl shadow-xl w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-serif italic text-[#590E2A] font-bold flex items-center gap-2">
+                <span class="material-icons text-[#2C5350]">edit</span>
+                Editar Direccion
+              </h3>
+              <button (click)="editingDireccion.set(null)" class="w-7 h-7 rounded-full bg-[#FDF8F4] flex items-center justify-center hover:bg-[#E8D8D0] transition-colors">
+                <span class="material-icons text-[#590E2A] text-sm">close</span>
+              </button>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider mb-1 block">Alias</label>
+                <input #editAlias type="text" [value]="editingDireccion()!.alias || ''"
+                  class="w-full px-4 py-2.5 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578]">
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider mb-1 block">Direccion</label>
+                <input #editDir type="text" [value]="editingDireccion()!.direccion_completa || ''"
+                  class="w-full px-4 py-2.5 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578]">
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-[#590E2A]/50 uppercase tracking-wider mb-1 block">Barrio</label>
+                <input #editBarrio type="text" [value]="editingDireccion()!.barrio || ''"
+                  class="w-full px-4 py-2.5 rounded-xl bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] text-xs focus:outline-none focus:border-[#D95578]">
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button (click)="editingDireccion.set(null)"
+                class="flex-1 py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] font-bold text-[10px] uppercase tracking-wider hover:bg-[#E8D8D0] transition-colors">
+                Cancelar
+              </button>
+              <button (click)="saveEditAddress(editAlias.value, editDir.value, editBarrio.value)"
+                class="flex-1 py-2.5 rounded-full bg-[#2C5350] text-white font-bold text-[10px] uppercase tracking-wider hover:bg-[#1f3d3b] transition-colors">
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Delete Address Modal -->
+      @if (deletingDireccion()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="deletingDireccion.set(null)">
+          <div class="bg-white rounded-3xl shadow-xl w-full max-w-sm p-6 space-y-4 text-center" (click)="$event.stopPropagation()">
+            <div class="w-14 h-14 rounded-full bg-[#FFEBEE] flex items-center justify-center mx-auto">
+              <span class="material-icons text-[#8C3A3A]" style="font-size: 28px">delete</span>
+            </div>
+            <div>
+              <h3 class="text-base font-serif italic text-[#590E2A] font-bold">Eliminar Direccion</h3>
+              <p class="text-[11px] text-[#590E2A]/60 mt-1">
+                Se eliminara "{{ deletingDireccion()!.alias || 'Direccion' }}" permanentemente.
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <button (click)="deletingDireccion.set(null)"
+                class="flex-1 py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] font-bold text-[10px] uppercase tracking-wider hover:bg-[#E8D8D0] transition-colors">
+                Cancelar
+              </button>
+              <button (click)="confirmDeleteAddress()"
+                class="flex-1 py-2.5 rounded-full bg-[#8C3A3A] text-white font-bold text-[10px] uppercase tracking-wider hover:bg-[#6d2f2f] transition-colors">
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- No Coverage Modal -->
+      @if (showNoCoverageModal()) {
+        <div class="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="showNoCoverageModal.set(false)">
+          <div class="bg-white rounded-[28px] w-[90vw] max-w-sm p-6 space-y-4 shadow-2xl" (click)="$event.stopPropagation()">
+            <div class="w-14 h-14 rounded-full bg-[#FFF3E0] flex items-center justify-center mx-auto">
+              <span class="material-icons text-[#E65100]" style="font-size: 28px">warning</span>
+            </div>
+            <div class="text-center space-y-2">
+              <h3 class="text-base font-serif italic text-[#590E2A] font-bold">Sin Cobertura en esta Zona</h3>
+              <p class="text-[11px] text-[#590E2A]/60 leading-relaxed">
+                La direccion ingresada no esta dentro de nuestras zonas de envio. Solo puedes guardar direcciones dentro de La Dorada, Puerto Salgar, Purnio, Guarinocito, Honda y Victoria.
+              </p>
+            </div>
+            <div class="space-y-2">
+              <a routerLink="/contacto" [queryParams]="{asunto: 'envio_nacional'}" (click)="showNoCoverageModal.set(false)"
+                class="w-full py-3 rounded-full bg-[#D95578] hover:bg-[#FF6078] text-white font-bold text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <span class="material-icons text-sm">mail</span>
+                Contactar para Envio Nacional
+              </a>
+              <button (click)="showNoCoverageModal.set(false)"
+                class="w-full py-2.5 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] text-[#590E2A] font-bold text-[10px] uppercase tracking-wider hover:bg-[#E8D8D0] transition-colors">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `
 })
-export class ProfileComponent implements OnDestroy {
+export class ProfileComponent implements OnInit, OnDestroy {
   supabaseService = inject(SupabaseService);
   private dataService = inject(MochiDataService);
   cartService = inject(CartService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private ngZone = inject(NgZone);
   private platformId = inject(PLATFORM_ID);
 
@@ -470,6 +589,9 @@ export class ProfileComponent implements OnDestroy {
 
   showNewAddress = signal(false);
   mapAddress = signal('');
+  editingDireccion = signal<Direccion | null>(null);
+  deletingDireccion = signal<Direccion | null>(null);
+  showNoCoverageModal = signal(false);
   mapLoading = signal(false);
 
   isEditing = signal(false);
@@ -511,6 +633,14 @@ export class ProfileComponent implements OnDestroy {
     if (!u) return [];
     return this.dataService.orders().filter(o => o.id_usuario === u.id);
   });
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      if (params['tab'] === 'pedidos') {
+        this.activeTab.set('pedidos');
+      }
+    });
+  }
 
   ngOnDestroy() {
     this.destroyMap();
@@ -614,9 +744,16 @@ export class ProfileComponent implements OnDestroy {
   saveAddress(alias: string, dir: string, barrio: string) {
     const u = this.user();
     if (!dir || !u) return;
+    const lower = dir.toLowerCase();
+    const zones = ['la dorada', 'puerto salgar', 'purnio', 'guarinocito', 'honda', 'victoria'];
+    const hasCoverage = zones.some(z => lower.includes(z));
+    if (!hasCoverage) {
+      this.showNoCoverageModal.set(true);
+      return;
+    }
     this.supabaseService.addDireccion({
       id_usuario: u.id,
-      alias: alias || 'Mi Dirección',
+      alias: alias || 'Mi Direccion',
       direccion_completa: dir,
       barrio: barrio || 'Centro',
       ciudad: 'La Dorada',
@@ -624,6 +761,27 @@ export class ProfileComponent implements OnDestroy {
       codigo_postal: '175031',
       predeterminada: this.userAddresses().length === 0
     });
+    this.showNewAddress.set(false);
+  }
+
+  async saveEditAddress(alias: string, dir: string, barrio: string) {
+    const u = this.user();
+    const editing = this.editingDireccion();
+    if (!u || !editing) return;
+    await this.supabaseService.updateDireccion(editing.id_direccion, {
+      alias: alias || 'Direccion',
+      direccion_completa: dir,
+      barrio: barrio || 'Centro'
+    }, u.id);
+    this.editingDireccion.set(null);
+  }
+
+  async confirmDeleteAddress() {
+    const u = this.user();
+    const deleting = this.deletingDireccion();
+    if (!u || !deleting) return;
+    await this.supabaseService.deleteDireccion(deleting.id_direccion, u.id);
+    this.deletingDireccion.set(null);
   }
 
   async onPasswordChange(event: Event) {

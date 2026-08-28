@@ -169,13 +169,17 @@ export interface POSSale {
   empleado: string;
   clienteNombre: string;
   clienteTelefono?: string;
+  clienteDireccion?: string;
+  tipoPedido?: 'local' | 'domicilio';
   items: {
     productoId: number;
     nombre: string;
     cantidad: number;
     precio: number;
+    frase_personalizada?: string;
   }[];
   subtotal: number;
+  costoEnvio?: number;
   total: number;
   metodoPago: 'efectivo' | 'tarjeta' | 'nequi' | 'daviplata';
 }

@@ -27,7 +27,7 @@ export class CartService implements OnDestroy {
   readonly pendingCustomCup = signal<{ product: Product; cantidad: number; configuracion_capas: any; customPrice: number } | null>(null);
 
   // POS: cart items (persist across navigation)
-  readonly posItems = signal<{ product: Product; cantidad: number; configuracion_capas?: any; customPrice?: number }[]>([]);
+  readonly posItems = signal<{ product: Product; cantidad: number; configuracion_capas?: any; customPrice?: number; frase_personalizada?: string }[]>([]);
 
   openDrawer() { this.isDrawerOpen.set(true); }
   closeDrawer() { this.isDrawerOpen.set(false); }
@@ -93,7 +93,8 @@ export class CartService implements OnDestroy {
       const existingIndex = merged.findIndex(
         m => m.product.id === localItem.product.id &&
              JSON.stringify(m.configuracion_capas) === JSON.stringify(localItem.configuracion_capas) &&
-             m.customPrice === localItem.customPrice
+             m.customPrice === localItem.customPrice &&
+             (m.frase_personalizada || '') === (localItem.frase_personalizada || '')
       );
       if (existingIndex >= 0) {
         merged[existingIndex] = {
@@ -165,7 +166,8 @@ export class CartService implements OnDestroy {
 
         for (const item of guestItems) {
           const alreadyInRemote = remoteItems.some(
-            r => r.product.id === item.product.id
+            r => r.product.id === item.product.id &&
+                 (r.frase_personalizada || '') === (item.frase_personalizada || '')
           );
           if (!alreadyInRemote) {
             await supabase.from('carrito_compras').upsert({
@@ -174,7 +176,7 @@ export class CartService implements OnDestroy {
               cantidad: item.cantidad,
               notas: item.notas || null,
               frase_personalizada: item.frase_personalizada || null
-            }, { onConflict: 'id_usuario,id_producto' });
+            }, { onConflict: 'id_usuario,id_producto,frase_personalizada' });
           }
         }
       } else {
@@ -235,7 +237,7 @@ export class CartService implements OnDestroy {
         cantidad: quantity,
         notas: notas || null,
         frase_personalizada: frase_personalizada || null
-      }, { onConflict: 'id_usuario,id_producto' });
+      }, { onConflict: 'id_usuario,id_producto,frase_personalizada' });
 
       if (error) { console.error('Error adding to cart:', error); }
     }
@@ -264,31 +266,43 @@ export class CartService implements OnDestroy {
     this.toastService.show(`${product.nombre_espanol} añadido al carrito`, 'success');
   }
 
-  async updateQuantity(productId: number, quantity: number): Promise<void> {
+  async updateQuantity(productId: number, quantity: number, frase_personalizada?: string): Promise<void> {
     const userId = this.sbService.activeUser()?.id;
     if (quantity <= 0) {
-      await this.removeFromCart(productId);
+      await this.removeFromCart(productId, undefined, frase_personalizada);
       return;
     }
     if (userId) {
-      await supabase.from('carrito_compras').update({ cantidad: quantity }).eq('id_usuario', userId).eq('id_producto', productId);
+      let query = supabase.from('carrito_compras').update({ cantidad: quantity }).eq('id_usuario', userId).eq('id_producto', productId);
+      if (frase_personalizada !== undefined) {
+        query = query.eq('frase_personalizada', frase_personalizada);
+      }
+      await query;
     }
     this.items.update(items => items.map(item =>
-      item.product.id === productId ? { ...item, cantidad: quantity } : item
+      item.product.id === productId && (frase_personalizada === undefined || (item.frase_personalizada || '') === frase_personalizada)
+        ? { ...item, cantidad: quantity } : item
     ));
     if (!userId) {
       this.saveGuestCart();
     }
   }
 
-  async removeFromCart(productId: number, configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null): Promise<void> {
+  async removeFromCart(productId: number, configuracion_capas?: { base: number; crema: number; relleno: number; topping: number } | null, frase_personalizada?: string): Promise<void> {
     const userId = this.sbService.activeUser()?.id;
     if (userId) {
-      await supabase.from('carrito_compras').delete().eq('id_usuario', userId).eq('id_producto', productId);
+      let query = supabase.from('carrito_compras').delete().eq('id_usuario', userId).eq('id_producto', productId);
+      if (frase_personalizada !== undefined) {
+        query = query.eq('frase_personalizada', frase_personalizada);
+      }
+      await query;
     }
     this.items.update(items => items.filter(item => {
       if (configuracion_capas) {
         return !(item.product.id === productId && JSON.stringify(item.configuracion_capas) === JSON.stringify(configuracion_capas));
+      }
+      if (frase_personalizada !== undefined) {
+        return !(item.product.id === productId && (item.frase_personalizada || '') === frase_personalizada);
       }
       return item.product.id !== productId || item.configuracion_capas;
     }));

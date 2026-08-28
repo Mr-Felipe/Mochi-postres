@@ -66,17 +66,17 @@ import { CartItem } from '../../models/mochi.models';
                       {{ '$' + itemTotal(item).toLocaleString('es-CO') }}
                     </span>
                     <div class="flex items-center rounded-full p-0.5" [style.background]="imgBg()" [style.border]="'1px solid ' + borderColor()">
-                      <button (click)="cartService.updateQuantity(item.product.id, item.cantidad - 1)"
+                      <button (click)="cartService.updateQuantity(item.product.id, item.cantidad - 1, item.frase_personalizada)"
                         class="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
                         [style.background]="cardBg()" [style.color]="headingColor()">-</button>
                       <span class="w-6 text-center text-xs font-bold font-mono">{{ item.cantidad }}</span>
-                      <button (click)="cartService.updateQuantity(item.product.id, item.cantidad + 1)"
+                      <button (click)="cartService.updateQuantity(item.product.id, item.cantidad + 1, item.frase_personalizada)"
                         class="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
                         [style.background]="cardBg()" [style.color]="headingColor()">+</button>
                     </div>
                   </div>
                 </div>
-                <button (click)="cartService.removeFromCart(item.product.id, item.configuracion_capas)"
+                <button (click)="cartService.removeFromCart(item.product.id, item.configuracion_capas, item.frase_personalizada)"
                   class="hover:opacity-70 p-1.5 rounded-full transition-colors"
                   style="color: #C62828" title="Eliminar producto">
                   <span class="material-icons text-base">delete_outline</span>

@@ -359,6 +359,20 @@ export class SupabaseService {
     await this.loadDirecciones(id_usuario);
   }
 
+  async updateDireccion(id_direccion: number, data: Partial<Direccion>, id_usuario: string) {
+    await this.sb.from('direcciones')
+      .update(data)
+      .eq('id_direccion', id_direccion);
+    await this.loadDirecciones(id_usuario);
+  }
+
+  async deleteDireccion(id_direccion: number, id_usuario: string) {
+    await this.sb.from('direcciones')
+      .delete()
+      .eq('id_direccion', id_direccion);
+    await this.loadDirecciones(id_usuario);
+  }
+
   // --- USER MANAGEMENT (admin) ---
 
   async updateUsuario(userId: string, data: Partial<Usuario>) {
