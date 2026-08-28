@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { MochiDataService } from '../../services/mochi-data.service';
 import { OrdersPanelComponent } from '../../components/orders-panel/orders-panel';
+import { GalleryComponent } from './gallery';
 import { SupabaseService } from '../../services/supabase.service';
 import { NotificationService } from '../../services/notification.service';
 import { UserRole, Usuario, Direccion, Product, Order, DetallePedido } from '../../models/mochi.models';
@@ -12,7 +13,7 @@ import { supabase } from '../../supabase';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [OrdersPanelComponent, DatePipe],
+  imports: [OrdersPanelComponent, GalleryComponent, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bg-[#FDF8F4] text-[#590E2A] min-h-screen p-4 sm:p-8 font-sans">
@@ -734,6 +735,11 @@ import { supabase } from '../../supabase';
           </div>
         }
 
+        <!-- TAB 7: GALERIA -->
+        @if (activeTab() === 'galeria') {
+          <app-gallery />
+        }
+
         <!-- Delete Product Confirmation Modal -->
         @if (showDeleteModal()) {
           <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -902,7 +908,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   Number = Number;
 
-  activeTab = signal<'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'>('detalles');
+  activeTab = signal<'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor' | 'galeria'>('detalles');
   detalleOrigenFilter = signal<'todos' | 'online' | 'local'>('todos');
   editingUser = signal<Usuario | null>(null);
   editingProduct = signal<Product | null>(null);
@@ -973,12 +979,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   private syncTabFromRoute(url: string) {
     const segment = url.replace('/admin', '').replace(/^\//, '');
-    const tabMap: Record<string, 'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor'> = {
+    const tabMap: Record<string, 'productos' | 'pedidos' | 'detalles' | 'usuarios' | 'editor' | 'galeria'> = {
       '': 'detalles',
       'productos': 'productos',
       'pedidos': 'pedidos',
       'detalles': 'detalles',
       'usuarios': 'usuarios',
+      'galeria': 'galeria',
       'blog': 'detalles',
     };
     this.activeTab.set(tabMap[segment] ?? 'detalles');
@@ -996,14 +1003,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     const from = this.dateFrom();
     const to = this.dateTo();
-    if (from) {
-      const fromDate = new Date(from);
-      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) >= fromDate);
-    }
-    if (to) {
-      const toDate = new Date(to);
-      toDate.setHours(23, 59, 59);
-      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) <= toDate);
+    if (from || to) {
+      const fromDate = from ? new Date(from) : null;
+      const toDate = to ? new Date(to) : null;
+      if (toDate) toDate.setHours(23, 59, 59);
+      detalles = detalles.filter(d => {
+        const pid = d.id_pedido || 0;
+        const order = this.getOrderInfo(pid);
+        const orderDate = order?.fecha;
+        if (!orderDate) return false;
+        const od = new Date(orderDate);
+        if (fromDate && od < fromDate) return false;
+        if (toDate && od > toDate) return false;
+        return true;
+      });
     }
 
     const mun = this.municipioFilter().trim().toLowerCase();
@@ -1127,14 +1140,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     let detalles = this.dataService.detallePedidosOnline();
     const from = this.dateFrom();
     const to = this.dateTo();
-    if (from) {
-      const fromDate = new Date(from);
-      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) >= fromDate);
-    }
-    if (to) {
-      const toDate = new Date(to);
-      toDate.setHours(23, 59, 59);
-      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) <= toDate);
+    if (from || to) {
+      const fromDate = from ? new Date(from) : null;
+      const toDate = to ? new Date(to) : null;
+      if (toDate) toDate.setHours(23, 59, 59);
+      detalles = detalles.filter(d => {
+        const pid = d.id_pedido || 0;
+        const order = this.getOrderInfo(pid);
+        const orderDate = order?.fecha;
+        if (!orderDate) return false;
+        const od = new Date(orderDate);
+        if (fromDate && od < fromDate) return false;
+        if (toDate && od > toDate) return false;
+        return true;
+      });
     }
     const mun = this.municipioFilter().trim().toLowerCase();
     if (mun) {
@@ -1153,14 +1172,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     let detalles = this.dataService.detallePedidosLocal();
     const from = this.dateFrom();
     const to = this.dateTo();
-    if (from) {
-      const fromDate = new Date(from);
-      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) >= fromDate);
-    }
-    if (to) {
-      const toDate = new Date(to);
-      toDate.setHours(23, 59, 59);
-      detalles = detalles.filter(d => d.created_at && new Date(d.created_at) <= toDate);
+    if (from || to) {
+      const fromDate = from ? new Date(from) : null;
+      const toDate = to ? new Date(to) : null;
+      if (toDate) toDate.setHours(23, 59, 59);
+      detalles = detalles.filter(d => {
+        const pid = d.id_pedido || 0;
+        const order = this.getOrderInfo(pid);
+        const orderDate = order?.fecha;
+        if (!orderDate) return false;
+        const od = new Date(orderDate);
+        if (fromDate && od < fromDate) return false;
+        if (toDate && od > toDate) return false;
+        return true;
+      });
     }
     const mun = this.municipioFilter().trim().toLowerCase();
     if (mun) {

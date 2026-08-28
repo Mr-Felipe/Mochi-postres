@@ -91,18 +91,13 @@ import { supabase } from '../../supabase';
                       [class]="selectedOptionId() === option.id
                         ? 'border-[#D95578] bg-[#D95578]/5 shadow-sm'
                         : 'border-[#E8D8D0] hover:border-[#D95578]/40 bg-white'">
-                      <div class="flex items-center gap-3">
-                        @if (getOptionImage(option, layer.label)) {
-                          <img [src]="getOptionImage(option, layer.label)" class="w-14 h-14 rounded-xl object-cover border border-[#E8D8D0]">
-                        }
-                        <div class="flex-1 flex items-center justify-between">
-                          <span class="text-sm font-bold text-[#590E2A]">{{ option.name }}</span>
-                          <div class="flex items-center gap-1.5">
-                            @if (selectedOptionId() === option.id) {
-                              <span class="material-icons text-[#D95578] text-sm">check_circle</span>
-                            }
-                            <span class="text-xs font-bold text-[#D95578]">{{ '$' + option.price.toLocaleString('es-CO') }}</span>
-                          </div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-[#590E2A]">{{ option.name }}</span>
+                        <div class="flex items-center gap-1.5">
+                          @if (selectedOptionId() === option.id) {
+                            <span class="material-icons text-[#D95578] text-sm">check_circle</span>
+                          }
+                          <span class="text-xs font-bold text-[#D95578]">{{ '$' + option.price.toLocaleString('es-CO') }}</span>
                         </div>
                       </div>
                     </button>
@@ -154,70 +149,36 @@ import { supabase } from '../../supabase';
                 <span class="material-icons text-[#D95578] text-base">visibility</span> Tu Vaso
               </h3>
 
-              <!-- Visual Cup with Images -->
+              <!-- Visual Cup -->
               <div class="flex flex-col items-center gap-0 mb-4 shrink-0">
-                <!-- Topping (Layer 7) -->
-                <div class="w-32 h-8 rounded-t-full overflow-hidden flex items-center justify-center transition-all duration-300 relative"
-                  [class]="config().topping ? '' : 'bg-[#E8D8D0]'">
-                  @if (getCupImage('topping', config().topping?.name || '')) {
-                    <img [src]="getCupImage('topping', config().topping?.name || '')" class="w-full h-full object-cover">
-                  } @else {
-                    <span class="text-[10px] font-bold" [class]="config().topping ? 'text-white' : 'text-[#590E2A]/30'">{{ config().topping?.name || '?' }}</span>
-                  }
+                <div class="w-32 h-6 rounded-t-full flex items-center justify-center text-[10px] font-bold transition-all duration-300"
+                  [class]="config().topping ? 'bg-[#8B4513] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'"
+                  style="border-radius: 4px 4px 0 0">
+                  {{ config().topping?.name || '?' }}
                 </div>
-                <!-- Relleno (Layer 6) -->
-                <div class="w-32 h-6 overflow-hidden flex items-center justify-center transition-all duration-300 relative"
-                  [class]="config().relleno ? '' : 'bg-[#E8D8D0]'">
-                  @if (getCupImage('relleno', config().relleno?.name || '', 6, true)) {
-                    <img [src]="getCupImage('relleno', config().relleno?.name || '', 6, true)" class="w-full h-full object-cover">
-                  } @else {
-                    <span class="text-[9px] font-bold" [class]="config().relleno ? 'text-white' : 'text-[#590E2A]/30'">{{ config().relleno?.name || '?' }}</span>
-                  }
+                <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
+                  [class]="config().relleno ? 'bg-[#FF6B6B] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
+                  {{ config().relleno?.name || '?' }}
                 </div>
-                <!-- Crema (Layer 5) -->
-                <div class="w-32 h-6 overflow-hidden flex items-center justify-center transition-all duration-300 relative"
-                  [class]="config().crema ? '' : 'bg-[#E8D8D0]'">
-                  @if (getCupImage('crema', config().crema?.name || '', 5, true)) {
-                    <img [src]="getCupImage('crema', config().crema?.name || '', 5, true)" class="w-full h-full object-cover">
-                  } @else {
-                    <span class="text-[9px] font-bold" [class]="config().crema ? 'text-[#590E2A]' : 'text-[#590E2A]/30'">{{ config().crema?.name || '?' }}</span>
-                  }
+                <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
+                  [class]="config().crema ? 'bg-[#FFEAA7] text-[#590E2A]' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
+                  {{ config().crema?.name || '?' }}
                 </div>
-                <!-- Base (Layer 4) -->
-                <div class="w-32 h-6 overflow-hidden flex items-center justify-center transition-all duration-300 relative"
-                  [class]="config().base ? '' : 'bg-[#E8D8D0]'">
-                  @if (getCupImage('base', config().base?.name || '', 4, true)) {
-                    <img [src]="getCupImage('base', config().base?.name || '', 4, true)" class="w-full h-full object-cover">
-                  } @else {
-                    <span class="text-[9px] font-bold" [class]="config().base ? 'text-white' : 'text-[#590E2A]/30'">{{ config().base?.name || '?' }}</span>
-                  }
+                <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
+                  [class]="config().base ? 'bg-[#D4A574] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
+                  {{ config().base?.name || '?' }}
                 </div>
-                <!-- Relleno (Layer 3) -->
-                <div class="w-32 h-6 overflow-hidden flex items-center justify-center transition-all duration-300 relative"
-                  [class]="config().relleno ? '' : 'bg-[#E8D8D0]'">
-                  @if (getCupImage('relleno', config().relleno?.name || '', 3)) {
-                    <img [src]="getCupImage('relleno', config().relleno?.name || '', 3)" class="w-full h-full object-cover">
-                  } @else {
-                    <span class="text-[9px] font-bold" [class]="config().relleno ? 'text-white' : 'text-[#590E2A]/30'">{{ config().relleno?.name || '?' }}</span>
-                  }
+                <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
+                  [class]="config().relleno ? 'bg-[#FF6B6B] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
+                  {{ config().relleno?.name || '?' }}
                 </div>
-                <!-- Crema (Layer 2) -->
-                <div class="w-32 h-6 overflow-hidden flex items-center justify-center transition-all duration-300 relative"
-                  [class]="config().crema ? '' : 'bg-[#E8D8D0]'">
-                  @if (getCupImage('crema', config().crema?.name || '', 2)) {
-                    <img [src]="getCupImage('crema', config().crema?.name || '', 2)" class="w-full h-full object-cover">
-                  } @else {
-                    <span class="text-[9px] font-bold" [class]="config().crema ? 'text-[#590E2A]' : 'text-[#590E2A]/30'">{{ config().crema?.name || '?' }}</span>
-                  }
+                <div class="w-32 h-5 flex items-center justify-center text-[9px] font-bold transition-all duration-300"
+                  [class]="config().crema ? 'bg-[#FFEAA7] text-[#590E2A]' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
+                  {{ config().crema?.name || '?' }}
                 </div>
-                <!-- Base (Layer 1) -->
-                <div class="w-32 h-6 rounded-b-lg overflow-hidden flex items-center justify-center transition-all duration-300 relative"
-                  [class]="config().base ? '' : 'bg-[#E8D8D0]'">
-                  @if (getCupImage('base', config().base?.name || '', 1)) {
-                    <img [src]="getCupImage('base', config().base?.name || '', 1)" class="w-full h-full object-cover">
-                  } @else {
-                    <span class="text-[9px] font-bold" [class]="config().base ? 'text-white' : 'text-[#590E2A]/30'">{{ config().base?.name || '?' }}</span>
-                  }
+                <div class="w-32 h-5 rounded-b-lg flex items-center justify-center text-[9px] font-bold transition-all duration-300"
+                  [class]="config().base ? 'bg-[#D4A574] text-white' : 'bg-[#E8D8D0] text-[#590E2A]/30'">
+                  {{ config().base?.name || '?' }}
                 </div>
               </div>
 
@@ -305,7 +266,6 @@ export class CustomCupComponent implements OnInit {
   layers = signal<CupLayer[]>([]);
   editMode = signal(false);
   isDashboard = signal(false);
-  galleryImages = signal<Map<string, string>>(new Map());
 
   config = signal<CustomCupConfig>({
     base: null,
@@ -317,9 +277,6 @@ export class CustomCupComponent implements OnInit {
   async ngOnInit() {
     const url = this.router.url;
     this.isDashboard.set(url.startsWith('/admin') || url.startsWith('/empleado'));
-
-    // Load gallery images
-    await this.loadGalleryImages();
 
     const { data } = await supabase
       .from('ingredientes')
@@ -379,97 +336,6 @@ export class CustomCupComponent implements OnInit {
         this.currentStep.set(0);
       } catch {}
     }
-  }
-
-  // Explicit mapping: ingredient ID → { layers: primary filename, duplicate: secondary filename }
-  // IDs from ingredientes table, filenames from galeria storage bucket
-  private readonly IMAGE_MAP: Record<number, { layers: string; duplicate?: string }> = {
-    // Base (layers 1 & 4)
-    1: { layers: 'Capa_1_-_Galleta', duplicate: 'Capa_4_-_Galleta' },
-    2: { layers: 'Capa_1_-_ponqu_', duplicate: 'Capa_4_-_ponqu_' },
-    // Crema (layers 2 & 5)
-    7: { layers: 'Capa_2_-_Crema_de_coco', duplicate: 'Capa_5_-_coco' },
-    4: { layers: 'Capa_2_-_Crema_de_Lim_n', duplicate: 'Capa_5_-_Lim_n' },
-    3: { layers: 'Capa_2_-_Crema_de_vainilla', duplicate: 'Capa_5_-_Vainilla' },
-    6: { layers: 'Capa_2_-_Crema_de_oreo', duplicate: 'Capa_5_-_Oreo' },
-    5: { layers: 'Capa_2_-_Crema_de_Tres_leches', duplicate: 'Capa_5_-_Tres_leches' },
-    // Relleno (layers 3 & 6)
-    12: { layers: 'Capa_3_-_Arequipe', duplicate: 'Capa_6_-_Arequipe' },
-    14: { layers: 'Capa_3_-_Cereza', duplicate: 'Capa_6_-_Cereza' },
-    9:  { layers: 'Capa_3_-_Coco', duplicate: 'Capa_6_-_Coco' },
-    15: { layers: 'Capa_3_-_Durazno', duplicate: 'Capa_6_-_Durazno' },
-    10: { layers: 'Capa_3_-_Oreo', duplicate: 'Capa_6_-_Oreo' },
-    13: { layers: 'Capa_3_-_kiwi', duplicate: 'Capa_6_-_Kiwi' },
-    11: { layers: 'Capa_3_-Maracuy_', duplicate: 'Capa_6_-_Maracuy_' },
-    8:  { layers: 'Capa_3_-_Mora', duplicate: 'Capa_6_-_Mora_' },
-    // Topping (layer 7 — no duplicate)
-    18: { layers: 'Barquillos' },
-    20: { layers: 'barrita_Galleta_de_chocolate' },
-    21: { layers: 'Cereza' },
-    22: { layers: 'Chips_de_chocolate' },
-    16: { layers: 'Chocolate_blanco' },
-    17: { layers: 'chocolate_negro' },
-    19: { layers: 'Masmellos_peque_os' },
-  };
-
-  // Maps ingredient ID → { primary URL, optional duplicate URL }
-  ingredientImages = signal<Map<number, { primary: string; duplicate?: string }>>(new Map());
-
-  async loadGalleryImages() {
-    const { data } = await supabase.storage
-      .from('galeria')
-      .list('', { sortBy: { column: 'name', order: 'asc' } });
-
-    if (!data) return;
-
-    // Build filename → public URL lookup (strip timestamp prefix)
-    const fileUrls = new Map<string, string>();
-    for (const file of data) {
-      if (file.name === '.emptyFolderPlaceholder') continue;
-      const { data: urlData } = supabase.storage
-        .from('galeria')
-        .getPublicUrl(file.name);
-      const cleanName = file.name.replace(/^\d+_/, '').replace(/\.png$/i, '');
-      fileUrls.set(cleanName, urlData.publicUrl);
-    }
-
-    // Map ingredient IDs to URLs (primary + duplicate)
-    const map = new Map<number, { primary: string; duplicate?: string }>();
-    for (const [id, entry] of Object.entries(this.IMAGE_MAP)) {
-      const primaryUrl = fileUrls.get(entry.layers);
-      if (primaryUrl) {
-        const obj: { primary: string; duplicate?: string } = { primary: primaryUrl };
-        if (entry.duplicate) {
-          const dupUrl = fileUrls.get(entry.duplicate);
-          if (dupUrl) obj.duplicate = dupUrl;
-        }
-        map.set(Number(id), obj);
-      }
-    }
-    this.ingredientImages.set(map);
-  }
-
-  // Get image for option in the selection grid
-  getOptionImage(option: CupLayerOption, _layerLabel: string): string | null {
-    const id = Number(option.id);
-    const imgs = this.ingredientImages().get(id);
-    return imgs?.primary || null;
-  }
-
-  // Get image for cup preview layer
-  // isDuplicate: true for layers 5 (crema dup) and 6 (relleno dup)
-  getCupImage(_tipo: string, optionName: string, _layerNum?: number, isDuplicate = false): string | null {
-    if (!optionName) return null;
-    for (const layer of this.layers()) {
-      for (const opt of layer.options) {
-        if (opt.name === optionName) {
-          const imgs = this.ingredientImages().get(Number(opt.id));
-          if (!imgs) return null;
-          return (isDuplicate && imgs.duplicate) ? imgs.duplicate : imgs.primary;
-        }
-      }
-    }
-    return null;
   }
 
   currentLayerData = computed(() => this.layers()[this.currentStep()]);

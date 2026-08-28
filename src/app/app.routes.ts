@@ -105,6 +105,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin/admin-dashboard').then(m => m.AdminDashboardComponent)
       },
       {
+        path: 'galeria',
+        loadComponent: () => import('./pages/admin/admin-dashboard').then(m => m.AdminDashboardComponent)
+      },
+      {
         path: 'perfil',
         loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent)
       },

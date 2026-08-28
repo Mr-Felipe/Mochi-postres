@@ -252,6 +252,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { route: '/admin/productos', icon: 'inventory_2', label: 'Productos', exact: false },
         { route: '/admin/pedidos', icon: 'shopping_cart', label: 'Pedidos', exact: false },
         { route: '/admin/usuarios', icon: 'people', label: 'Usuarios', exact: false },
+        { route: '/admin/galeria', icon: 'photo_library', label: 'Galeria', exact: false },
       );
     }
 
