@@ -116,24 +116,6 @@ import { CartService } from '../../services/cart.service';
             <span class="material-icons" style="font-size: 16px">chevron_left</span>
           </button>
 
-          @for (prod of products(); track prod.id; let i = $index) {
-            <button (click)="goToSlide(i)"
-              class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300"
-              [style.background]="i === currentIndex() ? '#D95578' : '#FDF8F4'"
-              [style.color]="i === currentIndex() ? 'white' : '#590E2A'"
-              [style.border]="i === currentIndex() ? 'none' : '1px solid #E8D8D0'">
-              {{ i + 1 }}
-            </button>
-          }
-          <!-- Personalizado dot -->
-          <button (click)="goToSlide(products().length)"
-            class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300"
-            [style.background]="currentIndex() === products().length ? '#D95578' : '#FDF8F4'"
-            [style.color]="currentIndex() === products().length ? 'white' : '#590E2A'"
-            [style.border]="currentIndex() === products().length ? 'none' : '1px solid #E8D8D0'">
-            <span class="material-icons" style="font-size: 12px">local_drink</span>
-          </button>
-
           <button (click)="nextSlide()"
             class="w-9 h-9 rounded-full bg-[#FDF8F4] border border-[#E8D8D0] flex items-center justify-center text-[#590E2A] hover:bg-[#D95578] hover:text-white hover:border-transparent transition-all">
             <span class="material-icons" style="font-size: 16px">chevron_right</span>
